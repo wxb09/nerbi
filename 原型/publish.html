@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>发布闲置 - 邻里共享</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+<style>
+        body { font-family: 'Noto Sans SC', sans-serif; background: #F9FAFB; }
+        .dashed-area:hover { border-color: #E2B04D; background: #FFFBF0; }
+        .step-active { background: #E2B04D; color: white; border-color: #E2B04D; }
+    </style>
+</head>
+<body>
+<!-- 极简导航 -->
+<nav class="bg-white border-b px-6 py-4">
+<div class="max-w-4xl mx-auto flex justify-between items-center">
+<a class="flex items-center space-x-2" href="index.html">
+<span class="iconify text-3xl text-[#E2B04D]" data-icon="solar:share-circle-bold-duotone"></span>
+<span class="text-xl font-bold">发布闲置物品</span>
+</a>
+<a class="text-gray-400 hover:text-gray-600 transition-colors" href="profile.html">取消并返回</a>
+</div>
+</nav>
+<main class="max-w-4xl mx-auto px-6 py-12">
+<!-- 进度指示器 -->
+<div class="flex justify-between items-center mb-12">
+<div class="flex flex-col items-center space-y-2 flex-1">
+<div class="w-10 h-10 rounded-full border-2 border-gray-200 flex items-center justify-center font-bold step-active transition-all">1</div>
+<span class="text-xs font-bold text-[#E2B04D]">基础信息</span>
+</div>
+<div class="h-0.5 bg-gray-200 flex-1 -mt-6"></div>
+<div class="flex flex-col items-center space-y-2 flex-1">
+<div class="w-10 h-10 rounded-full border-2 border-gray-200 flex items-center justify-center font-bold text-gray-400">2</div>
+<span class="text-xs font-bold text-gray-400">设置规则</span>
+</div>
+<div class="h-0.5 bg-gray-200 flex-1 -mt-6"></div>
+<div class="flex flex-col items-center space-y-2 flex-1">
+<div class="w-10 h-10 rounded-full border-2 border-gray-200 flex items-center justify-center font-bold text-gray-400">3</div>
+<span class="text-xs font-bold text-gray-400">完成发布</span>
+</div>
+</div>
+<div class="bg-white rounded-3xl p-10 border border-gray-100 shadow-xl space-y-10">
+<!-- 图片上传 -->
+<section class="space-y-4">
+<h2 class="text-lg font-bold flex items-center gap-2">
+<span class="iconify" data-icon="solar:gallery-bold"></span>
+                    物品美照 (最多9张)
+                </h2>
+<div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+<div class="aspect-square border-2 border-dashed border-gray-200 rounded-3xl flex flex-col items-center justify-center text-gray-400 dashed-area cursor-pointer transition-all">
+<span class="iconify text-3xl mb-2" data-icon="solar:camera-add-bold"></span>
+<span class="text-xs">添加主图</span>
+</div>
+<!-- 预览图占位 -->
+<div class="aspect-square border-2 border-gray-50 bg-gray-50 rounded-3xl flex items-center justify-center">
+<img alt="Preview" class="w-full h-full object-cover rounded-3xl opacity-50" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/2b905a0389984f9dacb494b4dc330612.jpg"/>
+</div>
+</div>
+<p class="text-xs text-gray-400 italic">小提示：2026年的邻居们更喜欢看到真实的使用场景图哦。</p>
+</section>
+<!-- 基础表单 -->
+<section class="grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="space-y-2">
+<label class="text-sm font-bold text-gray-700">物品名称</label>
+<input class="w-full p-4 bg-gray-50 rounded-2xl outline-none focus:ring-2 ring-[#E2B04D]/20 border-transparent" placeholder="例如：手持挂烫机" type="text"/>
+</div>
+<div class="space-y-2">
+<label class="text-sm font-bold text-gray-700">物品分类</label>
+<select class="w-full p-4 bg-gray-50 rounded-2xl outline-none border-transparent">
+<option>选择分类</option>
+<option>五金工具</option>
+<option>户外露营</option>
+<option>生活家电</option>
+<option>厨房用具</option>
+</select>
+</div>
+<div class="md:col-span-2 space-y-2">
+<label class="text-sm font-bold text-gray-700">物品背后的故事 / 描述</label>
+<textarea class="w-full p-4 bg-gray-50 rounded-2xl h-40 outline-none focus:ring-2 ring-[#E2B04D]/20 border-transparent" placeholder="它是怎么来到你身边的？有什么使用心得？或者需要特别注意的操作？"></textarea>
+</div>
+</section>
+<!-- 规则设置 -->
+<section class="p-8 bg-[#FFFBF0] rounded-3xl border border-[#E2B04D]/20 space-y-6">
+<h2 class="text-lg font-bold text-[#E2B04D]">借阅规则设置</h2>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="space-y-2">
+<label class="text-xs font-bold text-gray-500 uppercase">每日租金 (可为0)</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">￥</span>
+<input class="w-full pl-10 pr-4 py-4 bg-white rounded-xl outline-none border border-gray-100" type="number" value="0"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-bold text-gray-500 uppercase">履约押金</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">￥</span>
+<input class="w-full pl-10 pr-4 py-4 bg-white rounded-xl outline-none border border-gray-100" type="number" value="50"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-bold text-gray-500 uppercase">最低信用要求</label>
+<select class="w-full p-4 bg-white rounded-xl border border-gray-100 outline-none">
+<option>不限</option>
+<option>9.0 分以上</option>
+<option>9.5 分以上</option>
+</select>
+</div>
+</div>
+<div class="space-y-4">
+<p class="text-sm font-bold">归还要求：</p>
+<div class="flex flex-wrap gap-3">
+<button class="px-4 py-2 bg-white border border-[#E2B04D] text-[#E2B04D] rounded-full text-xs font-bold font-bold">已彻底消毒</button>
+<button class="px-4 py-2 bg-white border border-gray-200 text-gray-400 rounded-full text-xs font-bold">不留余电</button>
+<button class="px-4 py-2 bg-white border border-gray-200 text-gray-400 rounded-full text-xs font-bold">保持原样</button>
+</div>
+</div>
+</section>
+<!-- 操作 -->
+<div class="flex space-x-4">
+<button class="flex-1 py-5 bg-[#E2B04D] text-white rounded-2xl font-bold text-lg shadow-lg hover:brightness-105 transition-all">立即确认发布</button>
+<button class="px-10 py-5 bg-white border-2 border-gray-800 text-gray-800 rounded-2xl font-bold hover:bg-gray-50 transition-all">存为草稿</button>
+</div>
+<p class="text-center text-xs text-gray-400">点击发布即代表你已同意《社区邻里共享诚信公约》</p>
+</div>
+</main>
+</body>
+</html>

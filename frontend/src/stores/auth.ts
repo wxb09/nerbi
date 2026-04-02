@@ -1,0 +1,56 @@
+import { defineStore } from 'pinia'
+
+interface User {
+  id: string
+  nickname: string
+  avatar: string
+  communityId: string
+}
+
+export const useAuthStore = defineStore('auth', {
+  state: () => ({
+    user: null as User | null,
+    token: localStorage.getItem('token') || null
+  }),
+  
+  getters: {
+    isLoggedIn: (state) => !!state.token
+  },
+  
+  actions: {
+    login(user: User, token: string) {
+      this.user = user
+      this.token = token
+      localStorage.setItem('user', JSON.stringify(user))
+      localStorage.setItem('token', token)
+    },
+    
+    logout() {
+      this.user = null
+      this.token = null
+      localStorage.removeItem('user')
+      localStorage.removeItem('token')
+    },
+    
+    init() {
+      const userStr = localStorage.getItem('user')
+      const token = localStorage.getItem('token')
+      
+      if (token) {
+        this.token = token
+      }
+      
+      if (userStr && userStr !== 'undefined' && userStr !== 'null') {
+        try {
+          this.user = JSON.parse(userStr)
+        } catch (error) {
+          console.error('解析用户信息失败', error)
+          localStorage.removeItem('user')
+          localStorage.removeItem('token')
+          this.user = null
+          this.token = null
+        }
+      }
+    }
+  }
+})

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>物品详情 - 邻里共享</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto+Sans+SC', sans-serif; background-color: #FDFBFA; }
+        .nu-retro-shadow { box-shadow: 6px 6px 0px 0px #2D3436; }
+    </style>
+</head>
+<body class="text-[#333]">
+<!-- 导航栏 (复用) -->
+<nav class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-100 px-6 py-4">
+<div class="max-w-7xl mx-auto flex justify-between items-center">
+<a class="flex items-center space-x-2" href="index.html">
+<span class="iconify text-3xl text-[#E2B04D]" data-icon="solar:share-circle-bold-duotone"></span>
+<span class="text-2xl font-bold tracking-tight text-[#2D3436]">邻里共享<span class="text-[#E2B04D]">.</span></span>
+</a>
+<div class="flex items-center space-x-5">
+<a class="text-sm font-medium hover:text-[#E2B04D]" href="index.html">返回探索</a>
+<a class="iconify text-2xl text-gray-400 hover:text-[#E2B04D]" data-icon="solar:user-bold" href="profile.html"></a>
+</div>
+</div>
+</nav>
+<main class="max-w-7xl mx-auto px-6 py-12">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-16">
+<!-- 左侧：画廊展示 -->
+<div class="space-y-6">
+<div class="rounded-[2.5rem] overflow-hidden border-4 border-white shadow-2xl h-[500px]">
+<img alt="Product main view" class="w-full h-full object-cover" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/d0e61a7a46dc41a48c7e004e70006243.jpg"/>
+</div>
+<div class="grid grid-cols-4 gap-4">
+<img alt="view 1" class="rounded-2xl border-2 border-white shadow-md active:border-[#E2B04D] cursor-pointer" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/ca3c609a7cf64569a517781d41615b77.jpg"/>
+<img alt="view 2" class="rounded-2xl border-2 border-white shadow-md" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/28ca6b7934bf45ed81c3acd7b1190f60.jpg"/>
+<img alt="view 3" class="rounded-2xl border-2 border-white shadow-md" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/04beebaf1c6d450fa73161637fd570c9.jpg"/>
+<div class="bg-gray-200 rounded-2xl flex items-center justify-center text-gray-500 font-bold text-xl">+2</div>
+</div>
+<div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm space-y-4">
+<h3 class="font-bold text-lg flex items-center gap-2">
+<span class="iconify text-[#E2B04D]" data-icon="solar:chat-line-linear"></span>
+                        邻居留言 (故事袋)
+                    </h3>
+<p class="text-gray-600 leading-relaxed italic">
+                        “这套电钻是我去年装修新家时买的，伴随我打完了全屋的柜子。现在它们躺在柜子里呼吸，比起闲置，我更希望它们能帮到正在装饰新家的你。借用请务必注意安全防护，记得自备酒精湿巾擦拭。”
+                    </p>
+</div>
+</div>
+<!-- 右侧：详情与借阅 -->
+<div class="space-y-8">
+<div>
+<div class="flex space-x-2 mb-4">
+<span class="bg-orange-100 text-orange-600 px-3 py-1 rounded-full text-xs font-bold uppercase">五金工具</span>
+<span class="bg-green-100 text-green-600 px-3 py-1 rounded-full text-xs font-bold uppercase">已消毒</span>
+</div>
+<h1 class="text-4xl font-bold text-[#2D3436] mb-2">博世2026专业级电钻 (含全套钻头)</h1>
+<div class="flex items-center space-x-4">
+<div class="flex text-[#E2B04D]">
+<span class="iconify" data-icon="solar:star-bold"></span>
+<span class="iconify" data-icon="solar:star-bold"></span>
+<span class="iconify" data-icon="solar:star-bold"></span>
+<span class="iconify" data-icon="solar:star-bold"></span>
+<span class="iconify" data-icon="solar:star-bold"></span>
+</div>
+<span class="text-gray-400 text-sm">3次成功借出记录</span>
+</div>
+</div>
+<div class="grid grid-cols-3 gap-4 border-y border-gray-100 py-6">
+<div class="text-center">
+<p class="text-xs text-gray-400 uppercase tracking-widest mb-1">费用</p>
+<p class="text-xl font-bold text-[#E2B04D]">￥0 /天</p>
+</div>
+<div class="text-center border-x border-gray-100">
+<p class="text-xs text-gray-400 uppercase tracking-widest mb-1">距离</p>
+<p class="text-xl font-bold">350m</p>
+</div>
+<div class="text-center">
+<p class="text-xs text-gray-400 uppercase tracking-widest mb-1">要求</p>
+<p class="text-xl font-bold text-blue-600">信用 9.0+</p>
+</div>
+</div>
+<!-- 借用表单 -->
+<div class="bg-[#F8F9FA] p-8 rounded-[2rem] border-2 border-gray-100 relative overflow-hidden">
+<div class="absolute top-0 right-0 p-4">
+<span class="iconify text-6xl text-gray-100" data-icon="solar:calendar-mark-bold"></span>
+</div>
+<h3 class="text-xl font-bold mb-6">申请借用</h3>
+<div class="space-y-5 relative">
+<div class="grid grid-cols-2 gap-4">
+<div class="space-y-2">
+<label class="text-xs font-bold text-gray-500 uppercase">开始日期</label>
+<input class="w-full p-4 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 ring-[#E2B04D]/20" type="date"/>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-bold text-gray-500 uppercase">预估归还</label>
+<input class="w-full p-4 bg-white border border-gray-200 rounded-xl outline-none focus:ring-2 ring-[#E2B04D]/20" type="date"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-bold text-gray-500 uppercase">用途简述</label>
+<textarea class="w-full p-4 bg-white border border-gray-200 rounded-xl h-24 outline-none focus:ring-2 ring-[#E2B04D]/20" placeholder="告诉主人你打算用来做什么，有助于提高申请通过率..."></textarea>
+</div>
+<div class="flex items-center space-x-2 text-sm text-gray-500 pb-4">
+<input class="w-4 h-4 rounded border-gray-300" type="checkbox"/>
+<span>我承诺爱护此物品，如有损坏按价赔偿</span>
+</div>
+<button class="w-full py-5 bg-[#2D3436] text-white rounded-2xl font-bold text-lg nu-retro-shadow hover:scale-[1.02] transition-transform">
+                            提交借用申请
+                        </button>
+</div>
+</div>
+<!-- 机主卡片 -->
+<div class="flex items-center justify-between bg-white p-6 border border-gray-100 rounded-3xl">
+<div class="flex items-center space-x-4">
+<div class="relative">
+<img alt="User" class="w-14 h-14 rounded-full border-2 border-[#E2B04D]" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/b98358a8bc9e4e5c976cb8720c029348.jpg"/>
+<span class="absolute -bottom-1 -right-1 bg-[#E2B04D] w-5 h-5 rounded-full border-2 border-white flex items-center justify-center">
+<span class="iconify text-[10px] text-white" data-icon="solar:check-read-bold"></span>
+</span>
+</div>
+<div>
+<p class="font-bold text-lg">老周 (周海平)</p>
+<p class="text-sm text-gray-400">居住于：栖霞苑 3号楼 1402</p>
+</div>
+</div>
+<button class="px-6 py-2 border-2 border-gray-100 rounded-xl hover:bg-gray-50 font-bold transition-colors">致电联系</button>
+</div>
+</div>
+</div>
+<!-- 推荐相似内容 -->
+<div class="mt-24">
+<h2 class="text-2xl font-bold mb-8">可能你也需要...</h2>
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 opacity-60">
+<div class="border rounded-3xl p-4 bg-white"><div class="aspect-square bg-gray-50 rounded-2xl mb-4"></div><p class="font-bold">阶梯梯子</p></div>
+<div class="border rounded-3xl p-4 bg-white"><div class="aspect-square bg-gray-50 rounded-2xl mb-4"></div><p class="font-bold">水平尺</p></div>
+<div class="border rounded-3xl p-4 bg-white"><div class="aspect-square bg-gray-50 rounded-2xl mb-4"></div><p class="font-bold">冲击钻头组</p></div>
+<div class="border rounded-3xl p-4 bg-white"><div class="aspect-square bg-gray-50 rounded-2xl mb-4"></div><p class="font-bold">绝缘手套</p></div>
+</div>
+</div>
+</main>
+<footer class="bg-gray-100 text-center py-10 mt-10">
+<p class="text-gray-400">© 2026 邻里共享平台 - 让闲置更有价值</p>
+</footer>
+</body>
+</html>

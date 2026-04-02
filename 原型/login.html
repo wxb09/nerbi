@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>认证进入 - 邻里共享</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+<style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+        body { font-family: 'Noto+Sans+SC', sans-serif; background-color: #121212; }
+        .login-card { background: #FDFBFA; border-radius: 40px 10px 40px 40px; }
+        .cyber-button { transition: all 0.3s cubic-bezier(0.23, 1, 0.320, 1); }
+        .cyber-button:hover { box-shadow: 0px 0px 20px #E2B04D; transform: scale(1.02); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6">
+<div class="max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-0 overflow-hidden shadow-2xl">
+<!-- 左侧：视觉引导 -->
+<div class="hidden md:block bg-[#E2B04D] p-12 relative overflow-hidden">
+<div class="relative z-10 h-full flex flex-col justify-between text-white">
+<div class="flex items-center space-x-2">
+<span class="iconify text-4xl" data-icon="solar:share-circle-bold-duotone"></span>
+<span class="text-2xl font-bold italic">2026 邻里精神.</span>
+</div>
+<div>
+<h2 class="text-4xl font-bold leading-tight mb-4">通过每一件物品<br/>连接一个真实的人。</h2>
+<p class="text-orange-900 border-l-4 border-orange-900 pl-4 py-2 font-medium">加入 24,501 个正在共享的邻里单位</p>
+</div>
+<div class="text-sm opacity-60">© 2026 COMMUNITY SHARING INTERFACE</div>
+</div>
+<!-- 装饰性元素 -->
+<div class="absolute -right-20 -bottom-20 w-80 h-80 bg-white opacity-10 rounded-full"></div>
+<div class="absolute top-10 left-10 w-20 h-20 bg-black opacity-5 rounded-full"></div>
+</div>
+<!-- 右侧：登录/注册 -->
+<div class="login-card p-10 md:p-16">
+<div class="mb-10 flex justify-between items-center">
+<h1 class="text-3xl font-bold text-[#2D3436]">欢迎回来</h1>
+<a class="text-xs text-gray-400 hover:text-[#E2B04D]" href="index.html">先去随便看看 →</a>
+</div>
+<div class="flex space-x-8 mb-10 border-b border-gray-100">
+<button class="pb-4 font-bold border-b-2 border-[#E2B04D] text-[#E2B04D]">手机号登录</button>
+<button class="pb-4 font-bold text-gray-300 hover:text-gray-400">人脸识别认证</button>
+</div>
+<form class="space-y-6">
+<div class="space-y-2">
+<label class="text-xs font-bold text-gray-400 uppercase tracking-widest">认证手机号</label>
+<div class="relative">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"><span class="iconify" data-icon="solar:phone-bold"></span></span>
+<input class="w-full pl-12 pr-4 py-4 bg-gray-50 border-transparent rounded-2xl outline-none focus:ring-2 ring-[#E2B04D]/20 focus:bg-white transition-all" placeholder="138 **** 2026" type="tel"/>
+</div>
+</div>
+<div class="space-y-2">
+<label class="text-xs font-bold text-gray-400 uppercase tracking-widest">动态验证码</label>
+<div class="flex gap-4">
+<div class="relative flex-1">
+<span class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-300"><span class="iconify" data-icon="solar:lock-keyhole-bold"></span></span>
+<input class="w-full pl-12 pr-4 py-4 bg-gray-50 border-transparent rounded-2xl outline-none focus:ring-2 ring-[#E2B04D]/20 focus:bg-white transition-all" placeholder="······" type="password"/>
+</div>
+<button class="px-6 py-4 bg-white border-2 border-gray-100 rounded-2xl font-bold text-sm hover:border-[#E2B04D] hover:text-[#E2B04D] transition-all" type="button">获取</button>
+</div>
+</div>
+<div class="flex items-center justify-between text-xs py-2">
+<label class="flex items-center space-x-2 text-gray-500 cursor-pointer">
+<input class="w-4 h-4 rounded-lg border-gray-200 checked:bg-[#E2B04D]" type="checkbox"/>
+<span>记住我的认证状态</span>
+</label>
+<a class="text-[#E2B04D] font-bold" href="#">遇到问题？</a>
+</div>
+<a class="block w-full text-center py-5 bg-[#2D3436] text-white rounded-[2rem] font-bold text-sm cyber-button tracking-widest uppercase" href="profile.html">
+                    验证并进入社区
+                </a>
+</form>
+<div class="mt-12">
+<div class="relative py-4">
+<div class="absolute inset-0 flex items-center"><div class="w-full border-t border-gray-100"></div></div>
+<div class="relative flex justify-center text-[10px] uppercase font-bold text-gray-300"><span class="bg-white px-4">合作认证平台</span></div>
+</div>
+<div class="grid grid-cols-3 gap-4 mt-6">
+<button class="p-3 border rounded-xl hover:bg-gray-50 flex justify-center items-center"><span class="iconify text-xl" data-icon="ri:wechat-fill"></span></button>
+<button class="p-3 border rounded-xl hover:bg-gray-50 flex justify-center items-center"><span class="iconify text-xl text-blue-500" data-icon="ri:alipay-fill"></span></button>
+<button class="p-3 border rounded-xl hover:bg-gray-50 flex justify-center items-center"><span class="iconify text-xl" data-icon="brandico:apple"></span></button>
+</div>
+</div>
+<p class="mt-10 text-center text-[10px] text-gray-300 leading-relaxed px-8">
+                本登录过程由邻里区块链节点完成认证。点击登录即同意 <a class="underline" href="#">《隐私保护协议 2026》</a>
+</p>
+</div>
+</div>
+</body>
+</html>
