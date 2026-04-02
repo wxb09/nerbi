@@ -182,6 +182,22 @@ public class ItemServiceImpl implements ItemService {
         if (user.getCommunity() != null) {
             item.setCommunity(user.getCommunity());
         }
+        
+        if (data.containsKey("images")) {
+            @SuppressWarnings("unchecked")
+            List<String> imageUrls = (List<String>) data.get("images");
+            if (imageUrls != null && !imageUrls.isEmpty()) {
+                item.getImages().clear();
+                for (int i = 0; i < imageUrls.size(); i++) {
+                    ItemImage image = new ItemImage();
+                    image.setItem(item);
+                    image.setUrl(imageUrls.get(i));
+                    image.setSortOrder(i);
+                    image.setIsMain(i == 0);
+                    item.getImages().add(image);
+                }
+            }
+        }
     }
 
     private ItemListDTO convertToItemListDTO(Item item) {
