@@ -58,17 +58,17 @@ public class ItemController {
     }
 
     @PostMapping
-    public ApiResponse<Item> createItem(Authentication authentication, @RequestBody Map<String, Object> itemData) {
+    public ApiResponse<ItemDetailDTO> createItem(Authentication authentication, @RequestBody Map<String, Object> itemData) {
         Long userId = getUserIdFromAuth(authentication);
         Item item = itemService.createItem(itemData, userId);
-        return ApiResponse.ok(item);
+        return ApiResponse.ok(itemService.getItemById(item.getId()));
     }
 
     @PutMapping("/{id}")
-    public ApiResponse<Item> updateItem(Authentication authentication, @PathVariable Long id, @RequestBody Map<String, Object> itemData) {
+    public ApiResponse<ItemDetailDTO> updateItem(Authentication authentication, @PathVariable Long id, @RequestBody Map<String, Object> itemData) {
         Long userId = getUserIdFromAuth(authentication);
-        Item item = itemService.updateItem(id, itemData, userId);
-        return ApiResponse.ok(item);
+        itemService.updateItem(id, itemData, userId);
+        return ApiResponse.ok(itemService.getItemById(id));
     }
 
     @PutMapping("/{id}/withdraw")
@@ -79,10 +79,10 @@ public class ItemController {
     }
 
     @PostMapping("/draft")
-    public ApiResponse<Item> saveDraft(Authentication authentication, @RequestBody Map<String, Object> itemData) {
+    public ApiResponse<ItemDetailDTO> saveDraft(Authentication authentication, @RequestBody Map<String, Object> itemData) {
         Long userId = getUserIdFromAuth(authentication);
         Item item = itemService.saveDraft(itemData, userId);
-        return ApiResponse.ok(item);
+        return ApiResponse.ok(itemService.getItemById(item.getId()));
     }
 
     @GetMapping("/{id}/similar")

@@ -5,7 +5,7 @@
       <div class="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm text-center">
         <div class="relative w-24 h-24 mx-auto mb-4">
           <img 
-            :src="user?.avatar || 'https://modao.cc/agent-py/media/generated_images/2026-03-19/7a697da7cb0e46808f265a42ae7934f3.jpg'" 
+            :src="getImageUrl(user?.avatar)" 
             alt="User avatar" 
             class="rounded-full shadow-lg w-24 h-24 object-cover"
           />
@@ -142,7 +142,7 @@
                   <td class="px-8 py-6">
                     <div class="flex items-center space-x-4">
                       <div class="w-12 h-12 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden">
-                        <img v-if="item.itemImage" :src="item.itemImage" alt="Item" class="w-full h-full object-cover" />
+                        <img v-if="item.itemImage" :src="getImageUrl(item.itemImage)" alt="Item" class="w-full h-full object-cover" />
                         <span v-else class="iconify text-2xl text-gray-300" data-icon="solar:box-bold"></span>
                       </div>
                       <div>
@@ -155,7 +155,7 @@
                     <div class="flex items-center space-x-2">
                       <img 
                         v-if="item.counterpartyAvatar" 
-                        :src="item.counterpartyAvatar" 
+                        :src="getImageUrl(item.counterpartyAvatar)" 
                         class="w-6 h-6 rounded-full"
                       />
                       <div v-else class="w-6 h-6 rounded-full bg-gray-200"></div>
@@ -264,7 +264,7 @@
               <div class="flex items-center space-x-2">
                 <img 
                   v-if="review.reviewerAvatar" 
-                  :src="review.reviewerAvatar" 
+                  :src="getImageUrl(review.reviewerAvatar)" 
                   class="w-6 h-6 rounded-full"
                 />
                 <div v-else class="w-6 h-6 rounded-full bg-gray-200"></div>
@@ -297,7 +297,7 @@
               class="border border-gray-100 rounded-2xl overflow-hidden hover:shadow-lg transition-shadow"
             >
               <div class="aspect-square bg-gray-100 relative">
-                <img v-if="item.image" :src="item.image" class="w-full h-full object-cover" />
+                <img v-if="item.image" :src="getImageUrl(item.image)" class="w-full h-full object-cover" />
                 <span v-else class="iconify text-4xl text-gray-300 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" data-icon="solar:box-bold"></span>
                 <span :class="getItemStatusClass(item.status)" class="absolute top-3 right-3">
                   {{ getItemStatusText(item.status) }}
@@ -357,7 +357,7 @@
             >
               <div class="flex items-center space-x-4">
                 <div class="w-16 h-16 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden">
-                  <img v-if="item.itemImage" :src="item.itemImage" class="w-full h-full object-cover" />
+                  <img v-if="item.itemImage" :src="getImageUrl(item.itemImage)" class="w-full h-full object-cover" />
                   <span v-else class="iconify text-2xl text-gray-300" data-icon="solar:box-bold"></span>
                 </div>
                 <div>
@@ -398,7 +398,7 @@
               <div class="flex items-center space-x-2">
                 <img 
                   v-if="review.reviewerAvatar" 
-                  :src="review.reviewerAvatar" 
+                  :src="getImageUrl(review.reviewerAvatar)" 
                   class="w-6 h-6 rounded-full"
                 />
                 <div v-else class="w-6 h-6 rounded-full bg-gray-200"></div>
@@ -664,6 +664,19 @@ const getItemStatusText = (status: string) => {
     'OFFLINE': '已下架'
   }
   return texts[status] || status
+}
+
+const getImageUrl = (path: string | undefined) => {
+  if (!path) return 'https://modao.cc/agent-py/media/generated_images/2026-03-19/7a697da7cb0e46808f265a42ae7934f3.jpg'
+  if (path.startsWith('http')) {
+    return path
+  }
+  // 如果路径已经是 /uploads/ 开头，直接返回
+  if (path.startsWith('/uploads/')) {
+    return path
+  }
+  // 否则添加 /uploads/ 前缀（物品图片的情况）
+  return `/uploads/${path}`
 }
 
 const loadUserInfo = async () => {

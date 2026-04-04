@@ -31,6 +31,9 @@
               {{ category.name }}
             </option>
           </select>
+          <div v-if="categories.length === 0" class="text-red-500 text-sm mt-2">
+            分类加载失败，请刷新页面重试
+          </div>
         </div>
       </div>
       
@@ -162,7 +165,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import MainNav from '../components/MainNav.vue'
 import ImageUploader from '../components/ImageUploader.vue'
@@ -189,7 +192,10 @@ const form = ref({
 
 onMounted(async () => {
   try {
-    categories.value = await publicApi.getCategories()
+    console.log('开始加载分类...')
+    const data = await publicApi.getCategories()
+    console.log('分类加载成功:', data)
+    categories.value = data
   } catch (error) {
     console.error('获取分类失败', error)
   }

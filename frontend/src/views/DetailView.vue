@@ -3,12 +3,12 @@
   <main class="max-w-7xl mx-auto px-6 py-12 grid lg:grid-cols-2 gap-12">
     <div class="space-y-4">
       <div class="h-[420px] rounded-3xl bg-gray-100 flex items-center justify-center overflow-hidden">
-        <img v-if="item?.mainImage" :src="item.mainImage" :alt="item.name" class="h-full w-full object-cover" />
+        <img v-if="item?.images && item.images.length > 0" :src="getImageUrl(item.images[0])" :alt="item.name" class="h-full w-full object-cover" />
         <div v-else class="text-gray-400">无图片</div>
       </div>
       <div class="grid grid-cols-4 gap-3">
         <div v-for="(image, index) in item?.images || []" :key="index" class="h-20 rounded-xl bg-gray-100 flex items-center justify-center overflow-hidden">
-          <img :src="image.url" :alt="item.name" class="h-full w-full object-cover rounded-xl" />
+          <img :src="getImageUrl(image)" :alt="item.name" class="h-full w-full object-cover rounded-xl" />
         </div>
         <div v-if="(!item?.images || item.images.length === 0)" class="h-20 rounded-xl bg-gray-100 flex items-center justify-center text-gray-400">
           无图片
@@ -98,13 +98,13 @@
         <h3 class="font-bold text-lg">物品主人</h3>
         <div class="flex items-center justify-between">
           <div class="flex items-center space-x-3">
-            <img :src="item?.ownerAvatar || 'https://modao.cc/agent-py/media/generated_images/2026-03-19/7a697da7cb0e46808f265a42ae7934f3.jpg'" class="w-12 h-12 rounded-full" />
+            <img :src="getImageUrl(item?.owner?.avatar || 'https://modao.cc/agent-py/media/generated_images/2026-03-19/7a697da7cb0e46808f265a42ae7934f3.jpg')" class="w-12 h-12 rounded-full" />
             <div>
-              <p class="font-bold">{{ item?.ownerNickname || '未知' }}</p>
+              <p class="font-bold">{{ item?.owner?.nickname || '未知' }}</p>
               <p class="text-sm text-gray-400">{{ item?.communityName || '' }} {{ item?.building || '' }}</p>
             </div>
           </div>
-          <RouterLink class="px-4 py-2 border rounded-xl text-sm font-bold hover:bg-gray-50" :to="`/user/${item?.ownerId}`">
+          <RouterLink class="px-4 py-2 border rounded-xl text-sm font-bold hover:bg-gray-50" :to="`/user/${item?.owner?.id}`">
             查看主页
           </RouterLink>
         </div>
@@ -209,6 +209,19 @@ const submitBorrow = async () => {
   } finally {
     submitting.value = false
   }
+}
+
+const getImageUrl = (path: string) => {
+  if (!path) return ''
+  if (path.startsWith('http')) {
+    return path
+  }
+  // 如果路径已经是 /uploads/ 开头，直接返回
+  if (path.startsWith('/uploads/')) {
+    return path
+  }
+  // 否则添加 /uploads/ 前缀（物品图片的情况）
+  return `/uploads/${path}`
 }
 
 onMounted(() => {

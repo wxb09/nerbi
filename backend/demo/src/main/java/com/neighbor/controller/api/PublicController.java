@@ -1,6 +1,8 @@
 package com.neighbor.controller.api;
 
 import com.neighbor.common.api.ApiResponse;
+import com.neighbor.dto.CategoryDTO;
+import com.neighbor.dto.CommunityDTO;
 import com.neighbor.entity.Community;
 import com.neighbor.entity.Category;
 import com.neighbor.repository.CommunityRepository;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
@@ -24,13 +27,30 @@ public class PublicController {
     }
 
     @GetMapping("/communities")
-    public ApiResponse<List<Community>> getCommunities() {
-        return ApiResponse.ok(communityRepository.findAll());
+    public ApiResponse<List<CommunityDTO>> getCommunities() {
+        List<Community> communities = communityRepository.findAll();
+        List<CommunityDTO> dtos = communities.stream()
+                .map(community -> new CommunityDTO(
+                        community.getId(),
+                        community.getName(),
+                        community.getAddress()
+                ))
+                .collect(Collectors.toList());
+        return ApiResponse.ok(dtos);
     }
 
     @GetMapping("/categories")
-    public ApiResponse<List<Category>> getCategories() {
-        return ApiResponse.ok(categoryRepository.findAll());
+    public ApiResponse<List<CategoryDTO>> getCategories() {
+        List<Category> categories = categoryRepository.findAll();
+        List<CategoryDTO> dtos = categories.stream()
+                .map(category -> new CategoryDTO(
+                        category.getId(),
+                        category.getName(),
+                        category.getIcon(),
+                        category.getSortOrder()
+                ))
+                .collect(Collectors.toList());
+        return ApiResponse.ok(dtos);
     }
 
     @GetMapping("/stats/carbon")

@@ -12,11 +12,7 @@ export const uploadApi = {
       formData.append('files', file)
     })
     
-    const response = await api.post<UploadResult[]>('/upload/images', formData, {
-      headers: {
-        'Content-Type': 'multipart/form-data'
-      }
-    })
+    const response = await api.post<UploadResult[]>('/upload/images', formData)
     
     return response
   }

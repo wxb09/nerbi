@@ -25,15 +25,17 @@ public class UserServiceImpl implements UserService {
     private final BorrowRepository borrowRepository;
     private final ReviewRepository reviewRepository;
     private final CommunityRepository communityRepository;
+    private final ItemImageRepository itemImageRepository;
 
     public UserServiceImpl(UserRepository userRepository, ItemRepository itemRepository, 
                          BorrowRepository borrowRepository, ReviewRepository reviewRepository, 
-                         CommunityRepository communityRepository) {
+                         CommunityRepository communityRepository, ItemImageRepository itemImageRepository) {
         this.userRepository = userRepository;
         this.itemRepository = itemRepository;
         this.borrowRepository = borrowRepository;
         this.reviewRepository = reviewRepository;
         this.communityRepository = communityRepository;
+        this.itemImageRepository = itemImageRepository;
     }
 
     @Override
@@ -85,7 +87,16 @@ public class UserServiceImpl implements UserService {
                 itemMap.put("id", item.getId());
                 itemMap.put("name", item.getName());
                 itemMap.put("status", item.getStatus());
+                itemMap.put("borrowCount", item.getBorrowCount());
+                itemMap.put("viewCount", item.getViewCount());
                 itemMap.put("createdAt", item.getCreatedAt());
+                
+                // 获取主图
+                List<ItemImage> images = itemImageRepository.findByItemIdOrderBySortOrderAsc(item.getId());
+                if (!images.isEmpty()) {
+                    itemMap.put("image", images.get(0).getUrl());
+                }
+                
                 result.add(itemMap);
             }
         }
