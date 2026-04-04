@@ -12,68 +12,121 @@
     <div class="relative">
       <input 
         v-model="searchQuery" 
+        @input="handleSearchInput"
         @keyup.enter="searchItems" 
-        class="w-full p-4 rounded-2xl border-2 border-gray-100 focus:border-[#E2B04D] focus:outline-none transition-colors" 
+        class="w-full p-4 rounded-2xl border-2 border-gray-100 focus:border-[#E2B04D] focus:outline-none transition-colors pl-12" 
         placeholder="搜索：电钻、帐篷..."
       />
-      <button @click="searchItems" class="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-[#E2B04D] transition-colors">
-        🔍
-      </button>
+      <div class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+        <span class="iconify text-xl" data-icon="solar:magnifer"></span>
+      </div>
     </div>
-    <select 
-      v-model="selectedCommunityId" 
-      @change="loadItems" 
-      class="w-full p-4 rounded-2xl border-2 border-gray-100 focus:border-[#E2B04D] focus:outline-none transition-colors bg-white"
-    >
-      <option value="">全部小区</option>
-      <option v-for="community in communities" :key="community.id" :value="community.id">
-        {{ community.name }}
-      </option>
-    </select>
-    <select 
-      v-model="selectedCategoryId" 
-      @change="loadItems" 
-      class="w-full p-4 rounded-2xl border-2 border-gray-100 focus:border-[#E2B04D] focus:outline-none transition-colors bg-white"
-    >
-      <option value="">全部分类</option>
-      <option v-for="category in categories" :key="category.id" :value="category.id">
-        {{ category.name }}
-      </option>
-    </select>
+    <div class="relative">
+      <select 
+        v-model="selectedCommunityId" 
+        @change="loadItems" 
+        class="w-full p-4 pr-10 rounded-2xl border-2 border-gray-100 focus:border-[#E2B04D] focus:outline-none transition-all bg-white appearance-none cursor-pointer hover:border-gray-300 [&>option]:py-2 [&>option]:px-4"
+      >
+        <option value="">全部小区</option>
+        <option v-for="community in communities" :key="community.id" :value="community.id">
+          {{ community.name }}
+        </option>
+      </select>
+      <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+        <span class="iconify text-gray-400 text-xl" data-icon="solar:alt-arrow-down-bold"></span>
+      </div>
+    </div>
+    <div class="relative">
+      <select 
+        v-model="selectedCategoryId" 
+        @change="loadItems" 
+        class="w-full p-4 pr-10 rounded-2xl border-2 border-gray-100 focus:border-[#E2B04D] focus:outline-none transition-all bg-white appearance-none cursor-pointer hover:border-gray-300 [&>option]:py-2 [&>option]:px-4"
+      >
+        <option value="">全部分类</option>
+        <option v-for="category in categories" :key="category.id" :value="category.id">
+          {{ category.name }}
+        </option>
+      </select>
+      <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+        <span class="iconify text-gray-400 text-xl" data-icon="solar:alt-arrow-down-bold"></span>
+      </div>
+    </div>
   </section>
 
-  <main class="max-w-7xl mx-auto px-6 py-8 grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    <div v-if="loading" class="col-span-full text-center py-12">
+  <main class="max-w-7xl mx-auto px-6 py-8">
+    <div v-if="loading" class="text-center py-12">
       <div class="inline-block w-8 h-8 border-4 border-[#E2B04D] border-t-transparent rounded-full animate-spin"></div>
       <p class="text-gray-500 mt-4">加载中...</p>
     </div>
-    <div v-else-if="items.length === 0" class="col-span-full text-center py-12">
-      <p class="text-gray-500">暂无物品</p>
+    <div v-else-if="items.length === 0" class="text-center py-12">
+      <span class="iconify text-6xl text-gray-200" data-icon="solar:box-bold"></span>
+      <p class="text-gray-500 mt-4">暂无物品</p>
+      <RouterLink to="/publish" class="text-[#E2B04D] font-bold hover:underline inline-block mt-2">
+        成为第一个发布者
+      </RouterLink>
     </div>
-    <article v-for="item in items" :key="item.id" class="bg-white rounded-3xl border-2 border-gray-100 overflow-hidden hover:shadow-md transition-shadow">
-      <div class="h-44 bg-gray-100 flex items-center justify-center">
-        <img v-if="item.mainImage" :src="getImageUrl(item.mainImage)" :alt="item.name" class="h-full w-full object-cover rounded-t-3xl" />
-        <div v-else class="text-gray-400">无图片</div>
-      </div>
-      <div class="p-5 space-y-2">
-        <h3 class="font-bold text-[#333333]">{{ item.name }}</h3>
-        <p class="text-sm text-gray-500">{{ item.locationText }}</p>
-        <div class="flex flex-wrap gap-1">
-          <span v-for="(tag, index) in item.tags" :key="index" class="px-2 py-1 bg-gray-100 text-xs text-gray-600 rounded-full">
-            {{ tag }}
-          </span>
+    <div v-else class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <article v-for="item in items" :key="item.id" class="bg-white rounded-3xl border-2 border-gray-100 overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
+        <div class="h-44 bg-gray-100 flex items-center justify-center overflow-hidden">
+          <img v-if="item.mainImage" :src="getImageUrl(item.mainImage)" :alt="item.name" class="h-full w-full object-cover rounded-t-3xl transition-transform duration-300 group-hover:scale-110" />
+          <div v-else class="text-gray-400">无图片</div>
         </div>
-        <div class="flex justify-between items-center pt-2">
-          <span class="text-[#E2B04D] font-bold">￥{{ item.pricePerDay }}/天</span>
-          <RouterLink class="text-sm font-bold text-[#E2B04D] hover:underline transition-colors" :to="`/item/${item.id}`">查看详情</RouterLink>
+        <div class="p-5 space-y-2">
+          <h3 class="font-bold text-[#333333]">{{ item.name }}</h3>
+          <p class="text-sm text-gray-500">{{ item.locationText }}</p>
+          <div class="flex flex-wrap gap-1">
+            <template v-for="(tag, index) in displayTags(item.tags)" :key="index">
+              <span class="px-2 py-1 bg-gray-100 text-xs text-gray-600 rounded-full">
+                {{ tag }}
+              </span>
+            </template>
+            <span v-if="item.tags && item.tags.length > 3" class="px-2 py-1 bg-gray-100 text-xs text-gray-400 rounded-full">
+              +{{ item.tags.length - 3 }}
+            </span>
+          </div>
+          <div class="flex justify-between items-center pt-2">
+            <span class="text-[#E2B04D] font-bold">￥{{ item.pricePerDay }}/天</span>
+            <RouterLink class="text-sm font-bold text-[#E2B04D] hover:underline transition-colors" :to="`/item/${item.id}`">查看详情</RouterLink>
+          </div>
         </div>
-      </div>
-    </article>
+      </article>
+    </div>
+    
+    <!-- 分页组件 -->
+    <div v-if="totalPages > 1" class="flex justify-center items-center gap-2 mt-8">
+      <button 
+        @click="changePage(currentPage - 1)" 
+        :disabled="currentPage === 1"
+        class="px-4 py-2 rounded-xl border-2 font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+        :class="currentPage === 1 ? 'border-gray-200 text-gray-400' : 'border-gray-200 text-gray-600'"
+      >
+        上一页
+      </button>
+      
+      <button 
+        v-for="page in displayPages" 
+        :key="page"
+        @click="changePage(page)"
+        class="w-10 h-10 rounded-xl font-bold transition-all"
+        :class="page === currentPage ? 'bg-[#E2B04D] text-white' : 'border-2 border-gray-200 hover:bg-gray-50'"
+      >
+        {{ page }}
+      </button>
+      
+      <button 
+        @click="changePage(currentPage + 1)" 
+        :disabled="currentPage === totalPages"
+        class="px-4 py-2 rounded-xl border-2 font-bold transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+        :class="currentPage === totalPages ? 'border-gray-200 text-gray-400' : 'border-gray-200 text-gray-600'"
+      >
+        下一页
+      </button>
+    </div>
   </main>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import MainNav from '../components/MainNav.vue'
 import { itemApi } from '../api/item'
 import { publicApi, type Category, type Community } from '../api/public'
@@ -86,10 +139,22 @@ const selectedCategoryId = ref('')
 const communities = ref<Community[]>([])
 const categories = ref<Category[]>([])
 
+// 分页相关
+const currentPage = ref(1)
+const pageSize = ref(20)
+const totalPages = ref(1)
+const totalElements = ref(0)
+
+// 搜索防抖定时器
+let searchTimer: any = null
+
 const loadItems = async () => {
   loading.value = true
   try {
-    const params: any = {}
+    const params: any = {
+      page: currentPage.value - 1,
+      size: pageSize.value
+    }
     if (selectedCommunityId.value) {
       params.communityId = selectedCommunityId.value
     }
@@ -97,8 +162,11 @@ const loadItems = async () => {
       params.categoryId = selectedCategoryId.value
     }
     
-    const res = await itemApi.getItems(params)
+    const res: any = await itemApi.getItems(params)
     items.value = res?.content || []
+    totalPages.value = res?.totalPages || 1
+    totalElements.value = res?.totalElements || 0
+    currentPage.value = (res?.number || 0) + 1
   } catch (error) {
     console.error('加载物品列表失败', error)
   } finally {
@@ -106,7 +174,25 @@ const loadItems = async () => {
   }
 }
 
+const handleSearchInput = () => {
+  // 防抖：500ms 后执行搜索
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+  }
+  searchTimer = setTimeout(() => {
+    if (searchQuery.value.trim()) {
+      searchItems()
+    } else {
+      loadItems()
+    }
+  }, 500)
+}
+
 const searchItems = async () => {
+  if (searchTimer) {
+    clearTimeout(searchTimer)
+  }
+  
   if (!searchQuery.value.trim()) {
     await loadItems()
     return
@@ -114,13 +200,42 @@ const searchItems = async () => {
   
   loading.value = true
   try {
-    const res = await itemApi.searchItems(searchQuery.value)
+    const res: any = await itemApi.searchItems(searchQuery.value)
     items.value = res?.content || []
+    totalPages.value = res?.totalPages || 1
+    totalElements.value = res?.totalElements || 0
   } catch (error) {
     console.error('搜索物品失败', error)
   } finally {
     loading.value = false
   }
+}
+
+const changePage = (page: number) => {
+  if (page < 1 || page > totalPages.value) return
+  currentPage.value = page
+  loadItems()
+  // 滚动到顶部
+  window.scrollTo({ top: 0, behavior: 'smooth' })
+}
+
+// 计算显示的页码（最多显示 5 个页码）
+const displayPages = computed(() => {
+  const pages: number[] = []
+  const start = Math.max(1, currentPage.value - 2)
+  const end = Math.min(totalPages.value, start + 4)
+  
+  for (let i = start; i <= end; i++) {
+    pages.push(i)
+  }
+  
+  return pages
+})
+
+// 限制标签显示数量
+const displayTags = (tags: string[]) => {
+  if (!tags) return []
+  return tags.slice(0, 3)
 }
 
 const loadPublicData = async () => {
