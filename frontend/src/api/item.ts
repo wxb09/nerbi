@@ -1,27 +1,65 @@
 import api from './api'
 
+export interface Item {
+  id: number
+  name: string
+  categoryId: number
+  categoryName?: string
+  description: string
+  story?: string
+  pricePerDay: number
+  deposit: number
+  creditRequired: number
+  returnRequirements: string[]
+  tags: string[]
+  images: string[]
+  status: string
+  borrowCount: number
+  viewCount: number
+  createdAt: string
+}
+
+export interface CreateItemRequest {
+  name: string
+  categoryId: number
+  description: string
+  story?: string
+  pricePerDay: number
+  deposit: number
+  creditRequired: number
+  returnRequirements: string[]
+  tags: string[]
+  images: string[]
+}
+
 export const itemApi = {
-  getItems: (params?: Record<string, any>) => 
-    api.get<Array<Record<string, any>>>('/items', { params }),
+  getItems: (params: any) => 
+    api.get('/items', { params }),
   
-  searchItems: (keyword: string, params?: Record<string, any>) => 
-    api.get<Array<Record<string, any>>>('/items/search', { params: { keyword, ...params } }),
+  searchItems: (keyword: string, params?: any) => 
+    api.get('/items/search', { params: { keyword, ...params } }),
   
   getItemById: (id: string) => 
-    api.get<Record<string, any>>(`/items/${id}`),
+    api.get(`/items/${id}`),
   
-  createItem: (data: Record<string, any>) => 
-    api.post<Record<string, any>>('/items', data),
+  createItem: (data: CreateItemRequest) => 
+    api.post('/items', data),
   
-  updateItem: (id: string, data: Record<string, any>) => 
-    api.put<Record<string, any>>(`/items/${id}`, data),
+  updateItem: (id: number, data: any) => 
+    api.put(`/items/${id}`, data),
   
-  withdrawItem: (id: string) => 
-    api.put<Record<string, any>>(`/items/${id}/withdraw`),
+  withdrawItem: (id: number) => 
+    api.put(`/items/${id}/withdraw`),
   
-  saveDraft: (data: Record<string, any>) => 
-    api.post<Record<string, any>>('/items/draft', data),
+  deleteItem: (id: number) => 
+    api.delete(`/items/${id}`),
   
-  getSimilarItems: (id: string) => 
-    api.get<Array<Record<string, any>>>(`/items/${id}/similar`)
+  saveDraft: (data: any) => 
+    api.post('/items/draft', data),
+  
+  getMyDrafts: () => 
+    api.get('/items/my-drafts'),
+  
+  getSimilarItems: (id: number, limit: number = 4) => 
+    api.get(`/items/${id}/similar`, { params: { limit } })
 }

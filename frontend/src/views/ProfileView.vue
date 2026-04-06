@@ -307,15 +307,74 @@
                 <h4 class="font-bold mb-2 truncate">{{ item.name }}</h4>
                 <p class="text-xs text-gray-400 mb-3">{{ item.borrowCount || 0 }}次借阅 · {{ item.viewCount || 0 }}次浏览</p>
                 <div class="flex gap-2">
-                  <button @click="editItem(item)" class="flex-1 text-xs py-2 border border-gray-200 rounded-lg hover:bg-gray-50">
+                  <button 
+                    @click="editItem(item)" 
+                    class="flex-1 text-xs py-2 border border-gray-200 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    :disabled="item.status === 'BORROWED'"
+                    :title="item.status === 'BORROWED' ? '借出中的物品无法编辑' : ''"
+                  >
                     编辑
                   </button>
-                  <button @click="withdrawItem(item)" class="flex-1 text-xs py-2 border border-gray-200 rounded-lg hover:bg-gray-50 text-red-500">
-                    下架
+                  <button 
+                    v-if="item.status !== 'DRAFT' && item.status !== 'BORROWED'"
+                    @click="toggleItemStatus(item)" 
+                    class="flex-1 text-xs py-2 border rounded-lg hover:bg-gray-50 transition-colors"
+                    :class="item.status === 'OFFLINE' ? 'border-green-200 text-green-600 hover:bg-green-50' : 'border-red-200 text-red-500 hover:bg-red-50'"
+                  >
+                    {{ item.status === 'OFFLINE' ? '上架' : '下架' }}
+                  </button>
+                  <button 
+                    v-if="item.status !== 'BORROWED'"
+                    @click="deleteItem(item)" 
+                    class="flex-1 text-xs py-2 border border-red-200 rounded-lg hover:bg-red-50 text-red-500"
+                  >
+                    删除
                   </button>
                 </div>
               </div>
             </div>
+          </div>
+        </div>
+      </template>
+
+      <template v-else-if="activeMenu === 'drafts'">
+        <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+          <div class="flex items-center justify-between px-8 py-6 border-b border-gray-50">
+            <h3 class="text-xl font-bold italic">草稿箱</h3>
+            <RouterLink to="/drafts" class="text-sm bg-[#E2B04D] text-white px-4 py-2 rounded-xl font-bold">
+              管理草稿
+            </RouterLink>
+          </div>
+          <div v-if="drafts.length === 0" class="p-12 text-center">
+            <span class="iconify text-6xl text-gray-200 mb-4" data-icon="solar:file-bold"></span>
+            <p class="text-gray-400">暂无草稿</p>
+            <RouterLink to="/publish" class="text-[#E2B04D] font-bold hover:underline inline-block mt-2">
+              去发布第一个物品
+            </RouterLink>
+          </div>
+          <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6 p-8">
+            <div 
+              v-for="draft in drafts.slice(0, 2)" 
+              :key="draft.id" 
+              class="border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-all"
+            >
+              <div class="h-32 bg-gray-100 relative">
+                <img v-if="draft.image" :src="getImageUrl(draft.image)" class="w-full h-full object-cover" />
+                <span v-else class="iconify text-2xl text-gray-300 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" data-icon="solar:box-bold"></span>
+              </div>
+              <div class="p-4">
+                <h4 class="font-bold mb-2 truncate">{{ draft.name }}</h4>
+                <p class="text-xs text-gray-400 mb-3">最后编辑：{{ formatTimeAgo(draft.updatedAt) }}</p>
+                <button @click="editDraft(draft)" class="w-full py-2 bg-[#E2B04D] text-white rounded-xl font-bold text-sm hover:bg-[#C49A2E] transition-colors">
+                  继续编辑
+                </button>
+              </div>
+            </div>
+          </div>
+          <div class="p-6 bg-gray-50 text-center">
+            <RouterLink to="/drafts" class="text-xs font-bold text-[#E2B04D] hover:underline uppercase tracking-widest">
+              查看全部草稿
+            </RouterLink>
           </div>
         </div>
       </template>
@@ -419,6 +478,7 @@ import MainNav from '../components/MainNav.vue'
 import { useAuthStore } from '../stores/auth'
 import { userApi } from '../api/user'
 import { borrowApi } from '../api/borrow'
+import { itemApi } from '../api/item'
 
 interface User {
   id: number
@@ -477,6 +537,7 @@ const user = ref<User | null>(null)
 const lentItems = ref<BorrowItem[]>([])
 const borrowedItems = ref<BorrowItem[]>([])
 const myItems = ref<MyItem[]>([])
+const drafts = ref<MyItem[]>([])
 const reviews = ref<Review[]>([])
 const stats = ref<Stats>({
   pendingCount: 0,
@@ -491,6 +552,7 @@ const recordTab = ref('lent')
 const menuItems = [
   { key: 'dashboard', label: '控制面板', icon: 'solar:widget-3-bold' },
   { key: 'items', label: '我的发布', icon: 'solar:box-bold' },
+  { key: 'drafts', label: '草稿箱', icon: 'solar:file-bold' },
   { key: 'records', label: '借阅记录', icon: 'solar:reorder-bold' },
   { key: 'reviews', label: '评价管理', icon: 'solar:chat-round-dots-bold' }
 ]
@@ -583,11 +645,61 @@ const viewHistory = () => {
 }
 
 const editItem = (item: MyItem) => {
-  todo(`编辑物品 - ${item.name}`)
+  if (item.status === 'BORROWED') {
+    alert('借出中的物品无法编辑')
+    return
+  }
+  router.push(`/publish/${item.id}`)
 }
 
-const withdrawItem = (item: MyItem) => {
-  todo(`下架物品 - ${item.name}`)
+const toggleItemStatus = async (item: MyItem) => {
+  const isOffline = item.status === 'OFFLINE'
+  const action = isOffline ? '上架' : '下架'
+  
+  if (!confirm(`确认要${action}"${item.name}"吗？`)) return
+  
+  try {
+    if (isOffline) {
+      await itemApi.updateItem(item.id, { status: 'AVAILABLE' })
+      alert('物品已上架')
+    } else {
+      await itemApi.withdrawItem(item.id)
+      alert('物品已下架')
+    }
+    loadUserInfo()
+  } catch (error: any) {
+    alert(error.message || '操作失败')
+  }
+}
+
+const deleteItem = async (item: MyItem) => {
+  if (!confirm(`确认要删除"${item.name}"吗？删除后无法恢复。`)) return
+  
+  try {
+    await itemApi.deleteItem(item.id)
+    alert('删除成功')
+    loadUserInfo()
+  } catch (error: any) {
+    alert(error.message || '删除失败')
+  }
+}
+
+const editDraft = (draft: MyItem) => {
+  router.push(`/publish/${draft.id}`)
+}
+
+const formatTimeAgo = (dateStr: string) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  const hours = Math.floor(diff / (1000 * 60 * 60))
+  
+  if (hours < 1) return '刚刚'
+  if (hours < 24) return `${hours}小时前`
+  const days = Math.floor(hours / 24)
+  if (days < 7) return `${days}天前`
+  return new Date(dateStr).toLocaleDateString('zh-CN')
 }
 
 const isOverdue = (dateStr: string) => {
@@ -603,19 +715,6 @@ const formatDate = (dateStr: string) => {
   if (!dateStr) return '-'
   const date = new Date(dateStr)
   return date.toLocaleDateString('zh-CN')
-}
-
-const formatTimeAgo = (dateStr: string) => {
-  if (!dateStr) return ''
-  const date = new Date(dateStr)
-  const now = new Date()
-  const diff = now.getTime() - date.getTime()
-  const days = Math.floor(diff / (1000 * 60 * 60 * 24))
-  if (days === 0) return '今天'
-  if (days === 1) return '昨天'
-  if (days < 7) return `${days}天前`
-  if (days < 30) return `${Math.floor(days / 7)}周前`
-  return `${Math.floor(days / 30)}个月前`
 }
 
 const getStatusClass = (status: string) => {
@@ -684,10 +783,11 @@ const loadUserInfo = async () => {
     const userRes = await userApi.getCurrentUser()
     user.value = userRes as User
     
-    const [lentRes, borrowedRes, itemsRes, reviewsRes, statsRes] = await Promise.all([
+    const [lentRes, borrowedRes, itemsRes, draftsRes, reviewsRes, statsRes] = await Promise.all([
       userApi.getMyLent(),
       userApi.getMyBorrowed(),
       userApi.getMyItems(),
+      userApi.getMyDrafts(),
       userApi.getMyReviews(),
       userApi.getUserStats()
     ])
@@ -725,6 +825,16 @@ const loadUserInfo = async () => {
       status: item.status,
       borrowCount: item.borrowCount || 0,
       viewCount: item.viewCount || 0
+    }))
+    
+    drafts.value = (draftsRes || []).map((item: any) => ({
+      id: item.id,
+      name: item.name,
+      image: item.image || item.mainImage,
+      status: item.status,
+      borrowCount: item.borrowCount || 0,
+      viewCount: item.viewCount || 0,
+      updatedAt: item.updatedAt || item.createdAt
     }))
     
     reviews.value = (reviewsRes || []).map((review: any) => ({

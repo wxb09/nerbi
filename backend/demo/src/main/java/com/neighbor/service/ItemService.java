@@ -19,4 +19,5 @@ public interface ItemService {
     void withdrawItem(Long id, Long userId);
     Item saveDraft(Map<String, Object> itemData, Long userId);
     List<ItemListDTO> getSimilarItems(Long itemId, int limit);
+    void deleteItem(Long id, Long userId);
 }

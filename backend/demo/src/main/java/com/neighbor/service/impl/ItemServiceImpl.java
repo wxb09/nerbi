@@ -11,11 +11,13 @@ import com.neighbor.enums.ErrorCode;
 import com.neighbor.enums.ItemStatus;
 import com.neighbor.repository.*;
 import com.neighbor.service.ItemService;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.File;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -26,6 +28,9 @@ import java.util.Map;
 @Service
 @Transactional
 public class ItemServiceImpl implements ItemService {
+
+    @Value("${app.upload.path}")
+    private String uploadPath;
 
     private final ItemRepository itemRepository;
     private final ItemImageRepository itemImageRepository;
@@ -143,6 +148,35 @@ public class ItemServiceImpl implements ItemService {
         return result;
     }
 
+    @Override
+    public void deleteItem(Long id, Long userId) {
+        Item item = itemRepository.findById(id)
+                .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
+        
+        if (!item.getOwner().getId().equals(userId)) {
+            throw new BusinessException(ErrorCode.NOT_YOUR_ITEM);
+        }
+        
+        if (item.getStatus() == ItemStatus.BORROWED) {
+            throw new BusinessException(ErrorCode.PARAM_ERROR, "借出中的物品无法删除");
+        }
+        
+        List<ItemImage> images = itemImageRepository.findByItemIdOrderBySortOrderAsc(id);
+        for (ItemImage image : images) {
+            try {
+                File file = new File(uploadPath, image.getUrl());
+                if (file.exists()) {
+                    file.delete();
+                }
+            } catch (Exception e) {
+                // 忽略文件删除失败
+            }
+        }
+        
+        itemImageRepository.deleteByItemId(id);
+        itemRepository.delete(item);
+    }
+
     private void populateItemFromData(Item item, Map<String, Object> data, User user) {
         if (data.containsKey("name")) {
             item.setName((String) data.get("name"));
@@ -177,6 +211,16 @@ public class ItemServiceImpl implements ItemService {
         if (data.containsKey("tags")) {
             item.setTags((String) data.get("tags"));
         }
+        if (data.containsKey("status")) {
+            try {
+                ItemStatus status = ItemStatus.valueOf((String) data.get("status"));
+                item.setStatus(status);
+                if (status == ItemStatus.AVAILABLE && item.getPublishedAt() == null) {
+                    item.setPublishedAt(LocalDateTime.now());
+                }
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
         
         item.setOwner(user);
         if (user.getCommunity() != null) {
@@ -186,8 +230,8 @@ public class ItemServiceImpl implements ItemService {
         if (data.containsKey("images")) {
             @SuppressWarnings("unchecked")
             List<String> imageUrls = (List<String>) data.get("images");
+            item.getImages().clear();
             if (imageUrls != null && !imageUrls.isEmpty()) {
-                item.getImages().clear();
                 for (int i = 0; i < imageUrls.size(); i++) {
                     ItemImage image = new ItemImage();
                     image.setItem(item);

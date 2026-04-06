@@ -1,211 +1,274 @@
 <template>
   <MainNav />
-  <main class="max-w-4xl mx-auto px-6 py-12">
-    <div class="bg-white rounded-[2rem] p-8 border border-gray-100 shadow-sm space-y-8">
-      <h1 class="text-2xl font-bold text-[#2D3436]">发布闲置物品</h1>
-      
+  <main class="max-w-4xl mx-auto px-6 py-8">
+    <!-- 顶部标题 -->
+    <div class="flex items-center justify-between mb-8">
+      <div class="flex items-center gap-4">
+        <button @click="goBack" class="text-gray-400 hover:text-gray-600 transition-colors">
+          <span class="iconify text-2xl" data-icon="solar:alt-arrow-left-bold"></span>
+        </button>
+        <div>
+          <h1 class="text-2xl font-bold">{{ pageTitle }}</h1>
+          <p v-if="itemName" class="text-sm text-gray-500 mt-1">{{ itemName }}</p>
+        </div>
+      </div>
+      <div v-if="!isNew" class="text-sm text-gray-500">
+        最后编辑：{{ lastEditedAt }}
+      </div>
+    </div>
+
+    <!-- 表单内容 -->
+    <div class="bg-white rounded-3xl border border-gray-100 p-8 space-y-6">
       <!-- 图片上传 -->
       <div>
-        <label class="block text-sm font-medium text-[#333333] mb-3">物品图片</label>
-        <ImageUploader v-model="form.images" :max-count="9" />
+        <label class="block text-sm font-bold text-gray-700 mb-3">物品图片</label>
+        <ImageUploader v-model="form.images" />
       </div>
-      
-      <!-- 基本信息 -->
-      <div class="grid md:grid-cols-2 gap-6">
-        <div>
-          <label class="block text-sm font-medium text-[#333333] mb-3">物品名称 <span class="text-red-500">*</span></label>
-          <input 
-            v-model="form.name" 
-            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-[#E2B04D] focus:outline-none transition-colors" 
-            placeholder="请输入物品名称"
-          />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-[#333333] mb-3">物品分类 <span class="text-red-500">*</span></label>
-          <select 
-            v-model="form.categoryId" 
-            class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-[#E2B04D] focus:outline-none transition-colors bg-white"
-          >
-            <option value="">请选择分类</option>
-            <option v-for="category in categories" :key="category.id" :value="category.id">
-              {{ category.name }}
-            </option>
-          </select>
-          <div v-if="categories.length === 0" class="text-red-500 text-sm mt-2">
-            分类加载失败，请刷新页面重试
-          </div>
-        </div>
-      </div>
-      
-      <!-- 描述 -->
+
+      <!-- 物品名称 -->
       <div>
-        <label class="block text-sm font-medium text-[#333333] mb-3">物品描述</label>
+        <label class="block text-sm font-bold text-gray-700 mb-2">物品名称 <span class="text-red-500">*</span></label>
+        <input 
+          v-model="form.name" 
+          type="text" 
+          class="w-full p-4 rounded-xl border-2 border-gray-100 focus:border-[#E2B04D] focus:outline-none transition-colors"
+          placeholder="请输入物品名称"
+        />
+      </div>
+
+      <!-- 分类 -->
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-2">分类 <span class="text-red-500">*</span></label>
+        <select 
+          v-model="form.categoryId" 
+          class="w-full p-4 rounded-xl border-2 border-gray-100 focus:border-[#E2B04D] focus:outline-none transition-all bg-white appearance-none cursor-pointer"
+        >
+          <option value="">请选择分类</option>
+          <option v-for="category in categories" :key="category.id" :value="category.id">
+            {{ category.name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- 物品描述 -->
+      <div>
+        <label class="block text-sm font-bold text-gray-700 mb-2">物品描述 <span class="text-red-500">*</span></label>
         <textarea 
           v-model="form.description" 
-          class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-[#E2B04D] focus:outline-none transition-colors h-24 resize-none" 
-          placeholder="描述物品的基本情况，如新旧程度、购买时间等"
+          rows="4" 
+          class="w-full p-4 rounded-xl border-2 border-gray-100 focus:border-[#E2B04D] focus:outline-none transition-colors"
+          placeholder="请描述物品的品牌、型号、新旧程度、功能特点等"
         ></textarea>
       </div>
-      
-      <!-- 故事 -->
+
+      <!-- 背后的故事 -->
       <div>
-        <label class="block text-sm font-medium text-[#333333] mb-3">物品故事</label>
+        <label class="block text-sm font-bold text-gray-700 mb-2">背后的故事</label>
         <textarea 
           v-model="form.story" 
-          class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-[#E2B04D] focus:outline-none transition-colors h-24 resize-none" 
-          placeholder="分享这个物品背后的故事，让邻居更想借用它"
+          rows="3" 
+          class="w-full p-4 rounded-xl border-2 border-gray-100 focus:border-[#E2B04D] focus:outline-none transition-colors"
+          placeholder="分享这个物品对你的特殊意义或使用经历"
         ></textarea>
       </div>
-      
-      <!-- 租金设置 -->
+
+      <!-- 借阅规则 -->
       <div>
-        <label class="block text-sm font-medium text-[#333333] mb-3">租金设置</label>
-        <div class="grid md:grid-cols-3 gap-4">
-          <div class="relative">
+        <label class="block text-sm font-bold text-gray-700 mb-4">借阅规则</label>
+        <div class="grid grid-cols-3 gap-4">
+          <div>
+            <label class="block text-xs text-gray-500 mb-2">租金（元/天）</label>
             <input 
-              v-model="form.pricePerDay" 
+              v-model.number="form.pricePerDay" 
               type="number" 
               step="0.01"
-              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-[#E2B04D] focus:outline-none transition-colors pr-10" 
-              placeholder="0.00"
+              min="0"
+              class="w-full p-3 rounded-xl border-2 border-gray-100 focus:border-[#E2B04D] focus:outline-none transition-colors"
             />
-            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[#999999] text-sm">元/天</span>
           </div>
-          <div class="relative">
+          <div>
+            <label class="block text-xs text-gray-500 mb-2">押金（元）</label>
             <input 
-              v-model="form.deposit" 
+              v-model.number="form.deposit" 
               type="number" 
               step="0.01"
-              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-[#E2B04D] focus:outline-none transition-colors pr-10" 
-              placeholder="0.00"
+              min="0"
+              class="w-full p-3 rounded-xl border-2 border-gray-100 focus:border-[#E2B04D] focus:outline-none transition-colors"
             />
-            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[#999999] text-sm">押金</span>
           </div>
-          <div class="relative">
+          <div>
+            <label class="block text-xs text-gray-500 mb-2">信用要求</label>
             <input 
-              v-model="form.creditRequired" 
+              v-model.number="form.creditRequired" 
               type="number" 
               step="0.1"
               min="0"
               max="10"
-              class="w-full px-4 py-3 border border-gray-200 rounded-xl focus:border-[#E2B04D] focus:outline-none transition-colors pr-16" 
-              placeholder="0-10"
+              class="w-full p-3 rounded-xl border-2 border-gray-100 focus:border-[#E2B04D] focus:outline-none transition-colors"
             />
-            <span class="absolute right-4 top-1/2 -translate-y-1/2 text-[#999999] text-sm">信用要求</span>
           </div>
         </div>
       </div>
-      
+
       <!-- 归还要求 -->
       <div>
-        <label class="block text-sm font-medium text-[#333333] mb-3">归还要求</label>
-        <div class="space-y-3">
-          <div v-for="(req, index) in form.returnRequirements" :key="index" class="flex gap-3">
+        <label class="block text-sm font-bold text-gray-700 mb-2">归还要求</label>
+        <div class="space-y-2">
+          <div v-for="(req, index) in form.returnRequirements" :key="index" class="flex gap-2">
             <input 
               v-model="form.returnRequirements[index]" 
-              class="flex-1 px-4 py-3 border border-gray-200 rounded-xl focus:border-[#E2B04D] focus:outline-none transition-colors" 
-              placeholder="如：已消毒、保持原样、及时归还等"
+              type="text" 
+              class="flex-1 p-3 rounded-xl border-2 border-gray-100 focus:border-[#E2B04D] focus:outline-none transition-colors"
+              placeholder="如：清理干净、晾干后归还"
             />
             <button 
-              @click="removeRequirement(index)" 
-              class="px-4 py-3 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
+              @click="removeReturnRequirement(index)" 
+              type="button"
+              class="px-4 py-2 text-red-500 hover:bg-red-50 rounded-xl transition-colors"
             >
               删除
             </button>
           </div>
           <button 
-            @click="addRequirement" 
-            class="text-[#E2B04D] hover:text-[#C49A2E] font-medium text-sm transition-colors"
+            @click="addReturnRequirement" 
+            type="button"
+            class="text-sm text-[#E2B04D] font-bold hover:underline"
           >
             + 添加归还要求
           </button>
         </div>
       </div>
-      
+
       <!-- 标签 -->
       <div>
-        <label class="block text-sm font-medium text-[#333333] mb-3">标签</label>
-        <div class="flex flex-wrap gap-2">
+        <label class="block text-sm font-bold text-gray-700 mb-2">标签</label>
+        <div class="flex flex-wrap gap-2 mb-3">
           <span 
             v-for="(tag, index) in form.tags" 
             :key="index"
-            class="px-3 py-1 bg-gray-100 text-[#333333] rounded-full text-sm flex items-center gap-1"
+            class="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm flex items-center gap-2"
           >
             {{ tag }}
-            <button @click="removeTag(index)" class="text-gray-400 hover:text-red-500 transition-colors">×</button>
+            <button @click="removeTag(index)" class="text-gray-400 hover:text-red-500">×</button>
           </span>
+        </div>
+        <div class="flex gap-2">
           <input 
-            v-model="newTag"
+            v-model="newTag" 
             @keyup.enter="addTag"
-            class="px-3 py-1 border border-gray-200 rounded-full text-sm w-24 focus:border-[#E2B04D] focus:outline-none transition-colors"
-            placeholder="添加标签"
+            type="text" 
+            class="flex-1 p-3 rounded-xl border-2 border-gray-100 focus:border-[#E2B04D] focus:outline-none transition-colors"
+            placeholder="输入标签后按回车添加"
           />
         </div>
       </div>
+    </div>
+
+    <!-- 底部按钮 -->
+    <div class="flex gap-4 mt-8 pt-6 border-t border-gray-100">
+      <!-- 保存草稿按钮：仅新建和草稿模式显示 -->
+      <button 
+        v-if="showSaveDraftButton"
+        @click="saveDraftHandler" 
+        :disabled="submitting"
+        class="flex-1 py-4 rounded-2xl border-2 border-gray-200 font-bold text-gray-600 hover:bg-gray-50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {{ submitting ? '保存中...' : '💾 保存草稿' }}
+      </button>
       
-      <!-- 按钮 -->
-      <div class="flex gap-4 pt-4">
-        <button 
-          class="flex-1 py-3 rounded-xl bg-[#E2B04D] text-white font-bold hover:bg-[#C49A2E] transition-colors" 
-          @click="publish"
-          :disabled="submitting"
-        >
-          {{ submitting ? '发布中...' : '立即确认发布' }}
-        </button>
-        <button 
-          class="px-8 py-3 rounded-xl border-2 border-[#2D3436] text-[#2D3436] font-bold hover:bg-gray-50 transition-colors" 
-          @click="saveDraft"
-          :disabled="submitting"
-        >
-          存为草稿
-        </button>
-      </div>
+      <!-- 发布/保存按钮 -->
+      <button 
+        @click="publishHandler" 
+        :disabled="submitting || !canPublish"
+        class="flex-1 py-4 rounded-2xl bg-[#E2B04D] text-white font-bold hover:bg-[#C49A2E] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+      >
+        {{ submitting ? '提交中...' : publishButtonText }}
+      </button>
     </div>
   </main>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import MainNav from '../components/MainNav.vue'
 import ImageUploader from '../components/ImageUploader.vue'
-import { itemApi } from '../api/item'
+import { itemApi, type CreateItemRequest } from '../api/item'
 import { publicApi, type Category } from '../api/public'
 
 const router = useRouter()
-const submitting = ref(false)
-const categories = ref<Category[]>([])
-const newTag = ref('')
+const route = useRoute()
 
-const form = ref({
+const form = ref<CreateItemRequest>({
   name: '',
-  categoryId: '',
+  categoryId: 0,
   description: '',
   story: '',
-  pricePerDay: '',
-  deposit: '',
-  creditRequired: '',
-  images: [] as string[],
-  returnRequirements: [] as string[],
-  tags: [] as string[]
+  pricePerDay: 0,
+  deposit: 0,
+  creditRequired: 0,
+  returnRequirements: [],
+  tags: [],
+  images: []
 })
 
-onMounted(async () => {
-  try {
-    console.log('开始加载分类...')
-    const data = await publicApi.getCategories()
-    console.log('分类加载成功:', data)
-    categories.value = data
-  } catch (error) {
-    console.error('获取分类失败', error)
-  }
+const newTag = ref('')
+const categories = ref<Category[]>([])
+const submitting = ref(false)
+const itemStatus = ref<string>('')  // 物品实际状态
+
+const isNew = computed(() => {
+  return !route.params.id
 })
 
-const addRequirement = () => {
+const isDraft = computed(() => {
+  return itemStatus.value === 'DRAFT'
+})
+
+const isEdit = computed(() => {
+  return !!route.params.id && !isDraft.value
+})
+
+const pageTitle = computed(() => {
+  if (isDraft.value) return '继续编辑草稿'
+  if (isEdit.value) return '编辑物品'
+  return '发布新物品'
+})
+
+const publishButtonText = computed(() => {
+  if (isEdit.value) return '保存修改'
+  return '发布物品'
+})
+
+const showSaveDraftButton = computed(() => {
+  return isNew.value || isDraft.value
+})
+
+const itemName = computed(() => {
+  return form.value.name || ''
+})
+
+const lastEditedAt = computed(() => {
+  return new Date().toLocaleString('zh-CN')
+})
+
+const canPublish = computed(() => {
+  return form.value.name && 
+         form.value.categoryId && 
+         form.value.description &&
+         form.value.images.length > 0
+})
+
+// 方法
+const goBack = () => {
+  router.back()
+}
+
+const addReturnRequirement = () => {
   form.value.returnRequirements.push('')
 }
 
-const removeRequirement = (index: number) => {
+const removeReturnRequirement = (index: number) => {
   form.value.returnRequirements.splice(index, 1)
 }
 
@@ -221,63 +284,119 @@ const removeTag = (index: number) => {
   form.value.tags.splice(index, 1)
 }
 
-const validateForm = () => {
-  if (!form.value.name.trim()) {
-    alert('请输入物品名称')
-    return false
-  }
-  if (!form.value.categoryId) {
-    alert('请选择物品分类')
-    return false
-  }
-  if (form.value.images.length === 0) {
-    alert('请至少上传一张图片')
-    return false
-  }
-  return true
-}
-
-const buildSubmitData = () => {
-  return {
-    name: form.value.name,
-    categoryId: Number(form.value.categoryId),
-    description: form.value.description,
-    story: form.value.story,
-    pricePerDay: Number(form.value.pricePerDay) || 0,
-    deposit: Number(form.value.deposit) || 0,
-    creditRequired: Number(form.value.creditRequired) || 0,
-    images: form.value.images,
-    returnRequirements: JSON.stringify(form.value.returnRequirements.filter(r => r.trim())),
-    tags: JSON.stringify(form.value.tags.filter(t => t.trim()))
+const loadCategories = async () => {
+  try {
+    categories.value = await publicApi.getCategories()
+  } catch (error) {
+    console.error('加载分类失败', error)
   }
 }
 
-const publish = async () => {
-  if (!validateForm()) return
+const loadItemData = async () => {
+  const id = route.params.id as string
+  if (!id) return
+  
+  try {
+    const item = await itemApi.getItemById(id)
+    
+    if (item.status === 'BORROWED') {
+      alert('借出中的物品无法编辑')
+      router.back()
+      return
+    }
+    
+    itemStatus.value = item.status || ''
+    form.value = {
+      name: item.name,
+      categoryId: item.categoryId,
+      description: item.description,
+      story: item.story || '',
+      pricePerDay: Number(item.pricePerDay),
+      deposit: Number(item.deposit),
+      creditRequired: Number(item.creditRequired),
+      returnRequirements: item.returnRequirements || [],
+      tags: item.tags || [],
+      images: item.images || []
+    }
+  } catch (error) {
+    console.error('加载物品数据失败', error)
+    alert('加载失败')
+    router.back()
+  }
+}
+
+const saveDraftHandler = async () => {
+  if (!form.value.name) {
+    alert('请填写物品名称')
+    return
+  }
   
   submitting.value = true
   try {
-    await itemApi.createItem(buildSubmitData())
-    alert('发布成功')
-    router.push('/index')
+    const draftData = {
+      ...form.value,
+      returnRequirements: JSON.stringify(form.value.returnRequirements),
+      tags: JSON.stringify(form.value.tags)
+    }
+    
+    if (isDraft.value) {
+      const id = route.params.id as string
+      await itemApi.updateItem(Number(id), { ...draftData, status: 'DRAFT' })
+    } else {
+      await itemApi.saveDraft(draftData)
+    }
+    
+    alert('草稿已保存')
+    goBack()
   } catch (error: any) {
-    console.error('发布失败', error)
-    alert(error.message || '发布失败，请重试')
+    alert(error.message || '保存草稿失败')
   } finally {
     submitting.value = false
   }
 }
 
-const saveDraft = async () => {
+const publishHandler = async () => {
+  if (!canPublish.value) {
+    alert('请填写完整信息并至少上传一张图片')
+    return
+  }
+  
+  const actionText = isEdit.value ? '保存修改' : '发布物品'
+  if (!confirm(`确认${actionText}吗？`)) return
+  
   submitting.value = true
   try {
-    await itemApi.saveDraft(buildSubmitData())
-    alert('保存草稿成功')
+    const itemData = {
+      ...form.value,
+      returnRequirements: JSON.stringify(form.value.returnRequirements),
+      tags: JSON.stringify(form.value.tags)
+    }
+    
+    if (isNew.value) {
+      await itemApi.createItem(itemData)
+      alert('发布成功')
+    } else if (isDraft.value) {
+      const id = route.params.id as string
+      await itemApi.updateItem(Number(id), { ...itemData, status: 'AVAILABLE' })
+      alert('发布成功')
+    } else if (isEdit.value) {
+      const id = route.params.id as string
+      await itemApi.updateItem(Number(id), itemData)
+      alert('修改已保存')
+    }
+    
+    router.push('/')
   } catch (error: any) {
-    console.error('保存草稿失败', error)
-    alert(error.message || '保存草稿失败，请重试')
+    alert(error.message || '操作失败')
   } finally {
     submitting.value = false
   }
 }
+
+onMounted(async () => {
+  await loadCategories()
+  if (route.params.id) {
+    await loadItemData()
+  }
+})
 </script>

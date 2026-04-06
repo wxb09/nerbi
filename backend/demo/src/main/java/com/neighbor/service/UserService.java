@@ -16,5 +16,6 @@ public interface UserService {
     List<Map<String, Object>> getMyBorrowed(Long userId);
     List<Map<String, Object>> getMyPending(Long userId);
     List<Map<String, Object>> getMyReviews(Long userId);
+    List<Map<String, Object>> getMyDrafts(Long userId);
     UserStatsDTO getUserStats(Long userId);
 }

@@ -68,6 +68,12 @@ public class UserController {
         return ApiResponse.ok(userService.getMyReviews(userId));
     }
 
+    @GetMapping("/me/drafts")
+    public ApiResponse<List<Map<String, Object>>> getMyDrafts(Authentication authentication) {
+        Long userId = getUserIdFromAuth(authentication);
+        return ApiResponse.ok(userService.getMyDrafts(userId));
+    }
+
     @GetMapping("/me/stats")
     public ApiResponse<UserStatsDTO> getUserStats(Authentication authentication) {
         Long userId = getUserIdFromAuth(authentication);

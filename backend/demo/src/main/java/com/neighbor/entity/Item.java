@@ -77,7 +77,7 @@ public class Item {
     @Column(name = "published_at")
     private LocalDateTime publishedAt;
 
-    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "item", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @OrderBy("sortOrder ASC")
     private List<ItemImage> images = new ArrayList<>();
 

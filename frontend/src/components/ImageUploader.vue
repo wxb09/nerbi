@@ -45,7 +45,7 @@ import { ref, watch } from 'vue'
 import { uploadApi } from '../api/upload'
 
 const props = defineProps<{
-  modelValue: string[]
+  modelValue?: string[]
   maxCount?: number
 }>()
 
@@ -54,13 +54,13 @@ const emit = defineEmits<{
 }>()
 
 const maxCount = props.maxCount || 9
-const imageList = ref<string[]>([...props.modelValue])
+const imageList = ref<string[]>([...(props.modelValue || [])])
 const fileInput = ref<HTMLInputElement | null>(null)
 const uploading = ref(false)
 const isDragover = ref(false)
 
 watch(() => props.modelValue, (newVal) => {
-  imageList.value = [...newVal]
+  imageList.value = [...(newVal || [])]
 })
 
 const triggerUpload = () => {
@@ -118,10 +118,16 @@ const removeImage = (index: number) => {
 }
 
 const getImageUrl = (path: string) => {
+  if (!path) return ''
   if (path.startsWith('http')) {
     return path
   }
-  return `http://localhost:8080/uploads/${path}`
+  // 如果已经有 /uploads/ 前缀，直接返回
+  if (path.startsWith('/uploads/')) {
+    return path
+  }
+  // 否则添加 /uploads/ 前缀
+  return `/uploads/${path}`
 }
 </script>
 

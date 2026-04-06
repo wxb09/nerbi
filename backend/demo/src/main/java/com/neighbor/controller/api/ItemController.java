@@ -78,6 +78,13 @@ public class ItemController {
         return ApiResponse.ok();
     }
 
+    @DeleteMapping("/{id}")
+    public ApiResponse<Void> deleteItem(Authentication authentication, @PathVariable Long id) {
+        Long userId = getUserIdFromAuth(authentication);
+        itemService.deleteItem(id, userId);
+        return ApiResponse.ok();
+    }
+
     @PostMapping("/draft")
     public ApiResponse<ItemDetailDTO> saveDraft(Authentication authentication, @RequestBody Map<String, Object> itemData) {
         Long userId = getUserIdFromAuth(authentication);

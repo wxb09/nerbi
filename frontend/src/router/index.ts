@@ -7,6 +7,7 @@ import DetailView from '../views/DetailView.vue'
 import ForumView from '../views/ForumView.vue'
 import PublishView from '../views/PublishView.vue'
 import ProfileView from '../views/ProfileView.vue'
+import DraftsView from '../views/DraftsView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -17,6 +18,8 @@ const router = createRouter({
     { path: '/item/:id', component: DetailView },
     { path: '/forum', component: ForumView },
     { path: '/publish', component: PublishView, meta: { requiresAuth: true } },
+    { path: '/publish/:id', component: PublishView, meta: { requiresAuth: true } },
+    { path: '/drafts', component: DraftsView, meta: { requiresAuth: true } },
     { path: '/profile', component: ProfileView, meta: { requiresAuth: true } },
   ],
 })

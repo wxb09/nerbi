@@ -4,6 +4,7 @@ import com.neighbor.dto.UserDTO;
 import com.neighbor.dto.UserStatsDTO;
 import com.neighbor.entity.*;
 import com.neighbor.enums.BorrowStatus;
+import com.neighbor.enums.ItemStatus;
 import com.neighbor.repository.*;
 import com.neighbor.service.UserService;
 import org.springframework.data.domain.Pageable;
@@ -170,6 +171,33 @@ public class UserServiceImpl implements UserService {
             reviewMap.put("content", review.getContent());
             reviewMap.put("createdAt", review.getCreatedAt());
             result.add(reviewMap);
+        }
+        return result;
+    }
+
+    @Override
+    public List<Map<String, Object>> getMyDrafts(Long userId) {
+        List<Item> items = itemRepository.findAll();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Item item : items) {
+            if (item.getOwner().getId().equals(userId) && item.getStatus() == ItemStatus.DRAFT) {
+                Map<String, Object> itemMap = new HashMap<>();
+                itemMap.put("id", item.getId());
+                itemMap.put("name", item.getName());
+                itemMap.put("status", item.getStatus());
+                itemMap.put("borrowCount", item.getBorrowCount());
+                itemMap.put("viewCount", item.getViewCount());
+                itemMap.put("createdAt", item.getCreatedAt());
+                itemMap.put("updatedAt", item.getUpdatedAt());
+                
+                // 获取主图
+                List<ItemImage> images = itemImageRepository.findByItemIdOrderBySortOrderAsc(item.getId());
+                if (!images.isEmpty()) {
+                    itemMap.put("image", images.get(0).getUrl());
+                }
+                
+                result.add(itemMap);
+            }
         }
         return result;
     }
