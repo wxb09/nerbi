@@ -11,6 +11,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -207,24 +208,39 @@ public class UserServiceImpl implements UserService {
         List<Borrow> allBorrows = borrowRepository.findAll();
         int lentCount = 0;
         int borrowedCount = 0;
-        int pendingCount = 0;
+        int pendingApprovalCount = 0;
+        int returnRequestedCount = 0;
+        int dueSoonCount = 0;
+        
+        LocalDate today = LocalDate.now();
+        LocalDate weekLater = today.plusDays(7);
         
         for (Borrow borrow : allBorrows) {
             if (borrow.getLender().getId().equals(userId)) {
                 lentCount++;
                 if (borrow.getStatus() == BorrowStatus.PENDING) {
-                    pendingCount++;
+                    pendingApprovalCount++;
+                }
+                if (borrow.getStatus() == BorrowStatus.RETURN_REQUESTED) {
+                    returnRequestedCount++;
                 }
             }
             if (borrow.getBorrower().getId().equals(userId)) {
                 borrowedCount++;
             }
+            if (borrow.getStatus() == BorrowStatus.ACTIVE) {
+                if ((borrow.getLender().getId().equals(userId) || borrow.getBorrower().getId().equals(userId))
+                    && borrow.getEndDate() != null
+                    && !borrow.getEndDate().isBefore(today)
+                    && borrow.getEndDate().isBefore(weekLater)) {
+                    dueSoonCount++;
+                }
+            }
         }
         
-        int dueSoonCount = 0; // 待实现：计算即将到期的借取
-        int todayCo2Saved = 0; // 待实现：计算今日节省的 CO2
+        int todayCo2Saved = 0;
 
-        return new UserStatsDTO(lentCount, borrowedCount, pendingCount, dueSoonCount, todayCo2Saved);
+        return new UserStatsDTO(lentCount, borrowedCount, pendingApprovalCount, returnRequestedCount, dueSoonCount, todayCo2Saved);
     }
 
     private UserDTO convertToUserDTO(User user) {

@@ -13,8 +13,29 @@
       <div class="flex items-center gap-4">
         <div v-if="authStore.isLoggedIn" class="flex items-center gap-2">
           <span class="text-sm">{{ authStore.user?.nickname }}</span>
-          <RouterLink class="text-sm px-3 py-1.5 rounded-full border border-gray-200" to="/profile">
+          <RouterLink 
+            class="relative p-2 hover:bg-gray-100 rounded-full transition-colors" 
+            to="/messages"
+          >
+            <span class="iconify text-xl text-gray-600" data-icon="solar:bell-bold"></span>
+            <span 
+              v-if="unreadCount > 0"
+              class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold"
+            >
+              {{ unreadCount > 9 ? '9+' : unreadCount }}
+            </span>
+          </RouterLink>
+          <RouterLink 
+            class="text-sm px-3 py-1.5 rounded-full border border-gray-200 relative" 
+            to="/profile"
+          >
             我的
+            <span 
+              v-if="pendingTotal > 0"
+              class="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center"
+            >
+              {{ pendingTotal > 9 ? '9+' : pendingTotal }}
+            </span>
           </RouterLink>
           <button class="text-sm bg-[#2D3436] text-white px-4 py-2 rounded-xl" @click="logout">
             退出
@@ -34,16 +55,47 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { authApi } from '../api/auth'
+import { userApi } from '../api/user'
+import { messageApi } from '../api/message'
 
 const router = useRouter()
 const authStore = useAuthStore()
 
+const pendingApprovalCount = ref(0)
+const returnRequestedCount = ref(0)
+const unreadCount = ref(0)
+
+const pendingTotal = computed(() => pendingApprovalCount.value + returnRequestedCount.value)
+
+const loadPendingCount = async () => {
+  if (!authStore.isLoggedIn) return
+  try {
+    const res = await userApi.getUserStats()
+    pendingApprovalCount.value = res.pendingApprovalCount || 0
+    returnRequestedCount.value = res.returnRequestedCount || 0
+  } catch (error) {
+    console.error('加载待处理数量失败', error)
+  }
+}
+
+const loadUnreadCount = async () => {
+  if (!authStore.isLoggedIn) return
+  try {
+    const res = await messageApi.getUnreadCount()
+    unreadCount.value = res.count || 0
+  } catch (error) {
+    console.error('加载未读消息数量失败', error)
+  }
+}
+
 onMounted(() => {
   authStore.init()
+  loadPendingCount()
+  loadUnreadCount()
 })
 
 const logout = () => {

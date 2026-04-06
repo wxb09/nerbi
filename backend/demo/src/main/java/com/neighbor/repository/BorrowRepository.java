@@ -9,6 +9,8 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Repository
@@ -37,4 +39,13 @@ public interface BorrowRepository extends JpaRepository<Borrow, Long> {
     Long countByLenderIdAndStatusIn(@Param("userId") Long userId, @Param("statuses") List<BorrowStatus> statuses);
     
     List<Borrow> findByItemIdAndStatus(Long itemId, BorrowStatus status);
+    
+    @Query("SELECT b FROM Borrow b JOIN FETCH b.item JOIN FETCH b.borrower WHERE b.status = :status AND b.endDate = :date")
+    List<Borrow> findByStatusAndEndDateWithDetails(@Param("status") BorrowStatus status, @Param("date") LocalDate date);
+    
+    @Query("SELECT b FROM Borrow b JOIN FETCH b.item JOIN FETCH b.borrower WHERE b.status = :status AND b.endDate < :date")
+    List<Borrow> findByStatusAndEndDateBeforeWithDetails(@Param("status") BorrowStatus status, @Param("date") LocalDate date);
+    
+    @Query("SELECT b FROM Borrow b JOIN FETCH b.item JOIN FETCH b.borrower WHERE b.status IN :statuses AND b.endDate < :date AND (b.lastRemindAt IS NULL OR b.lastRemindAt < :remindThreshold)")
+    List<Borrow> findOverdueForReminder(@Param("statuses") List<BorrowStatus> statuses, @Param("date") LocalDate date, @Param("remindThreshold") LocalDateTime remindThreshold);
 }

@@ -9,6 +9,7 @@ import com.neighbor.entity.User;
 import com.neighbor.enums.BorrowStatus;
 import com.neighbor.enums.ErrorCode;
 import com.neighbor.enums.ItemStatus;
+import com.neighbor.enums.MessageType;
 import com.neighbor.repository.BorrowRepository;
 import com.neighbor.repository.ItemRepository;
 import com.neighbor.repository.UserRepository;
@@ -30,11 +31,14 @@ public class BorrowService {
     private final BorrowRepository borrowRepository;
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
+    private final MessageService messageService;
 
-    public BorrowService(BorrowRepository borrowRepository, ItemRepository itemRepository, UserRepository userRepository) {
+    public BorrowService(BorrowRepository borrowRepository, ItemRepository itemRepository, 
+                         UserRepository userRepository, MessageService messageService) {
         this.borrowRepository = borrowRepository;
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
+        this.messageService = messageService;
     }
 
     @Transactional(readOnly = true)
@@ -79,6 +83,9 @@ public class BorrowService {
         borrow.setStatus(BorrowStatus.PENDING);
         
         Borrow saved = borrowRepository.save(borrow);
+        
+        messageService.sendBorrowNotification(saved, MessageType.BORROW_APPLY);
+        
         return saved.getId();
     }
 
@@ -97,9 +104,11 @@ public class BorrowService {
         if (request.approved()) {
             borrow.setStatus(BorrowStatus.APPROVED);
             borrow.getItem().setStatus(ItemStatus.BORROWED);
+            messageService.sendBorrowNotification(borrow, MessageType.BORROW_APPROVED);
         } else {
             borrow.setStatus(BorrowStatus.REJECTED);
             borrow.setRejectReason(request.reason());
+            messageService.sendBorrowNotification(borrow, MessageType.BORROW_REJECTED);
         }
         
         borrowRepository.save(borrow);
@@ -198,12 +207,14 @@ public class BorrowService {
             throw new BusinessException(ErrorCode.NOT_YOUR_BORROW_REQUEST);
         }
         
-        if (borrow.getStatus() != BorrowStatus.ACTIVE) {
+        if (borrow.getStatus() != BorrowStatus.ACTIVE && borrow.getStatus() != BorrowStatus.OVERDUE) {
             throw new BusinessException(ErrorCode.BORROW_STATUS_INVALID);
         }
         
         borrow.setStatus(BorrowStatus.RETURN_REQUESTED);
         borrowRepository.save(borrow);
+        
+        messageService.sendBorrowNotification(borrow, MessageType.RETURN_CONFIRM);
     }
 
     @Transactional(readOnly = true)

@@ -69,17 +69,17 @@
               <span class="iconify text-2xl" data-icon="solar:bell-bold"></span>
             </div>
             <div>
-              <p class="text-2xl font-bold">{{ stats.pendingCount }}</p>
-              <p class="text-sm text-gray-400">待处理借阅申请</p>
+              <p class="text-2xl font-bold">{{ stats.pendingApprovalCount }}</p>
+              <p class="text-sm text-gray-400">待审批借阅申请</p>
             </div>
           </div>
           <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center space-x-4">
             <div class="p-4 bg-blue-100 text-blue-600 rounded-2xl">
-              <span class="iconify text-2xl" data-icon="solar:clock-circle-bold"></span>
+              <span class="iconify text-2xl" data-icon="solar:box-bold"></span>
             </div>
             <div>
-              <p class="text-2xl font-bold">{{ stats.dueSoonCount }}</p>
-              <p class="text-sm text-gray-400">本周到期物品</p>
+              <p class="text-2xl font-bold">{{ stats.returnRequestedCount }}</p>
+              <p class="text-sm text-gray-400">待确认归还</p>
             </div>
           </div>
           <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm flex items-center space-x-4">
@@ -87,8 +87,8 @@
               <span class="iconify text-2xl" data-icon="solar:leaf-bold"></span>
             </div>
             <div>
-              <p class="text-2xl font-bold">{{ stats.todayCo2Saved }}g</p>
-              <p class="text-sm text-gray-400">今日节省碳排放</p>
+              <p class="text-2xl font-bold">{{ stats.dueSoonCount }}</p>
+              <p class="text-sm text-gray-400">本周到期物品</p>
             </div>
           </div>
         </div>
@@ -525,7 +525,8 @@ interface Review {
 }
 
 interface Stats {
-  pendingCount: number
+  pendingApprovalCount: number
+  returnRequestedCount: number
   dueSoonCount: number
   todayCo2Saved: number
 }
@@ -540,7 +541,8 @@ const myItems = ref<MyItem[]>([])
 const drafts = ref<MyItem[]>([])
 const reviews = ref<Review[]>([])
 const stats = ref<Stats>({
-  pendingCount: 0,
+  pendingApprovalCount: 0,
+  returnRequestedCount: 0,
   dueSoonCount: 0,
   todayCo2Saved: 0
 })
@@ -847,7 +849,8 @@ const loadUserInfo = async () => {
     }))
     
     stats.value = {
-      pendingCount: statsRes?.pendingCount || 0,
+      pendingApprovalCount: statsRes?.pendingApprovalCount || 0,
+      returnRequestedCount: statsRes?.returnRequestedCount || 0,
       dueSoonCount: statsRes?.dueSoonCount || 0,
       todayCo2Saved: statsRes?.todayCo2Saved || user.value?.co2Saved || 0
     }
