@@ -113,10 +113,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import MainNav from '../components/MainNav.vue'
 import { messageApi, type Message } from '../api/message'
+import { wsManager } from '../utils/websocket'
 
 const router = useRouter()
 
@@ -176,6 +177,19 @@ const markAllAsRead = async () => {
     unreadCount.value = 0
   } catch (error) {
     console.error('全部标记已读失败', error)
+  }
+}
+
+const handleNewMessage = (message: any) => {
+  if (message.type === 'NEW_MESSAGE') {
+    const newMsg = message.data as Message
+    if (filter.value === 'all') {
+      messages.value.unshift(newMsg)
+    } else if (!newMsg.isRead) {
+      messages.value.unshift(newMsg)
+    }
+  } else if (message.type === 'UNREAD_COUNT') {
+    unreadCount.value = message.data.count
   }
 }
 
@@ -239,5 +253,13 @@ watch(filter, () => {
 onMounted(() => {
   loadMessages()
   loadUnreadCount()
+  
+  wsManager.on('NEW_MESSAGE', handleNewMessage)
+  wsManager.on('UNREAD_COUNT', handleNewMessage)
+})
+
+onUnmounted(() => {
+  wsManager.off('NEW_MESSAGE', handleNewMessage)
+  wsManager.off('UNREAD_COUNT', handleNewMessage)
 })
 </script>

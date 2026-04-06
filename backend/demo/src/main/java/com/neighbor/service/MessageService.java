@@ -7,6 +7,7 @@ import com.neighbor.entity.User;
 import com.neighbor.enums.MessageType;
 import com.neighbor.repository.MessageRepository;
 import com.neighbor.repository.UserRepository;
+import com.neighbor.websocket.WebSocketPushService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,10 +21,13 @@ public class MessageService {
 
     private final MessageRepository messageRepository;
     private final UserRepository userRepository;
+    private final WebSocketPushService webSocketPushService;
 
-    public MessageService(MessageRepository messageRepository, UserRepository userRepository) {
+    public MessageService(MessageRepository messageRepository, UserRepository userRepository, 
+                          WebSocketPushService webSocketPushService) {
         this.messageRepository = messageRepository;
         this.userRepository = userRepository;
+        this.webSocketPushService = webSocketPushService;
     }
 
     @Transactional(readOnly = true)
@@ -51,7 +55,7 @@ public class MessageService {
         return messageRepository.markAllAsRead(userId);
     }
 
-    public void sendMessage(Long toUserId, MessageType type, String title, String content, Long relatedId) {
+    public MessageDTO sendMessage(Long toUserId, MessageType type, String title, String content, Long relatedId) {
         User toUser = userRepository.findById(toUserId)
                 .orElseThrow(() -> new RuntimeException("用户不存在"));
         
@@ -63,10 +67,16 @@ public class MessageService {
         message.setRelatedId(relatedId);
         message.setIsRead(false);
         
-        messageRepository.save(message);
+        Message saved = messageRepository.save(message);
+        MessageDTO dto = toDTO(saved);
+        
+        webSocketPushService.pushMessage(toUserId, dto);
+        webSocketPushService.pushUnreadCount(toUserId, getUnreadCount(toUserId));
+        
+        return dto;
     }
 
-    public void sendBorrowNotification(Borrow borrow, MessageType type) {
+    public MessageDTO sendBorrowNotification(Borrow borrow, MessageType type) {
         Long toUserId = null;
         String title = "";
         String content = "";
@@ -114,8 +124,9 @@ public class MessageService {
         }
         
         if (toUserId != null) {
-            sendMessage(toUserId, type, title, content, borrow.getId());
+            return sendMessage(toUserId, type, title, content, borrow.getId());
         }
+        return null;
     }
 
     public boolean hasRecentMessage(Long toUserId, MessageType type, Long relatedId, LocalDateTime since) {

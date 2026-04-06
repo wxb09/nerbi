@@ -3,6 +3,7 @@ package com.neighbor.service;
 import com.neighbor.dto.ApproveRequest;
 import com.neighbor.dto.BorrowDTO;
 import com.neighbor.dto.BorrowRequest;
+import com.neighbor.dto.PushNotification;
 import com.neighbor.entity.Borrow;
 import com.neighbor.entity.Item;
 import com.neighbor.entity.User;
@@ -14,6 +15,7 @@ import com.neighbor.repository.BorrowRepository;
 import com.neighbor.repository.ItemRepository;
 import com.neighbor.repository.UserRepository;
 import com.neighbor.common.exception.BusinessException;
+import com.neighbor.websocket.WebSocketPushService;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -32,13 +34,16 @@ public class BorrowService {
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
     private final MessageService messageService;
+    private final WebSocketPushService webSocketPushService;
 
     public BorrowService(BorrowRepository borrowRepository, ItemRepository itemRepository, 
-                         UserRepository userRepository, MessageService messageService) {
+                         UserRepository userRepository, MessageService messageService,
+                         WebSocketPushService webSocketPushService) {
         this.borrowRepository = borrowRepository;
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
         this.messageService = messageService;
+        this.webSocketPushService = webSocketPushService;
     }
 
     @Transactional(readOnly = true)
@@ -86,6 +91,10 @@ public class BorrowService {
         
         messageService.sendBorrowNotification(saved, MessageType.BORROW_APPLY);
         
+        Long lenderPendingCount = webSocketPushService.getPendingCount(lender.getId());
+        webSocketPushService.pushToUser(lender.getId(), 
+            PushNotification.newBorrowApply(item.getId(), lenderPendingCount));
+        
         return saved.getId();
     }
 
@@ -101,14 +110,29 @@ public class BorrowService {
             throw new BusinessException(ErrorCode.BORROW_STATUS_INVALID);
         }
         
+        Long borrowerId = borrow.getBorrower().getId();
+        Long itemId = borrow.getItem().getId();
+        
         if (request.approved()) {
             borrow.setStatus(BorrowStatus.APPROVED);
             borrow.getItem().setStatus(ItemStatus.BORROWED);
             messageService.sendBorrowNotification(borrow, MessageType.BORROW_APPROVED);
+            
+            webSocketPushService.pushToUser(borrowerId, PushNotification.requestApproved(itemId));
+            
+            Long lenderPendingCount = webSocketPushService.getPendingCount(lenderId);
+            webSocketPushService.pushToUser(lenderId, 
+                PushNotification.itemStatusChanged(itemId, "BORROWED", lenderPendingCount));
         } else {
             borrow.setStatus(BorrowStatus.REJECTED);
             borrow.setRejectReason(request.reason());
             messageService.sendBorrowNotification(borrow, MessageType.BORROW_REJECTED);
+            
+            webSocketPushService.pushToUser(borrowerId, PushNotification.requestRejected(itemId));
+            
+            Long lenderPendingCount = webSocketPushService.getPendingCount(lenderId);
+            webSocketPushService.pushToUser(lenderId, 
+                PushNotification.itemStatusChanged(itemId, "AVAILABLE", lenderPendingCount));
         }
         
         borrowRepository.save(borrow);
@@ -144,6 +168,9 @@ public class BorrowService {
             throw new BusinessException(ErrorCode.BORROW_STATUS_INVALID);
         }
         
+        Long borrowerId = borrow.getBorrower().getId();
+        Long itemId = borrow.getItem().getId();
+        
         borrow.setStatus(BorrowStatus.RETURNED);
         borrow.setActualReturnDate(LocalDate.now());
         borrow.getItem().setStatus(ItemStatus.AVAILABLE);
@@ -157,6 +184,12 @@ public class BorrowService {
         borrowRepository.save(borrow);
         userRepository.save(borrower);
         userRepository.save(lender);
+        
+        webSocketPushService.pushToUser(borrowerId, PushNotification.borrowReturned(itemId));
+        
+        Long lenderPendingCount = webSocketPushService.getPendingCount(lenderId);
+        webSocketPushService.pushToUser(lenderId, 
+            PushNotification.returnConfirmed(itemId, lenderPendingCount));
     }
 
     public void remindReturn(Long borrowId, Long lenderId) {
@@ -211,10 +244,17 @@ public class BorrowService {
             throw new BusinessException(ErrorCode.BORROW_STATUS_INVALID);
         }
         
+        Long lenderId = borrow.getLender().getId();
+        Long itemId = borrow.getItem().getId();
+        
         borrow.setStatus(BorrowStatus.RETURN_REQUESTED);
         borrowRepository.save(borrow);
         
         messageService.sendBorrowNotification(borrow, MessageType.RETURN_CONFIRM);
+        
+        Long lenderPendingCount = webSocketPushService.getPendingCount(lenderId);
+        webSocketPushService.pushToUser(lenderId, 
+            PushNotification.returnRequested(itemId, lenderPendingCount));
     }
 
     @Transactional(readOnly = true)

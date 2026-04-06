@@ -55,12 +55,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
-import { authApi } from '../api/auth'
 import { userApi } from '../api/user'
 import { messageApi } from '../api/message'
+import { wsManager } from '../utils/websocket'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -92,10 +92,81 @@ const loadUnreadCount = async () => {
   }
 }
 
+const handleWebSocketMessage = (message: any) => {
+  console.log('收到 WebSocket 消息:', message)
+  
+  const { type, data } = message
+  
+  switch (type) {
+    case 'NEW_MESSAGE':
+      unreadCount.value++
+      break
+      
+    case 'UNREAD_COUNT':
+      unreadCount.value = data.count
+      break
+      
+    case 'NEW_BORROW_APPLY':
+      if (data.pendingCount !== undefined) {
+        pendingApprovalCount.value = data.pendingCount
+      }
+      break
+      
+    case 'ITEM_STATUS_CHANGED':
+      if (data.pendingCount !== undefined) {
+        const total = data.pendingCount
+        pendingApprovalCount.value = total
+      }
+      break
+      
+    case 'RETURN_REQUESTED':
+      if (data.pendingCount !== undefined) {
+        returnRequestedCount.value = data.pendingCount - pendingApprovalCount.value
+      }
+      break
+      
+    case 'RETURN_CONFIRMED':
+      if (data.pendingCount !== undefined) {
+        const total = data.pendingCount
+        returnRequestedCount.value = Math.max(0, returnRequestedCount.value - 1)
+      }
+      break
+      
+    case 'REQUEST_APPROVED':
+    case 'REQUEST_REJECTED':
+    case 'BORROW_RETURNED':
+      break
+  }
+}
+
 onMounted(() => {
   authStore.init()
   loadPendingCount()
   loadUnreadCount()
+  
+  wsManager.on('*', handleWebSocketMessage)
+  wsManager.on('NEW_MESSAGE', handleWebSocketMessage)
+  wsManager.on('UNREAD_COUNT', handleWebSocketMessage)
+  wsManager.on('NEW_BORROW_APPLY', handleWebSocketMessage)
+  wsManager.on('ITEM_STATUS_CHANGED', handleWebSocketMessage)
+  wsManager.on('RETURN_REQUESTED', handleWebSocketMessage)
+  wsManager.on('RETURN_CONFIRMED', handleWebSocketMessage)
+  wsManager.on('REQUEST_APPROVED', handleWebSocketMessage)
+  wsManager.on('REQUEST_REJECTED', handleWebSocketMessage)
+  wsManager.on('BORROW_RETURNED', handleWebSocketMessage)
+})
+
+onUnmounted(() => {
+  wsManager.off('*', handleWebSocketMessage)
+  wsManager.off('NEW_MESSAGE', handleWebSocketMessage)
+  wsManager.off('UNREAD_COUNT', handleWebSocketMessage)
+  wsManager.off('NEW_BORROW_APPLY', handleWebSocketMessage)
+  wsManager.off('ITEM_STATUS_CHANGED', handleWebSocketMessage)
+  wsManager.off('RETURN_REQUESTED', handleWebSocketMessage)
+  wsManager.off('RETURN_CONFIRMED', handleWebSocketMessage)
+  wsManager.off('REQUEST_APPROVED', handleWebSocketMessage)
+  wsManager.off('REQUEST_REJECTED', handleWebSocketMessage)
+  wsManager.off('BORROW_RETURNED', handleWebSocketMessage)
 })
 
 const logout = () => {

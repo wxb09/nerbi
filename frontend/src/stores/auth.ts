@@ -1,4 +1,5 @@
 import { defineStore } from 'pinia'
+import { wsManager } from '../utils/websocket'
 
 interface User {
   id: string
@@ -23,9 +24,14 @@ export const useAuthStore = defineStore('auth', {
       this.token = token
       localStorage.setItem('user', JSON.stringify(user))
       localStorage.setItem('token', token)
+      
+      wsManager.connect(token).catch(err => {
+        console.error('WebSocket 连接失败', err)
+      })
     },
     
     logout() {
+      wsManager.disconnect()
       this.user = null
       this.token = null
       localStorage.removeItem('user')
@@ -50,6 +56,12 @@ export const useAuthStore = defineStore('auth', {
           this.user = null
           this.token = null
         }
+      }
+      
+      if (this.token) {
+        wsManager.connect(this.token).catch(err => {
+          console.error('WebSocket 连接失败', err)
+        })
       }
     }
   }

@@ -472,13 +472,14 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import MainNav from '../components/MainNav.vue'
 import { useAuthStore } from '../stores/auth'
 import { userApi } from '../api/user'
 import { borrowApi } from '../api/borrow'
 import { itemApi } from '../api/item'
+import { wsManager } from '../utils/websocket'
 
 interface User {
   id: number
@@ -690,6 +691,22 @@ const editDraft = (draft: MyItem) => {
   router.push(`/publish/${draft.id}`)
 }
 
+const handleWebSocketMessage = (message: any) => {
+  const { type, data } = message
+  
+  switch (type) {
+    case 'NEW_BORROW_APPLY':
+    case 'ITEM_STATUS_CHANGED':
+    case 'RETURN_REQUESTED':
+    case 'RETURN_CONFIRMED':
+    case 'REQUEST_APPROVED':
+    case 'REQUEST_REJECTED':
+    case 'BORROW_RETURNED':
+      loadUserInfo()
+      break
+  }
+}
+
 const formatTimeAgo = (dateStr: string) => {
   if (!dateStr) return ''
   const date = new Date(dateStr)
@@ -772,11 +789,9 @@ const getImageUrl = (path: string | undefined) => {
   if (path.startsWith('http')) {
     return path
   }
-  // 如果路径已经是 /uploads/ 开头，直接返回
   if (path.startsWith('/uploads/')) {
     return path
   }
-  // 否则添加 /uploads/ 前缀（物品图片的情况）
   return `/uploads/${path}`
 }
 
@@ -861,5 +876,23 @@ const loadUserInfo = async () => {
 
 onMounted(() => {
   loadUserInfo()
+  
+  wsManager.on('NEW_BORROW_APPLY', handleWebSocketMessage)
+  wsManager.on('ITEM_STATUS_CHANGED', handleWebSocketMessage)
+  wsManager.on('RETURN_REQUESTED', handleWebSocketMessage)
+  wsManager.on('RETURN_CONFIRMED', handleWebSocketMessage)
+  wsManager.on('REQUEST_APPROVED', handleWebSocketMessage)
+  wsManager.on('REQUEST_REJECTED', handleWebSocketMessage)
+  wsManager.on('BORROW_RETURNED', handleWebSocketMessage)
+})
+
+onUnmounted(() => {
+  wsManager.off('NEW_BORROW_APPLY', handleWebSocketMessage)
+  wsManager.off('ITEM_STATUS_CHANGED', handleWebSocketMessage)
+  wsManager.off('RETURN_REQUESTED', handleWebSocketMessage)
+  wsManager.off('RETURN_CONFIRMED', handleWebSocketMessage)
+  wsManager.off('REQUEST_APPROVED', handleWebSocketMessage)
+  wsManager.off('REQUEST_REJECTED', handleWebSocketMessage)
+  wsManager.off('BORROW_RETURNED', handleWebSocketMessage)
 })
 </script>
