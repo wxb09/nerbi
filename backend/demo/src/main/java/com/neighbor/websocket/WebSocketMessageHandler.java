@@ -1,6 +1,8 @@
 package com.neighbor.websocket;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
+import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -18,7 +20,13 @@ public class WebSocketMessageHandler extends TextWebSocketHandler {
 
     private static final Logger log = LoggerFactory.getLogger(WebSocketMessageHandler.class);
     private static final Map<Long, WebSocketSession> userSessions = new ConcurrentHashMap<>();
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
+
+    public WebSocketMessageHandler() {
+        this.objectMapper = new ObjectMapper()
+            .registerModule(new JavaTimeModule())
+            .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+    }
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -78,18 +86,29 @@ public class WebSocketMessageHandler extends TextWebSocketHandler {
 
     public boolean sendMessageToUser(Long userId, Object message) {
         WebSocketSession session = userSessions.get(userId);
-        if (session == null || !session.isOpen()) {
-            log.debug("用户不在线：userId={}", userId);
+        
+        log.info("[WebSocket] 尝试推送消息: userId={}, session存在={}, 在线人数={}", 
+                userId, session != null, userSessions.size());
+        
+        if (session == null) {
+            log.info("[WebSocket] 用户不在线（无session）：userId={}, 当前在线用户={}", 
+                    userId, userSessions.keySet());
+            return false;
+        }
+        
+        if (!session.isOpen()) {
+            log.info("[WebSocket] 用户不在线（session已关闭）：userId={}", userId);
+            userSessions.remove(userId);
             return false;
         }
         
         try {
             String json = objectMapper.writeValueAsString(message);
             session.sendMessage(new TextMessage(json));
-            log.debug("消息推送成功：userId={}", userId);
+            log.info("[WebSocket] 消息推送成功：userId={}, message={}", userId, json);
             return true;
         } catch (IOException e) {
-            log.error("消息推送失败：userId={}", userId, e);
+            log.error("[WebSocket] 消息推送失败：userId={}", userId, e);
             userSessions.remove(userId);
             return false;
         }

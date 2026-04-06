@@ -16,6 +16,8 @@ import com.neighbor.repository.ItemRepository;
 import com.neighbor.repository.UserRepository;
 import com.neighbor.common.exception.BusinessException;
 import com.neighbor.websocket.WebSocketPushService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -30,6 +32,8 @@ import java.util.stream.Collectors;
 @Transactional
 public class BorrowService {
 
+    private static final Logger log = LoggerFactory.getLogger(BorrowService.class);
+    
     private final BorrowRepository borrowRepository;
     private final ItemRepository itemRepository;
     private final UserRepository userRepository;
@@ -54,6 +58,8 @@ public class BorrowService {
     }
 
     public Long createBorrow(BorrowRequest request, Long borrowerId) {
+        log.info("[BorrowService] 创建借阅申请: borrowerId={}, itemId={}", borrowerId, request.itemId());
+        
         Item item = itemRepository.findById(request.itemId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
         
@@ -88,17 +94,23 @@ public class BorrowService {
         borrow.setStatus(BorrowStatus.PENDING);
         
         Borrow saved = borrowRepository.save(borrow);
+        log.info("[BorrowService] 借阅申请已保存: borrowId={}", saved.getId());
         
         messageService.sendBorrowNotification(saved, MessageType.BORROW_APPLY);
         
         Long lenderPendingCount = webSocketPushService.getPendingCount(lender.getId());
+        log.info("[BorrowService] 准备推送通知给借出者: lenderId={}, pendingCount={}", lender.getId(), lenderPendingCount);
+        
         webSocketPushService.pushToUser(lender.getId(), 
             PushNotification.newBorrowApply(item.getId(), lenderPendingCount));
         
+        log.info("[BorrowService] 借阅申请创建完成");
         return saved.getId();
     }
 
     public void approveBorrow(Long borrowId, Long lenderId, ApproveRequest request) {
+        log.info("[BorrowService] 审批借阅申请: borrowId={}, lenderId={}, approved={}", borrowId, lenderId, request.approved());
+        
         Borrow borrow = borrowRepository.findById(borrowId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.BORROW_NOT_FOUND));
         
@@ -114,28 +126,37 @@ public class BorrowService {
         Long itemId = borrow.getItem().getId();
         
         if (request.approved()) {
+            log.info("[BorrowService] 审批通过: borrowerId={}, itemId={}", borrowerId, itemId);
+            
             borrow.setStatus(BorrowStatus.APPROVED);
             borrow.getItem().setStatus(ItemStatus.BORROWED);
             messageService.sendBorrowNotification(borrow, MessageType.BORROW_APPROVED);
             
+            log.info("[BorrowService] 推送给借入者: borrowerId={}", borrowerId);
             webSocketPushService.pushToUser(borrowerId, PushNotification.requestApproved(itemId));
             
             Long lenderPendingCount = webSocketPushService.getPendingCount(lenderId);
+            log.info("[BorrowService] 推送给借出者: lenderId={}, pendingCount={}", lenderId, lenderPendingCount);
             webSocketPushService.pushToUser(lenderId, 
                 PushNotification.itemStatusChanged(itemId, "BORROWED", lenderPendingCount));
         } else {
+            log.info("[BorrowService] 审批拒绝: borrowerId={}, itemId={}, reason={}", borrowerId, itemId, request.reason());
+            
             borrow.setStatus(BorrowStatus.REJECTED);
             borrow.setRejectReason(request.reason());
             messageService.sendBorrowNotification(borrow, MessageType.BORROW_REJECTED);
             
+            log.info("[BorrowService] 推送给借入者: borrowerId={}", borrowerId);
             webSocketPushService.pushToUser(borrowerId, PushNotification.requestRejected(itemId));
             
             Long lenderPendingCount = webSocketPushService.getPendingCount(lenderId);
+            log.info("[BorrowService] 推送给借出者: lenderId={}, pendingCount={}", lenderId, lenderPendingCount);
             webSocketPushService.pushToUser(lenderId, 
                 PushNotification.itemStatusChanged(itemId, "AVAILABLE", lenderPendingCount));
         }
         
         borrowRepository.save(borrow);
+        log.info("[BorrowService] 审批完成");
     }
 
     public void confirmPickup(Long borrowId, Long borrowerId) {

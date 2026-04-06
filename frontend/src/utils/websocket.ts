@@ -121,13 +121,19 @@ class WebSocketManager {
   }
 
   private handleMessage(message: WebSocketMessage) {
+    console.log('[WebSocket] 处理消息 - type:', message.type, 'data:', message.data)
+    
     const handlers = this.handlers.get(message.type)
     if (handlers) {
+      console.log(`[WebSocket] 找到 ${handlers.length} 个 ${message.type} 类型的处理器`)
       handlers.forEach(handler => handler(message))
+    } else {
+      console.log(`[WebSocket] 没有找到 ${message.type} 类型的处理器`)
     }
     
     const allHandlers = this.handlers.get('*')
     if (allHandlers) {
+      console.log(`[WebSocket] 找到 ${allHandlers.length} 个通配符处理器`)
       allHandlers.forEach(handler => handler(message))
     }
   }
