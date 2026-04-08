@@ -162,13 +162,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<Map<String, Object>> getMyReviews(Long userId) {
-        List<Review> reviews = reviewRepository.findByToUserId(userId, Pageable.unpaged()).getContent();
+        List<Review> reviews = reviewRepository.findByToUserIdAndDeletedFalseOrderByCreatedAtDesc(userId, Pageable.unpaged()).getContent();
         List<Map<String, Object>> result = new ArrayList<>();
         for (Review review : reviews) {
             Map<String, Object> reviewMap = new HashMap<>();
             reviewMap.put("id", review.getId());
             reviewMap.put("reviewerName", review.getFromUser().getNickname());
-            reviewMap.put("rating", review.getRating());
+            reviewMap.put("reviewerAvatar", review.getFromUser().getAvatar());
+            reviewMap.put("ratingStar", review.getRatingStar());
+            reviewMap.put("ratingTag", review.getRatingTag() != null ? review.getRatingTag().name() : null);
+            reviewMap.put("ratingTagDesc", review.getRatingTag() != null ? review.getRatingTag().getDescription() : null);
             reviewMap.put("content", review.getContent());
             reviewMap.put("createdAt", review.getCreatedAt());
             result.add(reviewMap);

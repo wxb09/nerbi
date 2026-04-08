@@ -19,7 +19,11 @@ public enum ErrorCode {
     START_DATE_IN_PAST(4007, "开始日期不能早于今天"),
     REMIND_LIMIT_EXCEEDED(4008, "今日提醒次数已达上限"),
     NOT_YOUR_ITEM(4009, "不是您的物品"),
-    SYSTEM_ERROR(5000, "系统异常");
+    REVIEW_NOT_FOUND(5001, "评价不存在"),
+    REVIEW_ALREADY_EXISTS(5002, "该借阅已评价"),
+    REVIEW_BORROW_NOT_RETURNED(5003, "借阅未完成，无法评价"),
+    REVIEW_NOT_YOUR_BORROW(5004, "只能评价自己的借阅记录"),
+    SYSTEM_ERROR(9000, "系统异常");
 
     private final int code;
     private final String message;

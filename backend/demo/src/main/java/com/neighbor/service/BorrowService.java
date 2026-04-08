@@ -99,12 +99,12 @@ public class BorrowService {
         messageService.sendBorrowNotification(saved, MessageType.BORROW_APPLY);
         
         Long lenderPendingCount = webSocketPushService.getPendingCount(lender.getId());
-        log.info("[BorrowService] 准备推送通知给借出者: lenderId={}, pendingCount={}", lender.getId(), lenderPendingCount);
+        log.debug("[BorrowService] 准备推送通知给借出者: lenderId={}, pendingCount={}", lender.getId(), lenderPendingCount);
         
         webSocketPushService.pushToUser(lender.getId(), 
             PushNotification.newBorrowApply(item.getId(), lenderPendingCount));
         
-        log.info("[BorrowService] 借阅申请创建完成");
+        log.debug("[BorrowService] 借阅申请创建完成");
         return saved.getId();
     }
 
@@ -132,11 +132,11 @@ public class BorrowService {
             borrow.getItem().setStatus(ItemStatus.BORROWED);
             messageService.sendBorrowNotification(borrow, MessageType.BORROW_APPROVED);
             
-            log.info("[BorrowService] 推送给借入者: borrowerId={}", borrowerId);
+            log.debug("[BorrowService] 推送给借入者: borrowerId={}", borrowerId);
             webSocketPushService.pushToUser(borrowerId, PushNotification.requestApproved(itemId));
             
             Long lenderPendingCount = webSocketPushService.getPendingCount(lenderId);
-            log.info("[BorrowService] 推送给借出者: lenderId={}, pendingCount={}", lenderId, lenderPendingCount);
+            log.debug("[BorrowService] 推送给借出者: lenderId={}, pendingCount={}", lenderId, lenderPendingCount);
             webSocketPushService.pushToUser(lenderId, 
                 PushNotification.itemStatusChanged(itemId, "BORROWED", lenderPendingCount));
         } else {
@@ -146,17 +146,17 @@ public class BorrowService {
             borrow.setRejectReason(request.reason());
             messageService.sendBorrowNotification(borrow, MessageType.BORROW_REJECTED);
             
-            log.info("[BorrowService] 推送给借入者: borrowerId={}", borrowerId);
+            log.debug("[BorrowService] 推送给借入者: borrowerId={}", borrowerId);
             webSocketPushService.pushToUser(borrowerId, PushNotification.requestRejected(itemId));
             
             Long lenderPendingCount = webSocketPushService.getPendingCount(lenderId);
-            log.info("[BorrowService] 推送给借出者: lenderId={}, pendingCount={}", lenderId, lenderPendingCount);
+            log.debug("[BorrowService] 推送给借出者: lenderId={}, pendingCount={}", lenderId, lenderPendingCount);
             webSocketPushService.pushToUser(lenderId, 
                 PushNotification.itemStatusChanged(itemId, "AVAILABLE", lenderPendingCount));
         }
         
         borrowRepository.save(borrow);
-        log.info("[BorrowService] 审批完成");
+        log.debug("[BorrowService] 审批完成");
     }
 
     public void confirmPickup(Long borrowId, Long borrowerId) {

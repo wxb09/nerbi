@@ -87,11 +87,11 @@ public class WebSocketMessageHandler extends TextWebSocketHandler {
     public boolean sendMessageToUser(Long userId, Object message) {
         WebSocketSession session = userSessions.get(userId);
         
-        log.info("[WebSocket] 尝试推送消息: userId={}, session存在={}, 在线人数={}", 
+        log.debug("[WebSocket] 尝试推送消息: userId={}, session存在={}, 在线人数={}", 
                 userId, session != null, userSessions.size());
         
         if (session == null) {
-            log.info("[WebSocket] 用户不在线（无session）：userId={}, 当前在线用户={}", 
+            log.debug("[WebSocket] 用户不在线（无session）：userId={}, 当前在线用户={}", 
                     userId, userSessions.keySet());
             return false;
         }
@@ -105,7 +105,8 @@ public class WebSocketMessageHandler extends TextWebSocketHandler {
         try {
             String json = objectMapper.writeValueAsString(message);
             session.sendMessage(new TextMessage(json));
-            log.info("[WebSocket] 消息推送成功：userId={}, message={}", userId, json);
+            log.info("[WebSocket] 消息推送成功：userId={}", userId);
+            log.debug("[WebSocket] 推送内容：{}", json);
             return true;
         } catch (IOException e) {
             log.error("[WebSocket] 消息推送失败：userId={}", userId, e);

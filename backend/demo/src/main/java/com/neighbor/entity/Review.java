@@ -1,5 +1,7 @@
 package com.neighbor.entity;
 
+import com.neighbor.enums.RatingTag;
+import com.neighbor.enums.ReviewType;
 import jakarta.persistence.*;
 import lombok.Data;
 import java.time.LocalDateTime;
@@ -28,17 +30,43 @@ public class Review {
     @JoinColumn(name = "item_id", nullable = false)
     private Item item;
 
-    @Column(nullable = false)
-    private Integer rating;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "target_type", length = 20, nullable = false)
+    private ReviewType targetType = ReviewType.ITEM;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(name = "rating_star")
+    private Integer ratingStar;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "rating_tag", length = 20)
+    private RatingTag ratingTag;
+
+    @Column(columnDefinition = "TEXT", nullable = false)
     private String content;
+
+    @Column(name = "is_deleted")
+    private Boolean deleted = false;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deleted_by")
+    private Long deletedBy;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "updated_at")
+    private LocalDateTime updatedAt;
+
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
+        updatedAt = LocalDateTime.now();
+    }
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
     }
 }
