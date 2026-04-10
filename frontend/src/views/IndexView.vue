@@ -67,9 +67,12 @@
     </div>
     <div v-else class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
       <article v-for="item in items" :key="item.id" class="bg-white rounded-3xl border-2 border-gray-100 overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
-        <div class="h-44 bg-gray-100 flex items-center justify-center overflow-hidden">
-          <img v-if="item.mainImage" :src="getImageUrl(item.mainImage)" :alt="item.name" class="h-full w-full object-cover rounded-t-3xl transition-transform duration-300 group-hover:scale-110" />
-          <div v-else class="text-gray-400">无图片</div>
+        <div class="h-44 bg-gray-100 relative overflow-hidden">
+          <img v-if="item.mainImage" :src="getImageUrl(item.mainImage)" :alt="item.name" class="rounded-t-3xl transition-transform duration-300 group-hover:scale-110" />
+          <div v-else class="h-full flex items-center justify-center text-gray-400">
+            <span class="iconify text-3xl mr-2" data-icon="solar:gallery-bold"></span>
+            <span>无图片</span>
+          </div>
         </div>
         <div class="p-5 space-y-2">
           <h3 class="font-bold text-[#333333]">{{ item.name }}</h3>

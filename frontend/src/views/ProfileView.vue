@@ -346,8 +346,8 @@
               :key="item.id" 
               class="border border-gray-100 rounded-2xl overflow-hidden hover:shadow-lg transition-shadow"
             >
-              <div class="aspect-square bg-gray-100 relative">
-                <img v-if="item.image" :src="getImageUrl(item.image)" class="w-full h-full object-cover" />
+              <div class="aspect-square bg-gray-100 relative overflow-hidden">
+                <img v-if="item.image" :src="getImageUrl(item.image)" />
                 <span v-else class="iconify text-4xl text-gray-300 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" data-icon="solar:box-bold"></span>
                 <span :class="getItemStatusClass(item.status)" class="absolute top-3 right-3">
                   {{ getItemStatusText(item.status) }}
@@ -408,8 +408,8 @@
               :key="draft.id" 
               class="border border-gray-100 rounded-2xl overflow-hidden hover:shadow-md transition-all"
             >
-              <div class="h-32 bg-gray-100 relative">
-                <img v-if="draft.image" :src="getImageUrl(draft.image)" class="w-full h-full object-cover" />
+              <div class="h-32 bg-gray-100 relative overflow-hidden">
+                <img v-if="draft.image" :src="getImageUrl(draft.image)" />
                 <span v-else class="iconify text-2xl text-gray-300 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" data-icon="solar:box-bold"></span>
               </div>
               <div class="p-4">
