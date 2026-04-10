@@ -12,8 +12,6 @@ export const uploadApi = {
       formData.append('files', file)
     })
     
-    const response = await api.post<UploadResult[]>('/upload/images', formData)
-    
-    return response
+    return api.post('/upload/images', formData) as Promise<UploadResult[]>
   }
 }

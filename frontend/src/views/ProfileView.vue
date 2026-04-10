@@ -232,7 +232,54 @@
                           等待确认
                         </span>
                       </template>
-                      <button class="text-gray-400 font-bold text-xs hover:text-red-500">更多</button>
+                      <div class="relative more-menu-container">
+                        <button 
+                          @click.stop="toggleMenu(item.id)" 
+                          class="text-gray-400 font-bold text-xs hover:text-gray-600 transition-colors"
+                        >
+                          更多
+                        </button>
+                        <Transition name="dropdown">
+                          <div 
+                            v-if="openMenuId === item.id"
+                            class="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 py-1 min-w-[100px] z-10"
+                          >
+                            <button 
+                              v-if="item.status === 'RETURNED' && activeTab === 'borrowed' && !reviewedBorrows.has(item.id)"
+                              @click="openReviewModal(item)"
+                              class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 text-[#E2B04D] font-medium"
+                            >
+                              发表评价
+                            </button>
+                            <button 
+                              v-if="item.status === 'RETURNED' && activeTab === 'borrowed' && reviewedBorrows.has(item.id)"
+                              class="w-full px-4 py-2 text-left text-sm text-gray-400 cursor-not-allowed"
+                            >
+                              已评价
+                            </button>
+                            <button 
+                              v-if="item.status === 'RETURNED' && activeTab === 'lent' && !reviewedBorrows.has(item.id)"
+                              @click="openReviewModal(item)"
+                              class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 text-[#E2B04D] font-medium"
+                            >
+                              评价借入者
+                            </button>
+                            <button 
+                              v-if="item.status === 'RETURNED' && activeTab === 'lent' && reviewedBorrows.has(item.id)"
+                              class="w-full px-4 py-2 text-left text-sm text-gray-400 cursor-not-allowed"
+                            >
+                              已评价
+                            </button>
+                            <button 
+                              v-if="item.status === 'PENDING' || item.status === 'APPROVED'"
+                              @click="cancelBorrow(item)"
+                              class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 text-red-500"
+                            >
+                              取消借阅
+                            </button>
+                          </div>
+                        </Transition>
+                      </div>
                     </div>
                   </td>
                 </tr>
@@ -255,9 +302,12 @@
             <div v-for="review in reviews.slice(0, 2)" :key="review.id" class="p-6 bg-gray-50 rounded-2xl relative">
               <span class="iconify absolute top-4 right-4 text-3xl text-gray-100" data-icon="bi:quote"></span>
               <div class="flex items-center space-x-2 mb-3">
-                <div class="flex text-yellow-400 text-xs">
-                  <span v-for="i in 5" :key="i" class="iconify" :data-icon="i <= review.rating ? 'solar:star-bold' : 'solar:star-line-duotone'"></span>
-                </div>
+                <span 
+                  v-if="review.ratingTagDesc" 
+                  class="px-2 py-1 bg-[#E2B04D]/10 text-[#E2B04D] text-xs font-bold rounded-full"
+                >
+                  {{ review.ratingTagDesc }}
+                </span>
                 <span class="text-[10px] text-gray-400">{{ formatTimeAgo(review.createdAt) }}</span>
               </div>
               <p class="text-sm text-gray-600 mb-4 font-medium leading-relaxed">"{{ review.content }}"</p>
@@ -437,31 +487,100 @@
 
       <template v-else-if="activeMenu === 'reviews'">
         <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
-          <div class="px-8 py-6 border-b border-gray-50">
+          <div class="flex items-center justify-between px-8 py-6 border-b border-gray-50">
             <h3 class="text-xl font-bold italic">评价管理</h3>
+            <div class="flex space-x-6 text-sm">
+              <button 
+                @click="reviewTab = 'received'"
+                :class="[
+                  'font-bold py-1',
+                  reviewTab === 'received' ? 'text-[#E2B04D] border-b-2 border-[#E2B04D]' : 'text-gray-400 hover:text-gray-600'
+                ]"
+              >
+                我收到的
+              </button>
+              <button 
+                @click="reviewTab = 'given'"
+                :class="[
+                  'font-bold py-1',
+                  reviewTab === 'given' ? 'text-[#E2B04D] border-b-2 border-[#E2B04D]' : 'text-gray-400 hover:text-gray-600'
+                ]"
+              >
+                我发出的
+              </button>
+            </div>
           </div>
-          <div v-if="reviews.length === 0" class="p-12 text-center">
+          <div v-if="currentReviews.length === 0" class="p-12 text-center">
             <span class="iconify text-6xl text-gray-200 mb-4" data-icon="solar:chat-round-dots-bold"></span>
-            <p class="text-gray-400">暂无评价</p>
+            <p class="text-gray-400">暂无{{ reviewTab === 'received' ? '收到' : '发出' }}的评价</p>
           </div>
-          <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-6 p-8">
-            <div v-for="review in reviews" :key="review.id" class="p-6 bg-gray-50 rounded-2xl relative">
-              <span class="iconify absolute top-4 right-4 text-3xl text-gray-100" data-icon="bi:quote"></span>
-              <div class="flex items-center space-x-2 mb-3">
-                <div class="flex text-yellow-400 text-xs">
-                  <span v-for="i in 5" :key="i" class="iconify" :data-icon="i <= review.rating ? 'solar:star-bold' : 'solar:star-line-duotone'"></span>
+          <div v-else class="divide-y divide-gray-50">
+            <div 
+              v-for="review in currentReviews" 
+              :key="review.id" 
+              class="px-8 py-6 hover:bg-gray-50/50 transition-colors"
+            >
+              <div class="flex items-start space-x-4">
+                <div class="w-12 h-12 rounded-xl bg-gray-100 flex-shrink-0 overflow-hidden">
+                  <img 
+                    v-if="review.itemImage" 
+                    :src="getImageUrl(review.itemImage)" 
+                    class="w-full h-full object-cover" 
+                  />
+                  <span v-else class="iconify text-2xl text-gray-300 w-full h-full flex items-center justify-center" data-icon="solar:box-bold"></span>
                 </div>
-                <span class="text-[10px] text-gray-400">{{ formatTimeAgo(review.createdAt) }}</span>
-              </div>
-              <p class="text-sm text-gray-600 mb-4 font-medium leading-relaxed">"{{ review.content }}"</p>
-              <div class="flex items-center space-x-2">
-                <img 
-                  v-if="review.reviewerAvatar" 
-                  :src="getImageUrl(review.reviewerAvatar)" 
-                  class="w-6 h-6 rounded-full"
-                />
-                <div v-else class="w-6 h-6 rounded-full bg-gray-200"></div>
-                <span class="text-xs font-bold">{{ review.reviewerName }}</span>
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center space-x-2 mb-2">
+                    <span class="font-bold text-sm">{{ review.itemName }}</span>
+                    <span 
+                      :class="[
+                        'px-2 py-0.5 text-[10px] font-bold rounded-full',
+                        review.targetType === 'ITEM' 
+                          ? 'bg-blue-100 text-blue-600' 
+                          : 'bg-purple-100 text-purple-600'
+                      ]"
+                    >
+                      {{ review.targetType === 'ITEM' ? '物品评价' : '用户评价' }}
+                    </span>
+                    <span class="text-[10px] text-gray-400">{{ formatTimeAgo(review.createdAt) }}</span>
+                  </div>
+                  
+                  <div class="flex items-center space-x-2 mb-2">
+                    <template v-if="review.targetType === 'ITEM' && review.ratingTagDesc">
+                      <span class="px-2 py-1 bg-[#E2B04D]/10 text-[#E2B04D] text-xs font-bold rounded-full">
+                        {{ review.ratingTagDesc }}
+                      </span>
+                    </template>
+                    <template v-if="review.targetType === 'USER' && review.ratingStar">
+                      <div class="flex text-yellow-400 text-xs">
+                        <span v-for="i in 5" :key="i" class="iconify" :data-icon="i <= (review.ratingStar || 0) ? 'solar:star-bold' : 'solar:star-line-duotone'"></span>
+                      </div>
+                    </template>
+                  </div>
+                  
+                  <p class="text-sm text-gray-600 font-medium leading-relaxed mb-3">"{{ review.content }}"</p>
+                  
+                  <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-2">
+                      <img 
+                        v-if="review.counterpartyAvatar" 
+                        :src="getImageUrl(review.counterpartyAvatar)" 
+                        class="w-5 h-5 rounded-full"
+                      />
+                      <div v-else class="w-5 h-5 rounded-full bg-gray-200"></div>
+                      <span class="text-xs text-gray-500">
+                        {{ reviewTab === 'received' ? '来自' : '评价' }}：{{ review.counterpartyName }}
+                      </span>
+                    </div>
+                    <button 
+                      v-if="reviewTab === 'given'"
+                      @click="deleteReview(review.id)"
+                      class="text-xs text-red-400 hover:text-red-600 transition-colors"
+                    >
+                      删除
+                    </button>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -469,16 +588,25 @@
       </template>
     </div>
   </main>
+  
+  <ReviewModal 
+    :visible="showReviewModal" 
+    :borrow-info="reviewingBorrow"
+    @close="showReviewModal = false"
+    @success="handleReviewSuccess"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import MainNav from '../components/MainNav.vue'
+import ReviewModal from '../components/ReviewModal.vue'
 import { useAuthStore } from '../stores/auth'
 import { userApi } from '../api/user'
 import { borrowApi } from '../api/borrow'
 import { itemApi } from '../api/item'
+import { reviewApi } from '../api/review'
 import { wsManager } from '../utils/websocket'
 
 interface User {
@@ -502,9 +630,11 @@ interface BorrowItem {
   counterpartyName: string
   counterpartyAvatar?: string
   counterpartyLocation?: string
+  counterpartyId?: number
   startTime: string
   endTime: string
   status: string
+  isBorrower?: boolean
 }
 
 interface MyItem {
@@ -518,10 +648,17 @@ interface MyItem {
 
 interface Review {
   id: number
-  rating: number
+  borrowId: number
+  itemId: number
+  itemName: string
+  itemImage?: string
+  targetType: 'ITEM' | 'USER'
+  ratingStar: number | null
+  ratingTag: string | null
+  ratingTagDesc: string | null
   content: string
-  reviewerName: string
-  reviewerAvatar?: string
+  counterpartyName: string
+  counterpartyAvatar?: string
   createdAt: string
 }
 
@@ -547,6 +684,15 @@ const stats = ref<Stats>({
   dueSoonCount: 0,
   todayCo2Saved: 0
 })
+
+const showReviewModal = ref(false)
+const reviewingBorrow = ref<BorrowItem | null>(null)
+const reviewedBorrows = ref<Set<number>>(new Set())
+const reviewedItems = ref<Set<number>>(new Set())
+const reviewedUsers = ref<Set<number>>(new Set())
+const openMenuId = ref<number | null>(null)
+const reviewTab = ref<'received' | 'given'>('received')
+const givenReviews = ref<Review[]>([])
 
 const activeMenu = ref('dashboard')
 const activeTab = ref('lent')
@@ -574,6 +720,10 @@ const ecoProgress = computed(() => {
 
 const currentItems = computed(() => {
   return activeTab.value === 'lent' ? lentItems.value : borrowedItems.value
+})
+
+const currentReviews = computed(() => {
+  return reviewTab.value === 'received' ? reviews.value : givenReviews.value
 })
 
 const recordItems = computed(() => {
@@ -800,12 +950,13 @@ const loadUserInfo = async () => {
     const userRes = await userApi.getCurrentUser()
     user.value = userRes as User
     
-    const [lentRes, borrowedRes, itemsRes, draftsRes, reviewsRes, statsRes] = await Promise.all([
+    const [lentRes, borrowedRes, itemsRes, draftsRes, reviewsRes, givenReviewsRes, statsRes] = await Promise.all([
       userApi.getMyLent(),
       userApi.getMyBorrowed(),
       userApi.getMyItems(),
       userApi.getMyDrafts(),
       userApi.getMyReviews(),
+      userApi.getMyGivenReviews(),
       userApi.getUserStats()
     ])
     
@@ -817,9 +968,11 @@ const loadUserInfo = async () => {
       counterpartyName: item.borrowerName || '未知',
       counterpartyAvatar: item.borrowerAvatar,
       counterpartyLocation: item.borrowerLocation,
+      counterpartyId: item.borrowerId,
       startTime: item.startTime,
       endTime: item.endTime,
-      status: item.status
+      status: item.status,
+      isBorrower: false
     }))
     
     borrowedItems.value = (borrowedRes || []).map((item: any) => ({
@@ -830,9 +983,11 @@ const loadUserInfo = async () => {
       counterpartyName: item.lenderName || '未知',
       counterpartyAvatar: item.lenderAvatar,
       counterpartyLocation: item.lenderLocation,
+      counterpartyId: item.lenderId,
       startTime: item.startTime,
       endTime: item.endTime,
-      status: item.status
+      status: item.status,
+      isBorrower: true
     }))
     
     myItems.value = (itemsRes || []).map((item: any) => ({
@@ -856,10 +1011,33 @@ const loadUserInfo = async () => {
     
     reviews.value = (reviewsRes || []).map((review: any) => ({
       id: review.id,
-      rating: review.rating,
+      borrowId: review.borrowId,
+      itemId: review.itemId,
+      itemName: review.itemName || '未知物品',
+      itemImage: review.itemImage,
+      targetType: review.targetType || 'ITEM',
+      ratingStar: review.ratingStar,
+      ratingTag: review.ratingTag,
+      ratingTagDesc: review.ratingTagDesc,
       content: review.content,
-      reviewerName: review.reviewerName || '匿名用户',
-      reviewerAvatar: review.reviewerAvatar,
+      counterpartyName: review.reviewerName || review.counterpartyName || '匿名用户',
+      counterpartyAvatar: review.reviewerAvatar || review.counterpartyAvatar,
+      createdAt: review.createdAt
+    }))
+    
+    givenReviews.value = (givenReviewsRes || []).map((review: any) => ({
+      id: review.id,
+      borrowId: review.borrowId,
+      itemId: review.itemId,
+      itemName: review.itemName || '未知物品',
+      itemImage: review.itemImage,
+      targetType: review.targetType || 'ITEM',
+      ratingStar: review.ratingStar,
+      ratingTag: review.ratingTag,
+      ratingTagDesc: review.ratingTagDesc,
+      content: review.content,
+      counterpartyName: review.counterpartyName || '未知用户',
+      counterpartyAvatar: review.counterpartyAvatar,
       createdAt: review.createdAt
     }))
     
@@ -884,6 +1062,8 @@ onMounted(() => {
   wsManager.on('REQUEST_APPROVED', handleWebSocketMessage)
   wsManager.on('REQUEST_REJECTED', handleWebSocketMessage)
   wsManager.on('BORROW_RETURNED', handleWebSocketMessage)
+  
+  document.addEventListener('click', handleClickOutside)
 })
 
 onUnmounted(() => {
@@ -894,5 +1074,85 @@ onUnmounted(() => {
   wsManager.off('REQUEST_APPROVED', handleWebSocketMessage)
   wsManager.off('REQUEST_REJECTED', handleWebSocketMessage)
   wsManager.off('BORROW_RETURNED', handleWebSocketMessage)
+  
+  document.removeEventListener('click', handleClickOutside)
 })
+
+const handleClickOutside = (event: MouseEvent) => {
+  const target = event.target as HTMLElement
+  if (!target.closest('.more-menu-container')) {
+    openMenuId.value = null
+  }
+}
+
+const toggleMenu = (itemId: number) => {
+  openMenuId.value = openMenuId.value === itemId ? null : itemId
+}
+
+const openReviewModal = async (item: BorrowItem) => {
+  openMenuId.value = null
+  
+  try {
+    const result = await reviewApi.checkReviewStatus(item.id) as { 
+      hasReviewed: boolean
+      hasReviewedItem: boolean
+      hasReviewedUser: boolean
+    }
+    if (result.hasReviewedItem && result.hasReviewedUser) {
+      alert('您已评价过该借阅记录')
+      reviewedBorrows.value.add(item.id)
+      return
+    }
+  } catch (error) {
+    console.error('检查评价状态失败', error)
+  }
+  
+  reviewingBorrow.value = item
+  showReviewModal.value = true
+}
+
+const handleReviewSuccess = () => {
+  if (reviewingBorrow.value) {
+    reviewedBorrows.value.add(reviewingBorrow.value.id)
+  }
+  loadUserInfo()
+}
+
+const deleteReview = async (reviewId: number) => {
+  if (!confirm('确认要删除这条评价吗？')) return
+  
+  try {
+    await reviewApi.deleteReview(reviewId)
+    alert('评价已删除')
+    loadUserInfo()
+  } catch (error: any) {
+    alert(error.message || '删除失败')
+  }
+}
+
+const cancelBorrow = async (item: BorrowItem) => {
+  openMenuId.value = null
+  if (!confirm('确认要取消该借阅申请吗？')) return
+  
+  try {
+    await borrowApi.cancelBorrow(item.id)
+    alert('已取消借阅')
+    loadUserInfo()
+  } catch (error: any) {
+    alert(error.message || '取消失败')
+  }
+}
 </script>
+
+<style scoped>
+.dropdown-enter-active,
+.dropdown-leave-active {
+  transition: all 0.2s ease;
+}
+
+.dropdown-enter-from,
+.dropdown-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+</style>

@@ -167,8 +167,47 @@ public class UserServiceImpl implements UserService {
         for (Review review : reviews) {
             Map<String, Object> reviewMap = new HashMap<>();
             reviewMap.put("id", review.getId());
+            reviewMap.put("borrowId", review.getBorrow().getId());
+            reviewMap.put("itemId", review.getItem().getId());
+            reviewMap.put("itemName", review.getItem().getName());
+            
+            List<ItemImage> images = itemImageRepository.findByItemIdOrderBySortOrderAsc(review.getItem().getId());
+            if (!images.isEmpty()) {
+                reviewMap.put("itemImage", images.get(0).getUrl());
+            }
+            
+            reviewMap.put("targetType", review.getTargetType().name());
             reviewMap.put("reviewerName", review.getFromUser().getNickname());
             reviewMap.put("reviewerAvatar", review.getFromUser().getAvatar());
+            reviewMap.put("ratingStar", review.getRatingStar());
+            reviewMap.put("ratingTag", review.getRatingTag() != null ? review.getRatingTag().name() : null);
+            reviewMap.put("ratingTagDesc", review.getRatingTag() != null ? review.getRatingTag().getDescription() : null);
+            reviewMap.put("content", review.getContent());
+            reviewMap.put("createdAt", review.getCreatedAt());
+            result.add(reviewMap);
+        }
+        return result;
+    }
+
+    @Override
+    public List<Map<String, Object>> getMyGivenReviews(Long userId) {
+        List<Review> reviews = reviewRepository.findByFromUserIdAndDeletedFalseOrderByCreatedAtDesc(userId, Pageable.unpaged()).getContent();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Review review : reviews) {
+            Map<String, Object> reviewMap = new HashMap<>();
+            reviewMap.put("id", review.getId());
+            reviewMap.put("borrowId", review.getBorrow().getId());
+            reviewMap.put("itemId", review.getItem().getId());
+            reviewMap.put("itemName", review.getItem().getName());
+            
+            List<ItemImage> images = itemImageRepository.findByItemIdOrderBySortOrderAsc(review.getItem().getId());
+            if (!images.isEmpty()) {
+                reviewMap.put("itemImage", images.get(0).getUrl());
+            }
+            
+            reviewMap.put("targetType", review.getTargetType().name());
+            reviewMap.put("counterpartyName", review.getToUser().getNickname());
+            reviewMap.put("counterpartyAvatar", review.getToUser().getAvatar());
             reviewMap.put("ratingStar", review.getRatingStar());
             reviewMap.put("ratingTag", review.getRatingTag() != null ? review.getRatingTag().name() : null);
             reviewMap.put("ratingTagDesc", review.getRatingTag() != null ? review.getRatingTag().getDescription() : null);

@@ -25,6 +25,9 @@ export const userApi = {
   getMyReviews: () => 
     api.get('/users/me/reviews'),
   
+  getMyGivenReviews: () => 
+    api.get('/users/me/reviews/given'),
+  
   getMyDrafts: () => 
     api.get('/users/me/drafts'),
   

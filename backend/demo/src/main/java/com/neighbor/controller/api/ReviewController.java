@@ -4,6 +4,7 @@ import com.neighbor.auth.AuthUser;
 import com.neighbor.common.api.ApiResponse;
 import com.neighbor.dto.ReviewDTO;
 import com.neighbor.dto.ReviewRequest;
+import com.neighbor.enums.ReviewType;
 import com.neighbor.service.ReviewService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -13,6 +14,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -51,28 +53,41 @@ public class ReviewController {
     @GetMapping("/user/{userId}/received")
     public ApiResponse<Page<ReviewDTO>> getUserReceivedReviews(
             @PathVariable Long userId,
+            @RequestParam(required = false) String type,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        if (type != null && !type.isEmpty()) {
+            ReviewType reviewType = ReviewType.valueOf(type);
+            return ApiResponse.ok(reviewService.getReviewsByToUserIdAndType(userId, reviewType, pageable));
+        }
         return ApiResponse.ok(reviewService.getReviewsByToUserId(userId, pageable));
     }
 
     @GetMapping("/user/{userId}/given")
     public ApiResponse<Page<ReviewDTO>> getUserGivenReviews(
             @PathVariable Long userId,
+            @RequestParam(required = false) String type,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        if (type != null && !type.isEmpty()) {
+            ReviewType reviewType = ReviewType.valueOf(type);
+            return ApiResponse.ok(reviewService.getReviewsByFromUserIdAndType(userId, reviewType, pageable));
+        }
         return ApiResponse.ok(reviewService.getReviewsByFromUserId(userId, pageable));
     }
 
     @GetMapping("/borrow/{borrowId}/check")
-    public ApiResponse<Map<String, Boolean>> checkReviewStatus(
+    public ApiResponse<Map<String, Object>> checkReviewStatus(
             Authentication authentication,
             @PathVariable Long borrowId) {
         Long userId = getUserIdFromAuth(authentication);
-        boolean hasReviewed = reviewService.hasReviewed(borrowId, userId);
-        return ApiResponse.ok(Map.of("hasReviewed", hasReviewed));
+        Map<String, Object> result = new HashMap<>();
+        result.put("hasReviewed", reviewService.hasReviewed(borrowId, userId));
+        result.put("hasReviewedItem", reviewService.hasReviewedWithType(borrowId, userId, ReviewType.ITEM));
+        result.put("hasReviewedUser", reviewService.hasReviewedWithType(borrowId, userId, ReviewType.USER));
+        return ApiResponse.ok(result);
     }
 
     @DeleteMapping("/{id}")

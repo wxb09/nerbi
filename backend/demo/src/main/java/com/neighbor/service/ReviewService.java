@@ -37,7 +37,8 @@ public class ReviewService {
     }
 
     public Long createReview(ReviewRequest request, Long fromUserId) {
-        log.info("[ReviewService] 创建评价: fromUserId={}, borrowId={}", fromUserId, request.borrowId());
+        log.info("[ReviewService] 创建评价: fromUserId={}, borrowId={}, type={}", 
+                fromUserId, request.borrowId(), request.targetType());
         
         Borrow borrow = borrowRepository.findById(request.borrowId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.BORROW_NOT_FOUND));
@@ -46,28 +47,52 @@ public class ReviewService {
             throw new BusinessException(ErrorCode.REVIEW_BORROW_NOT_RETURNED);
         }
         
-        if (!borrow.getBorrower().getId().equals(fromUserId)) {
-            throw new BusinessException(ErrorCode.REVIEW_NOT_YOUR_BORROW);
-        }
-        
-        Optional<Review> existingReview = reviewRepository.findByBorrowIdAndFromUserIdAndDeletedFalse(
-                request.borrowId(), fromUserId);
-        if (existingReview.isPresent()) {
-            throw new BusinessException(ErrorCode.REVIEW_ALREADY_EXISTS);
-        }
-        
         User borrower = borrow.getBorrower();
         User lender = borrow.getLender();
         Item item = borrow.getItem();
         
+        User fromUser;
+        User toUser;
+        
+        if (request.targetType() == ReviewType.ITEM) {
+            if (!borrower.getId().equals(fromUserId)) {
+                throw new BusinessException(ErrorCode.REVIEW_NOT_YOUR_BORROW);
+            }
+            fromUser = borrower;
+            toUser = lender;
+        } else if (request.targetType() == ReviewType.USER) {
+            if (borrower.getId().equals(fromUserId)) {
+                fromUser = borrower;
+                toUser = lender;
+            } else if (lender.getId().equals(fromUserId)) {
+                fromUser = lender;
+                toUser = borrower;
+            } else {
+                throw new BusinessException(ErrorCode.REVIEW_NOT_YOUR_BORROW);
+            }
+        } else {
+            throw new BusinessException(ErrorCode.PARAM_ERROR);
+        }
+        
+        Optional<Review> existingReview = reviewRepository.findByBorrowIdAndFromUserIdAndTargetTypeAndDeletedFalse(
+                request.borrowId(), fromUserId, request.targetType());
+        if (existingReview.isPresent()) {
+            throw new BusinessException(ErrorCode.REVIEW_ALREADY_EXISTS);
+        }
+        
         Review review = new Review();
         review.setBorrow(borrow);
-        review.setFromUser(borrower);
-        review.setToUser(lender);
+        review.setFromUser(fromUser);
+        review.setToUser(toUser);
         review.setItem(item);
-        review.setTargetType(ReviewType.ITEM);
-        review.setRatingTag(request.ratingTag());
+        review.setTargetType(request.targetType());
         review.setContent(request.content());
+        
+        if (request.targetType() == ReviewType.ITEM) {
+            review.setRatingTag(request.ratingTag());
+        } else {
+            review.setRatingStar(request.ratingStar());
+        }
         
         Review saved = reviewRepository.save(review);
         log.info("[ReviewService] 评价已保存: reviewId={}", saved.getId());
@@ -84,7 +109,8 @@ public class ReviewService {
 
     @Transactional(readOnly = true)
     public Page<ReviewDTO> getReviewsByItemId(Long itemId, Pageable pageable) {
-        return reviewRepository.findByItemIdAndDeletedFalseOrderByCreatedAtDesc(itemId, pageable)
+        return reviewRepository.findByItemIdAndTargetTypeAndDeletedFalseOrderByCreatedAtDesc(
+                itemId, ReviewType.ITEM, pageable)
                 .map(this::toDTO);
     }
 
@@ -101,8 +127,28 @@ public class ReviewService {
     }
 
     @Transactional(readOnly = true)
+    public Page<ReviewDTO> getReviewsByToUserIdAndType(Long toUserId, ReviewType type, Pageable pageable) {
+        return reviewRepository.findByToUserIdAndTargetTypeAndDeletedFalseOrderByCreatedAtDesc(
+                toUserId, type, pageable)
+                .map(this::toDTO);
+    }
+
+    @Transactional(readOnly = true)
+    public Page<ReviewDTO> getReviewsByFromUserIdAndType(Long fromUserId, ReviewType type, Pageable pageable) {
+        return reviewRepository.findByFromUserIdAndTargetTypeAndDeletedFalseOrderByCreatedAtDesc(
+                fromUserId, type, pageable)
+                .map(this::toDTO);
+    }
+
+    @Transactional(readOnly = true)
     public boolean hasReviewed(Long borrowId, Long fromUserId) {
         return reviewRepository.findByBorrowIdAndFromUserIdAndDeletedFalse(borrowId, fromUserId).isPresent();
+    }
+
+    @Transactional(readOnly = true)
+    public boolean hasReviewedWithType(Long borrowId, Long fromUserId, ReviewType type) {
+        return reviewRepository.findByBorrowIdAndFromUserIdAndTargetTypeAndDeletedFalse(
+                borrowId, fromUserId, type).isPresent();
     }
 
     public void deleteReview(Long reviewId, Long userId) {
