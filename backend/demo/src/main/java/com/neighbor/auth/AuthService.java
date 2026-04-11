@@ -30,16 +30,15 @@ public class AuthService {
             throw new BusinessException(2001, "验证码错误");
         }
         
-        // 从数据库中查找用户
         Optional<User> userOptional = userRepository.findByPhone(req.phone());
         User user;
         
         if (userOptional.isEmpty()) {
-            // 用户不存在，创建新用户
             user = new User();
             user.setPhone(req.phone());
             user.setNickname("新用户");
             user.setStatus(UserStatus.ACTIVE);
+            user.setRole(com.neighbor.enums.UserRole.USER);
             user.setCreditScore(new java.math.BigDecimal(10.00));
             user.setBorrowCount(0);
             user.setLendCount(0);
@@ -48,16 +47,22 @@ public class AuthService {
         } else {
             user = userOptional.get();
         }
+
+        if (user.getStatus() == UserStatus.BANNED) {
+            throw new BusinessException(1002, "账号已被封禁，请联系管理员");
+        }
         
-        // 转换为UserInfo
+        String role = user.getRole() != null ? user.getRole().name() : "USER";
+
         UserInfo userInfo = new UserInfo(
                 user.getId().toString(),
                 user.getNickname(),
                 user.getAvatar(),
-                user.getCommunity() != null ? user.getCommunity().getId().toString() : ""
+                user.getCommunity() != null ? user.getCommunity().getId().toString() : "",
+                role
         );
         
-        String token = jwtService.generateToken(user.getId().toString(), req.phone(), "user");
+        String token = jwtService.generateToken(user.getId().toString(), req.phone(), role);
         return new LoginResponse(token, userInfo);
     }
 

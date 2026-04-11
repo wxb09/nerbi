@@ -24,7 +24,7 @@ const router = createRouter({
     { path: '/drafts', component: DraftsView, meta: { requiresAuth: true } },
     { path: '/profile', component: ProfileView, meta: { requiresAuth: true } },
     { path: '/messages', component: MessageView, meta: { requiresAuth: true } },
-    { path: '/admin', component: AdminView },
+    { path: '/admin', component: AdminView, meta: { requiresAuth: true, requiresAdmin: true } },
   ],
 })
 
@@ -32,13 +32,14 @@ const router = createRouter({
 router.beforeEach((to, _from) => {
   const authStore = useAuthStore()
   
-  // 检查页面是否需要认证
   if (to.meta.requiresAuth) {
-    if (authStore.isLoggedIn) {
-      return true
-    } else {
-      // 未登录，跳转到登录页
+    if (!authStore.isLoggedIn) {
       return '/login'
+    }
+  }
+  if (to.meta.requiresAdmin) {
+    if (authStore.user?.role !== 'ADMIN') {
+      return '/index'
     }
   }
   return true

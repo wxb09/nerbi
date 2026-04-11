@@ -6,6 +6,7 @@ interface User {
   nickname: string
   avatar: string
   communityId: string
+  role: string
 }
 
 export const useAuthStore = defineStore('auth', {

@@ -85,8 +85,7 @@ public class ItemServiceImpl implements ItemService {
         
         Item item = new Item();
         populateItemFromData(item, itemData, user);
-        item.setStatus(ItemStatus.AVAILABLE);
-        item.setPublishedAt(LocalDateTime.now());
+        item.setStatus(ItemStatus.PENDING_REVIEW);
         
         return itemRepository.save(item);
     }
@@ -214,8 +213,11 @@ public class ItemServiceImpl implements ItemService {
         if (data.containsKey("status")) {
             try {
                 ItemStatus status = ItemStatus.valueOf((String) data.get("status"));
+                if (status == ItemStatus.AVAILABLE) {
+                    status = ItemStatus.PENDING_REVIEW;
+                }
                 item.setStatus(status);
-                if (status == ItemStatus.AVAILABLE && item.getPublishedAt() == null) {
+                if (status == ItemStatus.PENDING_REVIEW && item.getPublishedAt() == null) {
                     item.setPublishedAt(LocalDateTime.now());
                 }
             } catch (IllegalArgumentException ignored) {

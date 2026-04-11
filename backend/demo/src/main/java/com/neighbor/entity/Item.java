@@ -68,6 +68,12 @@ public class Item {
     @Column(length = 500)
     private String tags;
 
+    @Column(name = "audit_remark", length = 500)
+    private String auditRemark;
+
+    @Column(name = "audited_at")
+    private LocalDateTime auditedAt;
+
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 

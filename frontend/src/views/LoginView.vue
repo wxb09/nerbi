@@ -84,7 +84,11 @@ const login = async () => {
   try {
     const res = await authApi.login({ phone: phone.value, verifyCode: verifyCode.value })
     authStore.login(res.user, res.token)
-    router.push('/index')
+    if (res.user?.role === 'ADMIN') {
+      router.push('/admin')
+    } else {
+      router.push('/index')
+    }
   } catch (error: any) {
     // 登录失败时，清除可能存在的旧登录状态
     authStore.logout()

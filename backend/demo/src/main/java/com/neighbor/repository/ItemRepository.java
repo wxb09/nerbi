@@ -42,4 +42,12 @@ public interface ItemRepository extends JpaRepository<Item, Long> {
     
     @Query("SELECT COUNT(i) FROM Item i WHERE i.owner.id = :ownerId AND i.status = :status")
     Long countByOwnerIdAndStatus(@Param("ownerId") Long ownerId, @Param("status") ItemStatus status);
+
+    Page<Item> findByStatus(ItemStatus status, Pageable pageable);
+
+    @Query("SELECT COUNT(i) FROM Item i WHERE i.status = :status")
+    Long countByStatus(@Param("status") ItemStatus status);
+
+    @Query("SELECT COUNT(i) FROM Item i WHERE i.createdAt >= :since")
+    Long countByCreatedAtAfter(@Param("since") java.time.LocalDateTime since);
 }

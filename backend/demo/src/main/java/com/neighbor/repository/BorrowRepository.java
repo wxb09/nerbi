@@ -48,4 +48,15 @@ public interface BorrowRepository extends JpaRepository<Borrow, Long> {
     
     @Query("SELECT b FROM Borrow b JOIN FETCH b.item JOIN FETCH b.borrower WHERE b.status IN :statuses AND b.endDate < :date AND (b.lastRemindAt IS NULL OR b.lastRemindAt < :remindThreshold)")
     List<Borrow> findOverdueForReminder(@Param("statuses") List<BorrowStatus> statuses, @Param("date") LocalDate date, @Param("remindThreshold") LocalDateTime remindThreshold);
+
+    Page<Borrow> findByStatus(BorrowStatus status, Pageable pageable);
+
+    @Query("SELECT COUNT(b) FROM Borrow b WHERE b.status = :status")
+    Long countByStatus(@Param("status") BorrowStatus status);
+
+    @Query("SELECT COUNT(b) FROM Borrow b WHERE b.createdAt >= :since")
+    Long countByCreatedAtAfter(@Param("since") java.time.LocalDateTime since);
+
+    @Query("SELECT COUNT(b) FROM Borrow b WHERE b.status IN :statuses")
+    Long countByStatusIn(@Param("statuses") List<BorrowStatus> statuses);
 }

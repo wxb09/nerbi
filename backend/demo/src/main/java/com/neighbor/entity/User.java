@@ -1,5 +1,6 @@
 package com.neighbor.entity;
 
+import com.neighbor.enums.UserRole;
 import com.neighbor.enums.UserStatus;
 import jakarta.persistence.*;
 import lombok.Data;
@@ -54,6 +55,10 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(length = 20)
     private UserStatus status = UserStatus.ACTIVE;
+
+    @Enumerated(EnumType.STRING)
+    @Column(length = 20)
+    private UserRole role = UserRole.USER;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

@@ -7,6 +7,7 @@ public enum BorrowStatus {
     RETURN_REQUESTED("申请归还"),
     RETURNED("已归还"),
     OVERDUE("已超期"),
+    DISPUTED("纠纷中"),
     REJECTED("已拒绝"),
     CANCELLED("已取消");
 

@@ -9,6 +9,7 @@ export interface UserDTO {
   borrowCount: number
   lendCount: number
   co2Saved: number
+  role: string
 }
 
 export interface UserStatsDTO {
