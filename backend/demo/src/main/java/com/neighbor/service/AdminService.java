@@ -195,21 +195,25 @@ public class AdminService {
         }
 
         User operator = userRepository.getReferenceById(operatorId);
-        dispute.setResolvedBy(operator);
-        dispute.setResolvedAt(LocalDateTime.now());
         dispute.setResolution(request.resolution());
 
         Borrow borrow = dispute.getBorrow();
 
         if ("resolve".equals(request.action())) {
             dispute.setStatus(DisputeStatus.RESOLVED);
+            dispute.setResolvedBy(operator);
+            dispute.setResolvedAt(LocalDateTime.now());
             borrow.setStatus(BorrowStatus.RETURNED);
             if (borrow.getItem() != null) {
                 borrow.getItem().setStatus(ItemStatus.AVAILABLE);
             }
         } else if ("dismiss".equals(request.action())) {
             dispute.setStatus(DisputeStatus.DISMISSED);
+            dispute.setResolvedBy(operator);
+            dispute.setResolvedAt(LocalDateTime.now());
             borrow.setStatus(BorrowStatus.ACTIVE);
+        } else if ("investigate".equals(request.action())) {
+            dispute.setStatus(DisputeStatus.INVESTIGATING);
         } else {
             throw new BusinessException(2001, "无效的处理操作");
         }
@@ -217,12 +221,21 @@ public class AdminService {
         disputeRepository.save(dispute);
         borrowRepository.save(borrow);
 
-        messageService.sendMessage(borrow.getBorrower().getId(), MessageType.SYSTEM,
-                "纠纷处理通知", "您提交的借阅纠纷已处理" +
-                (request.resolution() != null ? "：" + request.resolution() : "") + "。", borrow.getId());
-        messageService.sendMessage(borrow.getLender().getId(), MessageType.SYSTEM,
-                "纠纷处理通知", "您涉及的借阅纠纷已处理" +
-                (request.resolution() != null ? "：" + request.resolution() : "") + "。", borrow.getId());
+        if ("resolve".equals(request.action()) || "dismiss".equals(request.action())) {
+            messageService.sendMessage(borrow.getBorrower().getId(), MessageType.SYSTEM,
+                    "纠纷处理通知", "您提交的借阅纠纷已处理" +
+                    (request.resolution() != null ? "：" + request.resolution() : "") + "。", borrow.getId());
+            messageService.sendMessage(borrow.getLender().getId(), MessageType.SYSTEM,
+                    "纠纷处理通知", "您涉及的借阅纠纷已处理" +
+                    (request.resolution() != null ? "：" + request.resolution() : "") + "。", borrow.getId());
+        } else if ("investigate".equals(request.action())) {
+            messageService.sendMessage(borrow.getBorrower().getId(), MessageType.SYSTEM,
+                    "纠纷调研通知", "您提交的借阅纠纷正在调研中" +
+                    (request.resolution() != null ? "：" + request.resolution() : "") + "，请耐心等待。", borrow.getId());
+            messageService.sendMessage(borrow.getLender().getId(), MessageType.SYSTEM,
+                    "纠纷调研通知", "您涉及的借阅纠纷正在调研中" +
+                    (request.resolution() != null ? "：" + request.resolution() : "") + "，请耐心等待。", borrow.getId());
+        }
     }
 
     private AdminUserDTO toAdminUserDTO(User user) {

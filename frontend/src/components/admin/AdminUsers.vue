@@ -38,7 +38,7 @@
               <td>
                 <div class="flex items-center gap-2.5">
                   <div v-if="user.avatar" class="w-9 h-9 rounded-lg overflow-hidden flex-shrink-0">
-                    <img :src="user.avatar.startsWith('http') ? user.avatar : `http://localhost:8080/uploads/${user.avatar}`" class="w-full h-full object-cover" />
+                    <img :src="getAvatarUrl(user.avatar)" class="w-full h-full object-cover" />
                   </div>
                   <div v-else class="w-9 h-9 rounded-lg bg-[#EEE8DD] flex items-center justify-center flex-shrink-0">
                     <span class="iconify text-[#C4B69A]" data-icon="solar:user-bold"></span>
@@ -142,6 +142,13 @@ function showToast(message: string, type: string = 'success') {
 }
 
 function formatDate(dateStr: string | null) { return dateStr ? dateStr.substring(0, 10) : '-' }
+
+function getAvatarUrl(avatar: string | null): string {
+  if (!avatar) return ''
+  if (avatar.startsWith('http')) return avatar
+  if (avatar.startsWith('/uploads')) return `http://localhost:8080${avatar}`
+  return `http://localhost:8080/uploads/${avatar}`
+}
 
 async function search() {
   loading.value = true; error.value = ''

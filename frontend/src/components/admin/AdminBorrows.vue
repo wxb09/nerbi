@@ -37,7 +37,7 @@
             <thead>
               <tr>
                 <th>纠纷ID</th>
-                <th>举报人</th>
+                <th>申诉人</th>
                 <th>物品</th>
                 <th>原因</th>
                 <th>状态</th>
@@ -54,11 +54,11 @@
                 <td><span class="text-xs font-bold px-2 py-0.5 rounded-full" :class="disputeStatusClass(d.status)">{{ disputeStatusLabel(d.status) }}</span></td>
                 <td class="text-sm text-[#9A9082]">{{ formatDate(d.createdAt) }}</td>
                 <td>
-                  <div class="flex items-center justify-center gap-1.5">
-                    <button v-if="d.status === 'PENDING' || d.status === 'INVESTIGATING'" class="action-btn approve" title="解决纠纷" @click="openResolveModal(d, 'resolve')">
+                  <div class="flex items-center gap-2">
+                    <button v-if="d.status === 'PENDING'" class="action-btn approve" title="解决纠纷" @click="openResolveModal(d, 'resolve')">
                       <span class="iconify text-base" data-icon="solar:check-circle-bold"></span>
                     </button>
-                    <button v-if="d.status === 'PENDING' || d.status === 'INVESTIGATING'" class="action-btn reject" title="驳回纠纷" @click="openResolveModal(d, 'dismiss')">
+                    <button v-if="d.status === 'PENDING'" class="action-btn reject" title="驳回纠纷" @click="openResolveModal(d, 'dismiss')">
                       <span class="iconify text-base" data-icon="solar:close-circle-bold"></span>
                     </button>
                   </div>
@@ -100,7 +100,7 @@
                 <td class="text-sm text-[#9A9082]">{{ b.startDate }} ~ {{ b.endDate }}</td>
                 <td><span class="text-xs font-bold px-2 py-0.5 rounded-full" :class="borrowStatusClass(b.status)">{{ borrowStatusLabel(b.status) }}</span></td>
                 <td>
-                  <div class="flex items-center justify-center gap-1.5">
+                  <div class="flex items-center gap-1.5">
                     <button v-if="b.status !== 'DISPUTED' && b.status !== 'RETURNED' && b.status !== 'CANCELLED'" class="action-btn warn" title="发起纠纷" @click="openDisputeModal(b)">
                       <span class="iconify text-base" data-icon="solar:shield-warning-bold"></span>
                     </button>
@@ -125,7 +125,7 @@
       <div v-if="resolveModal.show" class="modal-overlay" @click.self="resolveModal.show = false">
         <div class="modal-content">
           <div class="flex items-center justify-between mb-5">
-            <h3 class="text-lg font-bold text-[#3D3426]">{{ resolveModal.action === 'resolve' ? '解决纠纷' : '驳回纠纷' }}</h3>
+            <h3 class="text-lg font-bold text-[#3D3426]">{{ resolveModal.action === 'resolve' ? '解决纠纷' : resolveModal.action === 'investigate' ? '开始调研' : '驳回纠纷' }}</h3>
             <button class="p-1 hover:bg-[#FFF9EE] rounded-lg" @click="resolveModal.show = false">
               <span class="iconify text-xl text-[#9A9082]" data-icon="solar:close-circle-bold"></span>
             </button>
@@ -133,19 +133,19 @@
           <div class="mb-4 p-4 bg-[#FFF9EE] rounded-xl">
             <p class="text-sm text-[#3D3426]">纠纷ID：<span class="font-semibold">#{{ resolveModal.disputeId }}</span></p>
             <p class="text-sm text-[#9A9082] mt-1">物品：{{ resolveModal.itemName }}</p>
-            <p class="text-sm text-[#9A9082] mt-1">举报人：{{ resolveModal.reporterName }}</p>
+            <p class="text-sm text-[#9A9082] mt-1">申诉人：{{ resolveModal.reporterName }}</p>
             <p class="text-sm text-[#3D3426] mt-2">原因：{{ resolveModal.reason }}</p>
           </div>
           <div class="mb-5">
             <label class="block text-sm font-medium text-[#3D3426] mb-2">
-              {{ resolveModal.action === 'resolve' ? '处理结果' : '驳回原因' }}
+              {{ resolveModal.action === 'resolve' ? '处理结果' : resolveModal.action === 'investigate' ? '调研备注' : '驳回原因' }}
             </label>
-            <textarea v-model="resolveModal.resolution" class="w-full px-4 py-3 bg-[#FFF9EE] border border-[#E8D48B]/30 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#C9A227]/30 resize-none" rows="3" :placeholder="resolveModal.action === 'resolve' ? '请填写处理结果...' : '请填写驳回原因...'"></textarea>
+            <textarea v-model="resolveModal.resolution" class="w-full px-4 py-3 bg-[#FFF9EE] border border-[#E8D48B]/30 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#C9A227]/30 resize-none" rows="3" :placeholder="resolveModal.action === 'resolve' ? '请填写处理结果...' : resolveModal.action === 'investigate' ? '请填写调研备注...' : '请填写驳回原因...'"></textarea>
           </div>
           <div class="flex gap-3 justify-end">
             <button class="btn-cancel" @click="resolveModal.show = false">取消</button>
-            <button class="btn-submit" :class="resolveModal.action === 'resolve' ? 'approve' : 'reject'" :disabled="resolveModal.submitting" @click="submitResolve">
-              {{ resolveModal.submitting ? '处理中...' : (resolveModal.action === 'resolve' ? '确认解决' : '确认驳回') }}
+            <button class="btn-submit" :class="resolveModal.action === 'resolve' ? 'approve' : resolveModal.action === 'investigate' ? 'warn' : 'reject'" :disabled="resolveModal.submitting" @click="submitResolve">
+              {{ resolveModal.submitting ? '处理中...' : (resolveModal.action === 'resolve' ? '确认解决' : resolveModal.action === 'investigate' ? '开始调研' : '确认驳回') }}
             </button>
           </div>
         </div>

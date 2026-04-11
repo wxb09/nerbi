@@ -55,7 +55,7 @@
               <td><span class="text-xs font-bold px-2 py-0.5 rounded-full" :class="statusClass(item.status)">{{ statusLabel(item.status) }}</span></td>
               <td class="text-sm text-[#9A9082]">{{ formatDate(item.createdAt) }}</td>
               <td>
-                <div class="flex items-center justify-center gap-1.5">
+                <div class="flex items-center gap-1.5">
                   <button v-if="item.status === 'PENDING_REVIEW'" class="action-btn approve" title="通过" @click="openAuditModal(item, 'approve')">
                     <span class="iconify text-base" data-icon="solar:check-circle-bold"></span>
                   </button>

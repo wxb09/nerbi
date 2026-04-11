@@ -12,6 +12,9 @@ export const uploadApi = {
       formData.append('files', file)
     })
     
-    return api.post('/upload/images', formData) as Promise<UploadResult[]>
+    return api.post('/upload/images', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 60000
+    }) as Promise<UploadResult[]>
   }
 }

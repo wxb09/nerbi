@@ -59,4 +59,7 @@ public interface BorrowRepository extends JpaRepository<Borrow, Long> {
 
     @Query("SELECT COUNT(b) FROM Borrow b WHERE b.status IN :statuses")
     Long countByStatusIn(@Param("statuses") List<BorrowStatus> statuses);
+
+    @Query("SELECT b FROM Borrow b JOIN FETCH b.item JOIN FETCH b.borrower JOIN FETCH b.lender WHERE b.id = :id")
+    java.util.Optional<Borrow> findByIdWithDetails(@Param("id") Long id);
 }

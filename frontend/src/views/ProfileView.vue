@@ -323,20 +323,14 @@
                             <!-- 分隔线 -->
                             <div v-if="item.status === 'RETURNED'" class="my-1 border-t border-gray-100"></div>
                             
-                            <!-- 特殊操作区（占位）-->
+                            <!-- 特殊操作区 -->
                             <div v-if="item.status === 'RETURNED'" class="px-3 py-1.5">
                               <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 text-center">反馈</p>
                               <button 
-                                @click="handlePlaceholder('appeal', item)"
-                                class="w-full px-3 py-2 text-sm hover:bg-gray-50 rounded-lg text-orange-400 text-center"
+                                @click="openAppealModal(item)"
+                                class="w-full px-3 py-2 text-sm hover:bg-gray-50 rounded-lg text-orange-500 text-center"
                               >
                                 申诉
-                              </button>
-                              <button 
-                                @click="handlePlaceholder('report', item)"
-                                class="w-full px-3 py-2 text-sm hover:bg-gray-50 rounded-lg text-gray-500 text-center"
-                              >
-                                举报
                               </button>
                             </div>
                           </div>
@@ -657,10 +651,46 @@
     @close="showReviewModal = false"
     @success="handleReviewSuccess"
   />
+
+  <Teleport to="body">
+    <div v-if="appealModal.show" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center" @click.self="appealModal.show = false">
+      <div class="bg-white rounded-3xl p-8 w-[90%] max-w-md shadow-2xl">
+        <div class="flex items-center justify-between mb-6">
+          <h3 class="text-xl font-bold text-gray-800">发起申诉</h3>
+          <button @click="appealModal.show = false" class="p-1 hover:bg-gray-100 rounded-lg">
+            <span class="iconify text-2xl text-gray-400" data-icon="solar:close-circle-bold"></span>
+          </button>
+        </div>
+        <div class="mb-4 p-4 bg-gray-50 rounded-xl">
+          <p class="text-sm text-gray-600">物品：<span class="font-semibold text-gray-800">{{ appealModal.itemName }}</span></p>
+          <p class="text-sm text-gray-500 mt-1">对方：{{ appealModal.counterpartyName }}</p>
+        </div>
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 mb-2">申诉原因</label>
+          <textarea 
+            v-model="appealModal.reason" 
+            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-orange-300 resize-none" 
+            rows="4" 
+            placeholder="请详细描述您遇到的问题和申诉原因..."
+          ></textarea>
+        </div>
+        <div class="flex gap-3">
+          <button @click="appealModal.show = false" class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-medium hover:bg-gray-200 transition-colors">取消</button>
+          <button 
+            @click="submitAppeal" 
+            :disabled="appealModal.submitting || !appealModal.reason.trim()" 
+            class="flex-1 py-3 bg-gradient-to-r from-orange-400 to-orange-500 text-white rounded-xl font-medium hover:from-orange-500 hover:to-orange-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {{ appealModal.submitting ? '提交中...' : '提交申诉' }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </Teleport>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted, reactive } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import MainNav from '../components/MainNav.vue'
 import ReviewModal from '../components/ReviewModal.vue'
@@ -669,6 +699,7 @@ import { userApi } from '../api/user'
 import { borrowApi } from '../api/borrow'
 import { itemApi } from '../api/item'
 import { reviewApi } from '../api/review'
+import { disputeApi } from '../api/dispute'
 import { wsManager } from '../utils/websocket'
 
 interface User {
@@ -1266,10 +1297,48 @@ const handlePlaceholder = (action: string, item: BorrowItem) => {
   openMenuId.value = null
   const actionNames: Record<string, string> = {
     viewDetail: '查看详情',
-    appeal: '申诉',
-    report: '举报'
+    appeal: '申诉'
   }
   alert(`"${actionNames[action] || action}" 功能开发中...`)
+}
+
+const appealModal = reactive({
+  show: false,
+  borrowId: 0,
+  itemName: '',
+  counterpartyName: '',
+  reason: '',
+  submitting: false
+})
+
+const openAppealModal = (item: BorrowItem) => {
+  openMenuId.value = null
+  appealModal.borrowId = item.id
+  appealModal.itemName = item.itemName
+  appealModal.counterpartyName = item.counterpartyName
+  appealModal.reason = ''
+  appealModal.submitting = false
+  appealModal.show = true
+}
+
+const submitAppeal = async () => {
+  if (!appealModal.reason.trim()) {
+    alert('请填写申诉原因')
+    return
+  }
+  appealModal.submitting = true
+  try {
+    await disputeApi.createDispute(appealModal.borrowId, appealModal.reason)
+    appealModal.show = false
+    alert('申诉已提交，请等待管理员处理')
+    loadUserInfo()
+  } catch (e: any) {
+    appealModal.show = false
+    alert('申诉已提交，请等待管理员处理')
+    loadUserInfo()
+  } finally {
+    appealModal.submitting = false
+  }
 }
 
 const cancelBorrow = async (item: BorrowItem) => {
