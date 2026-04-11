@@ -235,48 +235,110 @@
                       <div class="relative more-menu-container">
                         <button 
                           @click.stop="toggleMenu(item.id)" 
-                          class="text-gray-400 font-bold text-xs hover:text-gray-600 transition-colors"
+                          class="text-gray-400 font-bold text-xs hover:text-[#E2B04D] transition-colors"
                         >
                           更多
                         </button>
                         <Transition name="dropdown">
                           <div 
                             v-if="openMenuId === item.id"
-                            class="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 py-1 min-w-[100px] z-10"
+                            class="absolute right-0 top-full mt-2 bg-white rounded-xl shadow-xl border border-gray-100 py-2 min-w-[120px] z-10 overflow-hidden"
                           >
-                            <button 
-                              v-if="item.status === 'RETURNED' && activeTab === 'borrowed' && !reviewedBorrows.has(item.id)"
-                              @click="openReviewModal(item)"
-                              class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 text-[#E2B04D] font-medium"
-                            >
-                              发表评价
-                            </button>
-                            <button 
-                              v-if="item.status === 'RETURNED' && activeTab === 'borrowed' && reviewedBorrows.has(item.id)"
-                              class="w-full px-4 py-2 text-left text-sm text-gray-400 cursor-not-allowed"
-                            >
-                              已评价
-                            </button>
-                            <button 
-                              v-if="item.status === 'RETURNED' && activeTab === 'lent' && !reviewedBorrows.has(item.id)"
-                              @click="openReviewModal(item)"
-                              class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 text-[#E2B04D] font-medium"
-                            >
-                              评价借入者
-                            </button>
-                            <button 
-                              v-if="item.status === 'RETURNED' && activeTab === 'lent' && reviewedBorrows.has(item.id)"
-                              class="w-full px-4 py-2 text-left text-sm text-gray-400 cursor-not-allowed"
-                            >
-                              已评价
-                            </button>
-                            <button 
-                              v-if="item.status === 'PENDING' || item.status === 'APPROVED'"
-                              @click="cancelBorrow(item)"
-                              class="w-full px-4 py-2 text-left text-sm hover:bg-gray-50 text-red-500"
-                            >
-                              取消借阅
-                            </button>
+                            <!-- 主要操作区 -->
+                            <div v-if="item.status === 'RETURNED'" class="px-3 py-1.5">
+                              <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 text-center">评价</p>
+                              
+                              <template v-if="activeTab === 'borrowed'">
+                                <button 
+                                  v-if="!reviewedItems.has(item.id)"
+                                  @click="openReviewModal(item, 'ITEM')"
+                                  class="w-full px-3 py-2 text-sm hover:bg-gray-50 rounded-lg text-[#E2B04D] text-center"
+                                >
+                                  评价物品
+                                </button>
+                                <span 
+                                  v-if="reviewedItems.has(item.id)"
+                                  class="w-full px-3 py-2 text-sm text-gray-300 cursor-not-allowed rounded-lg block text-center"
+                                >
+                                  已评物品
+                                </span>
+                                
+                                <button 
+                                  v-if="!reviewedUsers.has(item.id)"
+                                  @click="openReviewModal(item, 'USER')"
+                                  class="w-full px-3 py-2 text-sm hover:bg-gray-50 rounded-lg text-[#E2B04D] text-center"
+                                >
+                                  评价借出者
+                                </button>
+                                <span 
+                                  v-if="reviewedUsers.has(item.id)"
+                                  class="w-full px-3 py-2 text-sm text-gray-300 cursor-not-allowed rounded-lg block text-center"
+                                >
+                                  已评借出者
+                                </span>
+                              </template>
+                              
+                              <template v-if="activeTab === 'lent'">
+                                <button 
+                                  v-if="!reviewedUsers.has(item.id)"
+                                  @click="openReviewModal(item, 'USER')"
+                                  class="w-full px-3 py-2 text-sm hover:bg-gray-50 rounded-lg text-[#E2B04D] text-center"
+                                >
+                                  评价借入者
+                                </button>
+                                <span 
+                                  v-if="reviewedUsers.has(item.id)"
+                                  class="w-full px-3 py-2 text-sm text-gray-300 cursor-not-allowed rounded-lg block text-center"
+                                >
+                                  已评价
+                                </span>
+                              </template>
+                            </div>
+                            
+                            <!-- 取消借阅（非RETURNED状态）-->
+                            <div v-if="item.status === 'PENDING' || item.status === 'APPROVED'" class="px-3 py-1.5">
+                              <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 text-center">操作</p>
+                              <button 
+                                @click="cancelBorrow(item)"
+                                class="w-full px-3 py-2 text-sm hover:bg-gray-50 rounded-lg text-gray-500 text-center"
+                              >
+                                取消借阅
+                              </button>
+                            </div>
+                            
+                            <!-- 分隔线 -->
+                            <div v-if="item.status === 'RETURNED'" class="my-1 border-t border-gray-100"></div>
+                            
+                            <!-- 次要操作区（占位）-->
+                            <div v-if="item.status === 'RETURNED'" class="px-3 py-1.5">
+                              <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 text-center">其他</p>
+                              <button 
+                                @click="handlePlaceholder('viewDetail', item)"
+                                class="w-full px-3 py-2 text-sm hover:bg-gray-50 rounded-lg text-gray-600 text-center"
+                              >
+                                查看详情
+                              </button>
+                            </div>
+                            
+                            <!-- 分隔线 -->
+                            <div v-if="item.status === 'RETURNED'" class="my-1 border-t border-gray-100"></div>
+                            
+                            <!-- 特殊操作区（占位）-->
+                            <div v-if="item.status === 'RETURNED'" class="px-3 py-1.5">
+                              <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 text-center">反馈</p>
+                              <button 
+                                @click="handlePlaceholder('appeal', item)"
+                                class="w-full px-3 py-2 text-sm hover:bg-gray-50 rounded-lg text-orange-400 text-center"
+                              >
+                                申诉
+                              </button>
+                              <button 
+                                @click="handlePlaceholder('report', item)"
+                                class="w-full px-3 py-2 text-sm hover:bg-gray-50 rounded-lg text-gray-500 text-center"
+                              >
+                                举报
+                              </button>
+                            </div>
                           </div>
                         </Transition>
                       </div>
@@ -635,6 +697,7 @@ interface BorrowItem {
   endTime: string
   status: string
   isBorrower?: boolean
+  defaultReviewType?: 'ITEM' | 'USER'
 }
 
 interface MyItem {
@@ -990,6 +1053,8 @@ const loadUserInfo = async () => {
       isBorrower: true
     }))
     
+    await batchCheckReviewStatus([...lentItems.value, ...borrowedItems.value])
+    
     myItems.value = (itemsRes || []).map((item: any) => ({
       id: item.id,
       name: item.name,
@@ -1089,7 +1154,40 @@ const toggleMenu = (itemId: number) => {
   openMenuId.value = openMenuId.value === itemId ? null : itemId
 }
 
-const openReviewModal = async (item: BorrowItem) => {
+const batchCheckReviewStatus = async (items: BorrowItem[]) => {
+  const returnedItems = items.filter(item => item.status === 'RETURNED')
+  
+  if (returnedItems.length === 0) return
+  
+  const newReviewedItems = new Set(reviewedItems.value)
+  const newReviewedUsers = new Set(reviewedUsers.value)
+  
+  const promises = returnedItems.map(async (item) => {
+    try {
+      const result = await reviewApi.checkReviewStatus(item.id) as { 
+        hasReviewed: boolean
+        hasReviewedItem: boolean
+        hasReviewedUser: boolean
+      }
+      
+      if (result.hasReviewedItem) {
+        newReviewedItems.add(item.id)
+      }
+      if (result.hasReviewedUser) {
+        newReviewedUsers.add(item.id)
+      }
+    } catch (error) {
+      console.error('检查评价状态失败', error, item.id)
+    }
+  })
+  
+  await Promise.all(promises)
+  
+  reviewedItems.value = newReviewedItems
+  reviewedUsers.value = newReviewedUsers
+}
+
+const openReviewModal = async (item: BorrowItem, defaultType?: 'ITEM' | 'USER') => {
   openMenuId.value = null
   
   try {
@@ -1098,22 +1196,54 @@ const openReviewModal = async (item: BorrowItem) => {
       hasReviewedItem: boolean
       hasReviewedUser: boolean
     }
-    if (result.hasReviewedItem && result.hasReviewedUser) {
-      alert('您已评价过该借阅记录')
-      reviewedBorrows.value.add(item.id)
+    
+    if (result.hasReviewedItem) {
+      reviewedItems.value.add(item.id)
+    }
+    if (result.hasReviewedUser) {
+      reviewedUsers.value.add(item.id)
+    }
+    
+    if (defaultType === 'USER' && result.hasReviewedUser) {
+      alert('您已评价过该用户')
       return
     }
+    
+    if (defaultType === 'ITEM' && result.hasReviewedItem) {
+      alert('您已评价过该物品')
+      return
+    }
+    
+    if (!defaultType && result.hasReviewedItem && result.hasReviewedUser) {
+      alert('您已完成所有评价')
+      return
+    }
+    
+    let actualDefaultType = defaultType
+    if (!actualDefaultType) {
+      if (result.hasReviewedItem && !result.hasReviewedUser) {
+        actualDefaultType = 'USER'
+      } else if (!result.hasReviewedItem && result.hasReviewedUser) {
+        actualDefaultType = 'ITEM'
+      } else {
+        actualDefaultType = 'ITEM'
+      }
+    }
+    
+    reviewingBorrow.value = { ...item, defaultReviewType: actualDefaultType }
+    showReviewModal.value = true
   } catch (error) {
     console.error('检查评价状态失败', error)
   }
-  
-  reviewingBorrow.value = item
-  showReviewModal.value = true
 }
 
-const handleReviewSuccess = () => {
+const handleReviewSuccess = (type: 'ITEM' | 'USER') => {
   if (reviewingBorrow.value) {
-    reviewedBorrows.value.add(reviewingBorrow.value.id)
+    if (type === 'ITEM') {
+      reviewedItems.value.add(reviewingBorrow.value.id)
+    } else {
+      reviewedUsers.value.add(reviewingBorrow.value.id)
+    }
   }
   loadUserInfo()
 }
@@ -1124,10 +1254,22 @@ const deleteReview = async (reviewId: number) => {
   try {
     await reviewApi.deleteReview(reviewId)
     alert('评价已删除')
+    reviewedItems.value.clear()
+    reviewedUsers.value.clear()
     loadUserInfo()
   } catch (error: any) {
     alert(error.message || '删除失败')
   }
+}
+
+const handlePlaceholder = (action: string, item: BorrowItem) => {
+  openMenuId.value = null
+  const actionNames: Record<string, string> = {
+    viewDetail: '查看详情',
+    appeal: '申诉',
+    report: '举报'
+  }
+  alert(`"${actionNames[action] || action}" 功能开发中...`)
 }
 
 const cancelBorrow = async (item: BorrowItem) => {

@@ -74,7 +74,7 @@ public class ReviewService {
             throw new BusinessException(ErrorCode.PARAM_ERROR);
         }
         
-        Optional<Review> existingReview = reviewRepository.findByBorrowIdAndFromUserIdAndTargetTypeAndDeletedFalse(
+        Optional<Review> existingReview = reviewRepository.findByBorrowIdAndFromUserIdAndTargetType(
                 request.borrowId(), fromUserId, request.targetType());
         if (existingReview.isPresent()) {
             throw new BusinessException(ErrorCode.REVIEW_ALREADY_EXISTS);
@@ -102,70 +102,66 @@ public class ReviewService {
 
     @Transactional(readOnly = true)
     public ReviewDTO getReviewById(Long id) {
-        Review review = reviewRepository.findByIdAndDeletedFalse(id)
+        Review review = reviewRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
         return toDTO(review);
     }
 
     @Transactional(readOnly = true)
     public Page<ReviewDTO> getReviewsByItemId(Long itemId, Pageable pageable) {
-        return reviewRepository.findByItemIdAndTargetTypeAndDeletedFalseOrderByCreatedAtDesc(
+        return reviewRepository.findByItemIdAndTargetTypeOrderByCreatedAtDesc(
                 itemId, ReviewType.ITEM, pageable)
                 .map(this::toDTO);
     }
 
     @Transactional(readOnly = true)
     public Page<ReviewDTO> getReviewsByToUserId(Long toUserId, Pageable pageable) {
-        return reviewRepository.findByToUserIdAndDeletedFalseOrderByCreatedAtDesc(toUserId, pageable)
+        return reviewRepository.findByToUserIdOrderByCreatedAtDesc(toUserId, pageable)
                 .map(this::toDTO);
     }
 
     @Transactional(readOnly = true)
     public Page<ReviewDTO> getReviewsByFromUserId(Long fromUserId, Pageable pageable) {
-        return reviewRepository.findByFromUserIdAndDeletedFalseOrderByCreatedAtDesc(fromUserId, pageable)
+        return reviewRepository.findByFromUserIdOrderByCreatedAtDesc(fromUserId, pageable)
                 .map(this::toDTO);
     }
 
     @Transactional(readOnly = true)
     public Page<ReviewDTO> getReviewsByToUserIdAndType(Long toUserId, ReviewType type, Pageable pageable) {
-        return reviewRepository.findByToUserIdAndTargetTypeAndDeletedFalseOrderByCreatedAtDesc(
+        return reviewRepository.findByToUserIdAndTargetTypeOrderByCreatedAtDesc(
                 toUserId, type, pageable)
                 .map(this::toDTO);
     }
 
     @Transactional(readOnly = true)
     public Page<ReviewDTO> getReviewsByFromUserIdAndType(Long fromUserId, ReviewType type, Pageable pageable) {
-        return reviewRepository.findByFromUserIdAndTargetTypeAndDeletedFalseOrderByCreatedAtDesc(
+        return reviewRepository.findByFromUserIdAndTargetTypeOrderByCreatedAtDesc(
                 fromUserId, type, pageable)
                 .map(this::toDTO);
     }
 
     @Transactional(readOnly = true)
     public boolean hasReviewed(Long borrowId, Long fromUserId) {
-        return reviewRepository.findByBorrowIdAndFromUserIdAndDeletedFalse(borrowId, fromUserId).isPresent();
+        return reviewRepository.findByBorrowIdAndFromUserId(borrowId, fromUserId).isPresent();
     }
 
     @Transactional(readOnly = true)
     public boolean hasReviewedWithType(Long borrowId, Long fromUserId, ReviewType type) {
-        return reviewRepository.findByBorrowIdAndFromUserIdAndTargetTypeAndDeletedFalse(
+        return reviewRepository.findByBorrowIdAndFromUserIdAndTargetType(
                 borrowId, fromUserId, type).isPresent();
     }
 
     public void deleteReview(Long reviewId, Long userId) {
         log.info("[ReviewService] 删除评价: reviewId={}, userId={}", reviewId, userId);
         
-        Review review = reviewRepository.findByIdAndDeletedFalse(reviewId)
+        Review review = reviewRepository.findById(reviewId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.REVIEW_NOT_FOUND));
         
         if (!review.getFromUser().getId().equals(userId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
         }
         
-        review.setDeleted(true);
-        review.setDeletedBy(userId);
-        review.setDeletedAt(java.time.LocalDateTime.now());
-        
-        reviewRepository.save(review);
+        reviewRepository.delete(review);
         log.info("[ReviewService] 评价已删除: reviewId={}", reviewId);
     }
 

@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>邻里共享 - 管理后台</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://code.iconify.design/3/3.1.1/iconify.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: #f1f5f9;
+        }
+
+        /* 侧边栏折叠状态 */
+        .sidebar-collapsed .nav-text {
+            display: none;
+        }
+
+        /* 自定义滚动条 */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #64748b;
+        }
+
+        /* 数据卡片hover效果 */
+        .stat-card {
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        .stat-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px rgba(30, 41, 59, 0.12);
+        }
+
+        /* 表格行hover */
+        .table-row-hover:hover {
+            background-color: #f0f9ff;
+        }
+
+        /* 状态标签 */
+        .status-badge {
+            @apply px-3 py-1 rounded-full text-xs font-bold;
+        }
+
+        /* 复古阴影按钮 */
+        .btn-retro {
+            box-shadow: 4px 4px 0px 0px #334155;
+            transition: all 0.2s;
+        }
+        .btn-retro:hover {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px 0px #334155;
+        }
+        .btn-retro:active {
+            transform: translate(4px, 4px);
+            box-shadow: 0px 0px 0px 0px #334155;
+        }
+    </style>
+</head>
+<body class="text-[#2D3436]">
+
+<!-- 整体布局 -->
+<div class="flex h-screen overflow-hidden">
+
+    <!-- 左侧边栏 -->
+    <aside class="w-64 bg-[#1e293b] text-white flex flex-col flex-shrink-0 transition-all duration-300" id="sidebar">
+        <!-- Logo区域 -->
+        <div class="h-20 flex items-center px-6 border-b border-slate-700/60">
+            <span class="iconify text-3xl text-[#E2B04D]" data-icon="solar:share-circle-bold-duotone"></span>
+            <div class="ml-3 nav-text">
+                <h1 class="font-bold text-lg tracking-tight">邻里共享</h1>
+                <p class="text-[10px] text-slate-400 uppercase tracking-widest">管理后台</p>
+            </div>
+            <button class="ml-auto text-gray-400 hover:text-white lg:hidden" onclick="toggleSidebar()">
+                <span class="iconify text-xl" data-icon="solar:menu-dots-bold"></span>
+            </button>
+        </div>
+
+        <!-- 主导航 -->
+        <nav class="flex-1 overflow-y-auto py-6 space-y-1 px-3">
+            <!-- 仪表盘 -->
+            <a class="flex items-center px-4 py-3 bg-[#E2B04D] text-white rounded-xl font-medium" href="#">
+                <span class="iconify text-xl" data-icon="solar:pie-chart-2-bold"></span>
+                <span class="ml-3 nav-text">数据仪表盘</span>
+            </a>
+
+            <!-- 物品管理 -->
+            <a class="flex items-center px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-700/60 rounded-xl font-medium transition-colors" href="#">
+                <span class="iconify text-xl" data-icon="solar:box-bold"></span>
+                <span class="ml-3 nav-text">物品管理</span>
+                <span class="ml-auto bg-orange-400 text-white text-[10px] px-2 py-0.5 rounded-full nav-text">12</span>
+            </a>
+
+            <!-- 借阅审核 -->
+            <a class="flex items-center px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-700/60 rounded-xl font-medium transition-colors" href="#">
+                <span class="iconify text-xl" data-icon="solar:clipboard-check-bold"></span>
+                <span class="ml-3 nav-text">借阅审核</span>
+                <span class="ml-auto bg-[#E2B04D] text-white text-[10px] px-2 py-0.5 rounded-full nav-text">5</span>
+            </a>
+
+            <!-- 用户管理 -->
+            <a class="flex items-center px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-700/60 rounded-xl font-medium transition-colors" href="#">
+                <span class="iconify text-xl" data-icon="solar:users-group-rounded-bold"></span>
+                <span class="ml-3 nav-text">用户管理</span>
+            </a>
+
+            <!-- 社区运营 -->
+            <div class="pt-4 pb-2">
+                <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest nav-text">运营</p>
+            </div>
+            <a class="flex items-center px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-700/60 rounded-xl font-medium transition-colors" href="#">
+                <span class="iconify text-xl" data-icon="solar:chat-square-bold"></span>
+                <span class="ml-3 nav-text">帖子管理</span>
+            </a>
+            <a class="flex items-center px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-700/60 rounded-xl font-medium transition-colors" href="#">
+                <span class="iconify text-xl" data-icon="solar:add-circle-bold"></span>
+                <span class="ml-3 nav-text">公告发布</span>
+            </a>
+            <a class="flex items-center px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-700/60 rounded-xl font-medium transition-colors" href="#">
+                <span class="iconify text-xl" data-icon="solar:medal-ribbon-bold"></span>
+                <span class="ml-3 nav-text">绿色榜单</span>
+            </a>
+
+            <!-- 系统设置 -->
+            <div class="pt-4 pb-2">
+                <p class="px-4 text-[10px] font-bold text-slate-500 uppercase tracking-widest nav-text">系统</p>
+            </div>
+            <a class="flex items-center px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-700/60 rounded-xl font-medium transition-colors" href="#">
+                <span class="iconify text-xl" data-icon="solar:settings-bold"></span>
+                <span class="ml-3 nav-text">系统设置</span>
+            </a>
+            <a class="flex items-center px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-700/60 rounded-xl font-medium transition-colors" href="#">
+                <span class="iconify text-xl" data-icon="solar:shield-check-bold"></span>
+                <span class="ml-3 nav-text">权限管理</span>
+            </a>
+        </nav>
+
+        <!-- 底部管理员信息 -->
+        <div class="p-4 border-t border-slate-700/60">
+            <div class="flex items-center px-4 py-3 bg-slate-700/40 rounded-xl">
+                <img alt="Admin" class="w-10 h-10 rounded-full border-2 border-[#E2B04D]" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/a453981eedaa427c81b6f1552d5d5dbc.jpg"/>
+                <div class="ml-3 nav-text">
+                    <p class="font-bold text-sm">管理员</p>
+                    <p class="text-[10px] text-gray-400">超级管理员</p>
+                </div>
+                <button class="ml-auto text-gray-400 hover:text-white nav-text">
+                    <span class="iconify text-xl" data-icon="solar:logout-2-bold"></span>
+                </button>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 主内容区 -->
+    <main class="flex-1 flex flex-col overflow-hidden">
+        
+        <!-- 顶部栏 -->
+        <header class="h-20 bg-white border-b border-gray-100 flex items-center justify-between px-8 flex-shrink-0">
+            <div class="flex items-center">
+                <button class="mr-4 p-2 hover:bg-gray-100 rounded-lg lg:hidden" onclick="toggleSidebar()">
+                    <span class="iconify text-xl text-gray-600" data-icon="solar:hamburger-menu-bold"></span>
+                </button>
+                <div>
+                    <h2 class="text-2xl font-bold text-[#2D3436]">数据仪表盘</h2>
+                    <p class="text-sm text-gray-400 mt-0.5">栖霞苑社区 · 2026年4月10日</p>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-6">
+                <!-- 搜索 -->
+                <div class="relative hidden md:block">
+                    <span class="iconify absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" data-icon="solar:magnifer-linear"></span>
+                    <input class="pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl w-64 outline-none focus:ring-2 ring-blue-400/30 focus:bg-white transition-all text-sm" placeholder="搜索物品、用户..." type="text"/>
+                </div>
+
+                <!-- 通知 -->
+                <button class="relative p-3 bg-gray-50 rounded-2xl hover:bg-gray-100 transition-colors">
+                    <span class="iconify text-xl text-gray-600" data-icon="solar:bell-bold"></span>
+                    <span class="absolute top-2 right-2 w-2.5 h-2.5 bg-orange-400 rounded-full border-2 border-gray-50"></span>
+                </button>
+
+                <!-- 快捷操作 -->
+                <button class="btn-retro bg-[#E2B04D] text-white px-6 py-3 rounded-2xl font-bold text-sm flex items-center space-x-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+                    <span>发布公告</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- 可滚动内容区 -->
+        <div class="flex-1 overflow-y-auto p-8">
+            
+            <!-- 统计卡片区 -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- 卡片1 -->
+                <div class="stat-card bg-white p-6 rounded-3xl border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-[#FFFBF0] rounded-2xl">
+                            <span class="iconify text-2xl text-[#E2B04D]" data-icon="solar:box-bold"></span>
+                        </div>
+                        <span class="text-xs font-bold text-green-500 flex items-center">
+                            <span class="iconify mr-1" data-icon="solar:arrow-up-bold"></span>+12%
+                        </span>
+                    </div>
+                    <p class="text-3xl font-bold text-[#2D3436]">1,284</p>
+                    <p class="text-sm text-gray-400 mt-1">平台总物品</p>
+                    <div class="mt-4 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-[#E2B04D] rounded-full" style="width: 75%"></div>
+                    </div>
+                </div>
+
+                <!-- 卡片2 -->
+                <div class="stat-card bg-white p-6 rounded-3xl border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-blue-50 rounded-2xl">
+                            <span class="iconify text-2xl text-blue-500" data-icon="solar:hand-shake-bold"></span>
+                        </div>
+                        <span class="text-xs font-bold text-green-500 flex items-center">
+                            <span class="iconify mr-1" data-icon="solar:arrow-up-bold"></span>+8%
+                        </span>
+                    </div>
+                    <p class="text-3xl font-bold text-[#2D3436]">342</p>
+                    <p class="text-sm text-gray-400 mt-1">本月借阅次数</p>
+                    <div class="mt-4 h-1.5 bg-gray-100 rounded-full overflow-hidden">
+                        <div class="h-full bg-blue-500 rounded-full" style="width: 60%"></div>
+                    </div>
+                </div>
+
+                <!-- 卡片3 -->
+                <div class="stat-card bg-white p-6 rounded-3xl border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-green-50 rounded-2xl">
+                            <span class="iconify text-2xl text-green-500" data-icon="solar:leaf-bold"></span>
+                        </div>
+                        <span class="text-xs font-bold text-gray-400">累计</span>
+                    </div>
+                    <p class="text-3xl font-bold text-[#2D3436]">2.4<span class="text-lg text-gray-400">吨</span></p>
+                    <p class="text-sm text-gray-400 mt-1">减少碳排放</p>
+                    <div class="mt-4 flex items-center text-xs text-gray-500">
+                        <span class="iconify mr-1 text-green-500" data-icon="solar:check-circle-bold"></span>
+                        相当于种植 120 棵树
+                    </div>
+                </div>
+
+                <!-- 卡片4 -->
+                <div class="stat-card bg-white p-6 rounded-3xl border border-gray-100">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="p-3 bg-orange-50 rounded-2xl">
+                            <span class="iconify text-2xl text-orange-500" data-icon="solar:alarm-bold"></span>
+                        </div>
+                        <span class="text-xs font-bold text-orange-500">需关注</span>
+                    </div>
+                    <p class="text-3xl font-bold text-[#2D3436]">5</p>
+                    <p class="text-sm text-gray-400 mt-1">待处理纠纷</p>
+                    <button class="mt-4 text-xs font-bold text-blue-600 hover:underline">立即处理 →</button>
+                </div>
+            </div>
+
+            <!-- 主要内容网格 -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- 左侧：待审核物品 (占2列) -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="bg-white rounded-3xl border border-gray-100 overflow-hidden">
+                        <div class="px-8 py-6 border-b border-gray-100 flex items-center justify-between">
+                            <div>
+                                <h3 class="text-lg font-bold text-[#2D3436]">待审核物品</h3>
+                                <p class="text-sm text-gray-400 mt-1">共 12 件物品等待上架审核</p>
+                            </div>
+                            <div class="flex space-x-2">
+                                <button class="px-4 py-2 text-sm font-bold text-slate-400 hover:text-blue-600 transition-colors">全部</button>
+                                <button class="px-4 py-2 text-sm font-bold text-blue-600 bg-blue-50 rounded-xl">待审核</button>
+                                <button class="px-4 py-2 text-sm font-bold text-slate-400 hover:text-blue-600 transition-colors">已驳回</button>
+                            </div>
+                        </div>
+
+                        <!-- 表格 -->
+                        <div class="overflow-x-auto">
+                            <table class="w-full">
+                                <thead class="bg-slate-50 text-xs font-bold uppercase text-slate-400">
+                                    <tr>
+                                        <th class="px-8 py-4 text-left">物品信息</th>
+                                        <th class="px-8 py-4 text-left">发布者</th>
+                                        <th class="px-8 py-4 text-left">提交时间</th>
+                                        <th class="px-8 py-4 text-center">操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-50">
+                                    <!-- 行1 -->
+                                    <tr class="table-row-hover transition-colors">
+                                        <td class="px-8 py-5">
+                                            <div class="flex items-center space-x-4">
+                                                <img class="w-14 h-14 rounded-2xl object-cover border border-gray-100" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/2708e2c946b24f0087330e2e974cbd6c.jpg"/>
+                                                <div>
+                                                    <p class="font-bold text-[#2D3436]">博世专业级电钻套装</p>
+                                                    <p class="text-xs text-gray-400 mt-1">五金工具 · ￥0/天</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-8 py-5">
+                                            <div class="flex items-center space-x-2">
+                                                <img class="w-8 h-8 rounded-full" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/4d9bd78d593745d0b800d9220fde2bed.jpg"/>
+                                                <div>
+                                                    <p class="text-sm font-bold">老周</p>
+                                                    <p class="text-[10px] text-gray-400">信用 9.8</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-8 py-5 text-sm text-gray-500">10分钟前</td>
+                                        <td class="px-8 py-5">
+                                            <div class="flex items-center justify-center space-x-2">
+                                                <button class="p-2 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors" title="通过">
+                                                    <span class="iconify text-lg" data-icon="solar:check-circle-bold"></span>
+                                                </button>
+                                                <button class="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors" title="驳回">
+                                                    <span class="iconify text-lg" data-icon="solar:close-circle-bold"></span>
+                                                </button>
+                                                <button class="p-2 bg-gray-50 text-gray-400 rounded-xl hover:bg-gray-100 transition-colors" title="查看详情">
+                                                    <span class="iconify text-lg" data-icon="solar:eye-bold"></span>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <!-- 行2 -->
+                                    <tr class="table-row-hover transition-colors">
+                                        <td class="px-8 py-5">
+                                            <div class="flex items-center space-x-4">
+                                                <img class="w-14 h-14 rounded-2xl object-cover border border-gray-100" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/4f9f6627f2f84d878b046babe25d4158.jpg"/>
+                                                <div>
+                                                    <p class="font-bold text-[#2D3436]">黑狗轻量化帐篷</p>
+                                                    <p class="text-xs text-gray-400 mt-1">户外装备 · ￥15/天</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-8 py-5">
+                                            <div class="flex items-center space-x-2">
+                                                <img class="w-8 h-8 rounded-full" src="https://modao.cc/agent-py/media/generated_images/2026-03-19/b98358a8bc9e4e5c976cb8720c029348.jpg"/>
+                                                <div>
+                                                    <p class="text-sm font-bold">阿强</p>
+                                                    <p class="text-[10px] text-gray-400">信用 9.2</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-8 py-5 text-sm text-gray-500">1小时前</td>
+                                        <td class="px-8 py-5">
+                                            <div class="flex items-center justify-center space-x-2">
+                                                <button class="p-2 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors">
+                                                    <span class="iconify text-lg" data-icon="solar:check-circle-bold"></span>
+                                                </button>
+                                                <button class="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors">
+                                                    <span class="iconify text-lg" data-icon="solar:close-circle-bold"></span>
+                                                </button>
+                                                <button class="p-2 bg-gray-50 text-gray-400 rounded-xl hover:bg-gray-100 transition-colors">
+                                                    <span class="iconify text-lg" data-icon="solar:eye-bold"></span>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <!-- 行3 -->
+                                    <tr class="table-row-hover transition-colors">
+                                        <td class="px-8 py-5">
+                                            <div class="flex items-center space-x-4">
+                                                <div class="w-14 h-14 rounded-2xl bg-gray-100 flex items-center justify-center border border-gray-100">
+                                                    <span class="iconify text-2xl text-gray-300" data-icon="solar:camera-bold"></span>
+                                                </div>
+                                                <div>
+                                                    <p class="font-bold text-[#2D3436]">富士 X100VI 相机</p>
+                                                    <p class="text-xs text-gray-400 mt-1">数码影音 · ￥80/天</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-8 py-5">
+                                            <div class="flex items-center space-x-2">
+                                                <div class="w-8 h-8 rounded-full bg-gray-200"></div>
+                                                <div>
+                                                    <p class="text-sm font-bold">Linda</p>
+                                                    <p class="text-[10px] text-gray-400">信用 9.9</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="px-8 py-5 text-sm text-gray-500">3小时前</td>
+                                        <td class="px-8 py-5">
+                                            <div class="flex items-center justify-center space-x-2">
+                                                <button class="p-2 bg-green-50 text-green-600 rounded-xl hover:bg-green-100 transition-colors">
+                                                    <span class="iconify text-lg" data-icon="solar:check-circle-bold"></span>
+                                                </button>
+                                                <button class="p-2 bg-red-50 text-red-600 rounded-xl hover:bg-red-100 transition-colors">
+                                                    <span class="iconify text-lg" data-icon="solar:close-circle-bold"></span>
+                                                </button>
+                                                <button class="p-2 bg-gray-50 text-gray-400 rounded-xl hover:bg-gray-100 transition-colors">
+                                                    <span class="iconify text-lg" data-icon="solar:eye-bold"></span>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="px-8 py-4 bg-gray-50 border-t border-gray-100">
+                            <button class="text-sm font-bold text-blue-600 hover:underline">查看全部待审核物品 →</button>
+                        </div>
+                    </div>
+
+                    <!-- 快速操作区 -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <button class="p-6 bg-white rounded-2xl border border-gray-100 hover:border-[#E2B04D] hover:bg-[#FFFBF0] transition-all group text-left">
+                            <span class="iconify text-3xl text-gray-300 group-hover:text-[#E2B04D] mb-3 block" data-icon="solar:user-plus-bold"></span>
+                            <p class="font-bold text-[#2D3436]">添加用户</p>
+                            <p class="text-xs text-gray-400 mt-1">手动录入业主信息</p>
+                        </button>
+                        <button class="p-6 bg-white rounded-2xl border border-gray-100 hover:border-blue-400 hover:bg-blue-50 transition-all group text-left">
+                            <span class="iconify text-3xl text-gray-300 group-hover:text-blue-500 mb-3 block" data-icon="solar:document-text-bold"></span>
+                            <p class="font-bold text-[#2D3436]">生成报表</p>
+                            <p class="text-xs text-gray-400 mt-1">导出月度运营数据</p>
+                        </button>
+                        <button class="p-6 bg-white rounded-2xl border border-gray-100 hover:border-green-400 hover:bg-green-50 transition-all group text-left">
+                            <span class="iconify text-3xl text-gray-300 group-hover:text-green-500 mb-3 block" data-icon="solar:leaf-bold"></span>
+                            <p class="font-bold text-[#2D3436]">环保统计</p>
+                            <p class="text-xs text-gray-400 mt-1">查看碳减排详情</p>
+                        </button>
+                        <button class="p-6 bg-white rounded-2xl border border-gray-100 hover:border-purple-400 hover:bg-purple-50 transition-all group text-left">
+                            <span class="iconify text-3xl text-gray-300 group-hover:text-purple-500 mb-3 block" data-icon="solar:shield-warning-bold"></span>
+                            <p class="font-bold text-[#2D3436]">风险监控</p>
+                            <p class="text-xs text-gray-400 mt-1">异常行为检测</p>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 右侧：实时动态 & 快捷信息 -->
+                <div class="space-y-6">
+                    <!-- 实时动态 -->
+                    <div class="rounded-3xl p-6 text-slate-800 relative overflow-hidden border border-blue-100" style="background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 40%, #e0f2fe 100%);">
+                        <!-- 装饰背景 -->
+                        <div class="absolute top-0 right-0 w-32 h-32 rounded-full opacity-30" style="background: radial-gradient(circle, #3b82f6, transparent); transform: translate(30%, -30%);"></div>
+                        <div class="absolute bottom-0 left-0 w-24 h-24 rounded-full opacity-20" style="background: radial-gradient(circle, #60a5fa, transparent); transform: translate(-30%, 30%);"></div>
+                        <div class="relative z-10">
+                        <div class="flex items-center justify-between mb-6">
+                            <h3 class="font-bold text-lg text-slate-800">实时动态</h3>
+                            <span class="flex h-3 w-3 relative">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-500 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-3 w-3 bg-blue-500"></span>
+                            </span>
+                        </div>
+                        <div class="space-y-4 max-h-80 overflow-y-auto pr-2">
+                            <div class="flex items-start space-x-3 pb-4 border-b border-blue-100/80">
+                                <div class="w-2 h-2 rounded-full bg-emerald-500 mt-2 flex-shrink-0"></div>
+                                <div>
+                                    <p class="text-sm"><span class="font-bold text-[#E2B04D]">老周</span> 发布了新物品</p>
+                                    <p class="text-xs text-slate-400 mt-1">博世电钻套装 · 刚刚</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3 pb-4 border-b border-blue-100/80">
+                                <div class="w-2 h-2 rounded-full bg-blue-500 mt-2 flex-shrink-0"></div>
+                                <div>
+                                    <p class="text-sm"><span class="font-bold">小雅</span> 借阅了戴森吸尘器</p>
+                                    <p class="text-xs text-slate-400 mt-1">来自 李大明白 · 5分钟前</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3 pb-4 border-b border-blue-100/80">
+                                <div class="w-2 h-2 rounded-full bg-amber-500 mt-2 flex-shrink-0"></div>
+                                <div>
+                                    <p class="text-sm"><span class="font-bold">王阿姨</span> 发布了感谢信</p>
+                                    <p class="text-xs text-slate-400 mt-1">收到草鱼分享 · 12分钟前</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3 pb-4 border-b border-blue-100/80">
+                                <div class="w-2 h-2 rounded-full bg-rose-500 mt-2 flex-shrink-0"></div>
+                                <div>
+                                    <p class="text-sm">系统检测到<span class="font-bold text-rose-600">异常登录</span></p>
+                                    <p class="text-xs text-slate-400 mt-1">IP: 192.168.1.xxx · 1小时前</p>
+                                </div>
+                            </div>
+                            <div class="flex items-start space-x-3">
+                                <div class="w-2 h-2 rounded-full bg-emerald-500 mt-2 flex-shrink-0"></div>
+                                <div>
+                                    <p class="text-sm"><span class="font-bold text-[#E2B04D]">陈工</span> 归还了物品</p>
+                                    <p class="text-xs text-slate-400 mt-1">水粉画架 · 2小时前</p>
+                                </div>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+
+                    <!-- 本月数据概览 -->
+                    <div class="bg-white rounded-3xl p-6 border border-gray-100">
+                        <h3 class="font-bold text-lg mb-6">本月数据概览</h3>
+                        <div class="space-y-6">
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-gray-500">物品上架率</span>
+                                    <span class="font-bold">85%</span>
+                                </div>
+                                <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-[#E2B04D] rounded-full" style="width: 85%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-gray-500">借阅成功率</span>
+                                    <span class="font-bold">92%</span>
+                                </div>
+                                <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-blue-500 rounded-full" style="width: 92%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-gray-500">用户满意度</span>
+                                    <span class="font-bold">4.8/5.0</span>
+                                </div>
+                                <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-green-500 rounded-full" style="width: 96%"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="flex justify-between text-sm mb-2">
+                                    <span class="text-gray-500">纠纷处理率</span>
+                                    <span class="font-bold text-orange-500">待提高 65%</span>
+                                </div>
+                                <div class="h-2 bg-gray-100 rounded-full overflow-hidden">
+                                    <div class="h-full bg-orange-500 rounded-full" style="width: 65%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 快捷工具 -->
+                    <div class="bg-blue-50/60 rounded-3xl p-6 border border-blue-100">
+                        <h3 class="font-bold text-slate-700 mb-4 flex items-center">
+                            <span class="iconify mr-2 text-blue-500" data-icon="solar:bolt-bold"></span>
+                            快捷工具
+                        </h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button class="p-3 bg-white rounded-xl text-sm font-bold text-slate-600 hover:text-blue-600 hover:shadow-md transition-all">
+                                批量审核
+                            </button>
+                            <button class="p-3 bg-white rounded-xl text-sm font-bold text-slate-600 hover:text-blue-600 hover:shadow-md transition-all">
+                                信用调整
+                            </button>
+                            <button class="p-3 bg-white rounded-xl text-sm font-bold text-slate-600 hover:text-blue-600 hover:shadow-md transition-all">
+                                紧急冻结
+                            </button>
+                            <button class="p-3 bg-white rounded-xl text-sm font-bold text-slate-600 hover:text-blue-600 hover:shadow-md transition-all">
+                                数据备份
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 底部信息 -->
+            <footer class="mt-12 pt-8 border-t border-gray-200 text-center">
+                <p class="text-sm text-gray-400">© 2026 邻里共享平台 · 管理后台系统 v2.0</p>
+                <p class="text-xs text-gray-300 mt-2">上次数据同步：2026-04-10 09:56:23</p>
+            </footer>
+        </div>
+    </main>
+</div>
+
+<script>
+    // 侧边栏折叠功能
+    function toggleSidebar() {
+        const sidebar = document.getElementById('sidebar');
+        sidebar.classList.toggle('w-64');
+        sidebar.classList.toggle('w-20');
+        sidebar.classList.toggle('sidebar-collapsed');
+    }
+
+    // 响应式：小屏幕默认折叠
+    if (window.innerWidth < 1024) {
+        document.getElementById('sidebar').classList.add('sidebar-collapsed', 'w-20');
+        document.getElementById('sidebar').classList.remove('w-64');
+    }
+</script>
+
+</body>
+</html>

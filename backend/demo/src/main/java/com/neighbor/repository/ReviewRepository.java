@@ -7,38 +7,35 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
     
-    Page<Review> findByToUserId(Long toUserId, Pageable pageable);
+    Optional<Review> findByBorrowIdAndFromUserId(Long borrowId, Long fromUserId);
     
-    Page<Review> findByFromUserId(Long fromUserId, Pageable pageable);
+    Optional<Review> findByBorrowIdAndFromUserIdAndTargetType(Long borrowId, Long fromUserId, ReviewType targetType);
     
+    Page<Review> findByItemIdOrderByCreatedAtDesc(Long itemId, Pageable pageable);
+    
+    Page<Review> findByItemIdAndTargetTypeOrderByCreatedAtDesc(Long itemId, ReviewType targetType, Pageable pageable);
+    
+    Page<Review> findByToUserIdOrderByCreatedAtDesc(Long toUserId, Pageable pageable);
+    
+    Page<Review> findByToUserIdAndTargetTypeOrderByCreatedAtDesc(Long toUserId, ReviewType targetType, Pageable pageable);
+    
+    Page<Review> findByFromUserIdOrderByCreatedAtDesc(Long fromUserId, Pageable pageable);
+    
+    Page<Review> findByFromUserIdAndTargetTypeOrderByCreatedAtDesc(Long fromUserId, ReviewType targetType, Pageable pageable);
+
+    Long countByItemId(Long itemId);
+
     Long countByToUserId(Long toUserId);
-
-    Optional<Review> findByBorrowIdAndFromUserIdAndDeletedFalse(Long borrowId, Long fromUserId);
     
-    Optional<Review> findByBorrowIdAndFromUserIdAndTargetTypeAndDeletedFalse(Long borrowId, Long fromUserId, ReviewType targetType);
+    Long countByToUserIdAndTargetType(Long toUserId, ReviewType targetType);
     
-    Optional<Review> findByIdAndDeletedFalse(Long id);
+    List<Review> findByToUserIdOrderByCreatedAtDesc(Long toUserId);
     
-    Page<Review> findByItemIdAndDeletedFalseOrderByCreatedAtDesc(Long itemId, Pageable pageable);
-    
-    Page<Review> findByItemIdAndTargetTypeAndDeletedFalseOrderByCreatedAtDesc(Long itemId, ReviewType targetType, Pageable pageable);
-    
-    Page<Review> findByToUserIdAndDeletedFalseOrderByCreatedAtDesc(Long toUserId, Pageable pageable);
-    
-    Page<Review> findByToUserIdAndTargetTypeAndDeletedFalseOrderByCreatedAtDesc(Long toUserId, ReviewType targetType, Pageable pageable);
-    
-    Page<Review> findByFromUserIdAndDeletedFalseOrderByCreatedAtDesc(Long fromUserId, Pageable pageable);
-    
-    Page<Review> findByFromUserIdAndTargetTypeAndDeletedFalseOrderByCreatedAtDesc(Long fromUserId, ReviewType targetType, Pageable pageable);
-
-    Long countByItemIdAndDeletedFalse(Long itemId);
-
-    Long countByToUserIdAndDeletedFalse(Long toUserId);
-    
-    Long countByToUserIdAndTargetTypeAndDeletedFalse(Long toUserId, ReviewType targetType);
+    List<Review> findByFromUserIdOrderByCreatedAtDesc(Long fromUserId);
 }

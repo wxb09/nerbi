@@ -15,6 +15,7 @@
             
             <div class="flex bg-gray-100 rounded-xl p-1">
               <button 
+                v-if="canSelectItemType"
                 @click="reviewType = 'ITEM'"
                 :class="[
                   'flex-1 py-2 rounded-lg text-sm font-bold transition-all',
@@ -28,7 +29,8 @@
               <button 
                 @click="reviewType = 'USER'"
                 :class="[
-                  'flex-1 py-2 rounded-lg text-sm font-bold transition-all',
+                  'py-2 rounded-lg text-sm font-bold transition-all',
+                  canSelectItemType ? 'flex-1' : 'flex-1',
                   reviewType === 'USER' 
                     ? 'bg-white text-[#E2B04D] shadow-sm' 
                     : 'text-gray-500 hover:text-gray-700'
@@ -142,6 +144,7 @@ interface BorrowInfo {
   counterpartyName: string
   counterpartyId: number
   isBorrower?: boolean
+  defaultReviewType?: 'ITEM' | 'USER'
 }
 
 const props = defineProps<{
@@ -151,7 +154,7 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'close'): void
-  (e: 'success'): void
+  (e: 'success', type: 'ITEM' | 'USER'): void
 }>()
 
 const reviewType = ref<'ITEM' | 'USER'>('ITEM')
@@ -171,6 +174,7 @@ const ratingTexts: Record<number, string> = {
 }
 
 const isBorrower = computed(() => props.borrowInfo?.isBorrower ?? true)
+const canSelectItemType = computed(() => isBorrower.value)
 
 const canSubmit = computed(() => {
   if (reviewType.value === 'ITEM') {
@@ -182,7 +186,7 @@ const canSubmit = computed(() => {
 
 watch(() => props.visible, (val) => {
   if (val) {
-    reviewType.value = 'ITEM'
+    reviewType.value = props.borrowInfo?.defaultReviewType || 'ITEM'
     selectedTag.value = ''
     ratingStar.value = 0
     content.value = ''
@@ -213,7 +217,7 @@ const handleSubmit = async () => {
     
     await reviewApi.createReview(data)
     alert('评价成功！')
-    emit('success')
+    emit('success', reviewType.value)
     handleClose()
   } catch (error: any) {
     alert(error.message || '评价失败')

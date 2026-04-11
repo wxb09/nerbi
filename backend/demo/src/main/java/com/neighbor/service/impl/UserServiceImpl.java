@@ -7,7 +7,10 @@ import com.neighbor.enums.BorrowStatus;
 import com.neighbor.enums.ItemStatus;
 import com.neighbor.repository.*;
 import com.neighbor.service.UserService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -107,38 +110,52 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<Map<String, Object>> getMyLent(Long userId) {
-        List<Borrow> borrows = borrowRepository.findAll();
+        Pageable pageable = PageRequest.of(0, 100, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Borrow> borrowPage = borrowRepository.findByLenderId(userId, pageable);
         List<Map<String, Object>> result = new ArrayList<>();
-        for (Borrow borrow : borrows) {
-            if (borrow.getLender().getId().equals(userId)) {
-                Map<String, Object> borrowMap = new HashMap<>();
-                borrowMap.put("id", borrow.getId());
-                borrowMap.put("itemName", borrow.getItem().getName());
-                borrowMap.put("borrowerName", borrow.getBorrower().getNickname());
-                borrowMap.put("status", borrow.getStatus());
-                borrowMap.put("startTime", borrow.getStartDate());
-                borrowMap.put("endTime", borrow.getEndDate());
-                result.add(borrowMap);
+        for (Borrow borrow : borrowPage.getContent()) {
+            Map<String, Object> borrowMap = new HashMap<>();
+            borrowMap.put("id", borrow.getId());
+            borrowMap.put("itemName", borrow.getItem().getName());
+            borrowMap.put("borrowerName", borrow.getBorrower().getNickname());
+            borrowMap.put("borrowerId", borrow.getBorrower().getId());
+            borrowMap.put("borrowerAvatar", borrow.getBorrower().getAvatar());
+            borrowMap.put("status", borrow.getStatus());
+            borrowMap.put("startTime", borrow.getStartDate());
+            borrowMap.put("endTime", borrow.getEndDate());
+            
+            List<ItemImage> images = itemImageRepository.findByItemIdOrderBySortOrderAsc(borrow.getItem().getId());
+            if (!images.isEmpty()) {
+                borrowMap.put("itemImage", images.get(0).getUrl());
             }
+            
+            result.add(borrowMap);
         }
         return result;
     }
 
     @Override
     public List<Map<String, Object>> getMyBorrowed(Long userId) {
-        List<Borrow> borrows = borrowRepository.findAll();
+        Pageable pageable = PageRequest.of(0, 100, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<Borrow> borrowPage = borrowRepository.findByBorrowerId(userId, pageable);
         List<Map<String, Object>> result = new ArrayList<>();
-        for (Borrow borrow : borrows) {
-            if (borrow.getBorrower().getId().equals(userId)) {
-                Map<String, Object> borrowMap = new HashMap<>();
-                borrowMap.put("id", borrow.getId());
-                borrowMap.put("itemName", borrow.getItem().getName());
-                borrowMap.put("lenderName", borrow.getLender().getNickname());
-                borrowMap.put("status", borrow.getStatus());
-                borrowMap.put("startTime", borrow.getStartDate());
-                borrowMap.put("endTime", borrow.getEndDate());
-                result.add(borrowMap);
+        for (Borrow borrow : borrowPage.getContent()) {
+            Map<String, Object> borrowMap = new HashMap<>();
+            borrowMap.put("id", borrow.getId());
+            borrowMap.put("itemName", borrow.getItem().getName());
+            borrowMap.put("lenderName", borrow.getLender().getNickname());
+            borrowMap.put("lenderId", borrow.getLender().getId());
+            borrowMap.put("lenderAvatar", borrow.getLender().getAvatar());
+            borrowMap.put("status", borrow.getStatus());
+            borrowMap.put("startTime", borrow.getStartDate());
+            borrowMap.put("endTime", borrow.getEndDate());
+            
+            List<ItemImage> images = itemImageRepository.findByItemIdOrderBySortOrderAsc(borrow.getItem().getId());
+            if (!images.isEmpty()) {
+                borrowMap.put("itemImage", images.get(0).getUrl());
             }
+            
+            result.add(borrowMap);
         }
         return result;
     }
@@ -162,7 +179,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<Map<String, Object>> getMyReviews(Long userId) {
-        List<Review> reviews = reviewRepository.findByToUserIdAndDeletedFalseOrderByCreatedAtDesc(userId, Pageable.unpaged()).getContent();
+        List<Review> reviews = reviewRepository.findByToUserIdOrderByCreatedAtDesc(userId);
         List<Map<String, Object>> result = new ArrayList<>();
         for (Review review : reviews) {
             Map<String, Object> reviewMap = new HashMap<>();
@@ -191,7 +208,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<Map<String, Object>> getMyGivenReviews(Long userId) {
-        List<Review> reviews = reviewRepository.findByFromUserIdAndDeletedFalseOrderByCreatedAtDesc(userId, Pageable.unpaged()).getContent();
+        List<Review> reviews = reviewRepository.findByFromUserIdOrderByCreatedAtDesc(userId);
         List<Map<String, Object>> result = new ArrayList<>();
         for (Review review : reviews) {
             Map<String, Object> reviewMap = new HashMap<>();
