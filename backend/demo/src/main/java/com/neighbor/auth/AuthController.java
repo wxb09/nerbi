@@ -1,7 +1,9 @@
 package com.neighbor.auth;
 
+import com.neighbor.auth.dto.LoginPasswordRequest;
 import com.neighbor.auth.dto.LoginPhoneRequest;
 import com.neighbor.auth.dto.LoginResponse;
+import com.neighbor.auth.dto.RegisterRequest;
 import com.neighbor.auth.dto.VerifyCodeRequest;
 import com.neighbor.common.api.ApiResponse;
 import com.neighbor.common.exception.BusinessException;
@@ -28,6 +30,16 @@ public class AuthController {
     @PostMapping("/login/phone")
     public ApiResponse<LoginResponse> loginByPhone(@Valid @RequestBody LoginPhoneRequest req) {
         return ApiResponse.ok(authService.loginByPhone(req));
+    }
+
+    @PostMapping("/login/password")
+    public ApiResponse<LoginResponse> loginByPassword(@Valid @RequestBody LoginPasswordRequest req) {
+        return ApiResponse.ok(authService.loginByPassword(req));
+    }
+
+    @PostMapping("/register")
+    public ApiResponse<LoginResponse> register(@Valid @RequestBody RegisterRequest req) {
+        return ApiResponse.ok(authService.register(req));
     }
 
     @PostMapping("/verify-code")

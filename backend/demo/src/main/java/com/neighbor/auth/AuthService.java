@@ -1,12 +1,16 @@
 package com.neighbor.auth;
 
+import com.neighbor.auth.dto.LoginPasswordRequest;
 import com.neighbor.auth.dto.LoginPhoneRequest;
 import com.neighbor.auth.dto.LoginResponse;
+import com.neighbor.auth.dto.RegisterRequest;
 import com.neighbor.auth.dto.UserInfo;
 import com.neighbor.common.exception.BusinessException;
 import com.neighbor.entity.User;
+import com.neighbor.enums.UserRole;
 import com.neighbor.enums.UserStatus;
 import com.neighbor.repository.UserRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import java.util.Optional;
 
@@ -19,10 +23,12 @@ public class AuthService {
 
     private final JwtService jwtService;
     private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public AuthService(JwtService jwtService, UserRepository userRepository) {
+    public AuthService(JwtService jwtService, UserRepository userRepository, PasswordEncoder passwordEncoder) {
         this.jwtService = jwtService;
         this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public LoginResponse loginByPhone(LoginPhoneRequest req) {
@@ -38,8 +44,8 @@ public class AuthService {
             user.setPhone(req.phone());
             user.setNickname("新用户");
             user.setStatus(UserStatus.ACTIVE);
-            user.setRole(com.neighbor.enums.UserRole.USER);
-            user.setCreditScore(new java.math.BigDecimal(10.00));
+            user.setRole(UserRole.USER);
+            user.setCreditScore(new java.math.BigDecimal("10.00"));
             user.setBorrowCount(0);
             user.setLendCount(0);
             user.setCo2Saved(0);
@@ -63,6 +69,61 @@ public class AuthService {
         );
         
         String token = jwtService.generateToken(user.getId().toString(), req.phone(), role);
+        return new LoginResponse(token, userInfo);
+    }
+
+    public LoginResponse loginByPassword(LoginPasswordRequest req) {
+        User user = userRepository.findByPhone(req.phone())
+                .orElseThrow(() -> new BusinessException(2001, "手机号或密码错误"));
+
+        if (user.getPassword() == null || !passwordEncoder.matches(req.password(), user.getPassword())) {
+            throw new BusinessException(2001, "手机号或密码错误");
+        }
+
+        if (user.getStatus() == UserStatus.BANNED) {
+            throw new BusinessException(1002, "账号已被封禁，请联系管理员");
+        }
+
+        String role = user.getRole() != null ? user.getRole().name() : "USER";
+
+        UserInfo userInfo = new UserInfo(
+                user.getId().toString(),
+                user.getNickname(),
+                user.getAvatar(),
+                user.getCommunity() != null ? user.getCommunity().getId().toString() : "",
+                role
+        );
+        
+        String token = jwtService.generateToken(user.getId().toString(), req.phone(), role);
+        return new LoginResponse(token, userInfo);
+    }
+
+    public LoginResponse register(RegisterRequest req) {
+        if (userRepository.findByPhone(req.phone()).isPresent()) {
+            throw new BusinessException(2001, "该手机号已注册");
+        }
+
+        User user = new User();
+        user.setPhone(req.phone());
+        user.setPassword(passwordEncoder.encode(req.password()));
+        user.setNickname(req.nickname() != null && !req.nickname().isBlank() ? req.nickname() : "新用户");
+        user.setStatus(UserStatus.ACTIVE);
+        user.setRole(UserRole.USER);
+        user.setCreditScore(new java.math.BigDecimal("10.00"));
+        user.setBorrowCount(0);
+        user.setLendCount(0);
+        user.setCo2Saved(0);
+        user = userRepository.save(user);
+
+        UserInfo userInfo = new UserInfo(
+                user.getId().toString(),
+                user.getNickname(),
+                user.getAvatar(),
+                user.getCommunity() != null ? user.getCommunity().getId().toString() : "",
+                "USER"
+        );
+        
+        String token = jwtService.generateToken(user.getId().toString(), req.phone(), "USER");
         return new LoginResponse(token, userInfo);
     }
 

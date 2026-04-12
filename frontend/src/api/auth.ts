@@ -1,8 +1,19 @@
 import api from './api'
 
-export interface LoginRequest {
+export interface LoginPhoneRequest {
   phone: string
   verifyCode: string
+}
+
+export interface LoginPasswordRequest {
+  phone: string
+  password: string
+}
+
+export interface RegisterRequest {
+  phone: string
+  password: string
+  nickname?: string
 }
 
 export interface LoginResponse {
@@ -12,6 +23,7 @@ export interface LoginResponse {
     nickname: string
     avatar: string
     communityId: string
+    role?: string
   }
 }
 
@@ -21,8 +33,14 @@ export interface VerifyCodeResponse {
 }
 
 export const authApi = {
-  login: (data: LoginRequest) => 
+  loginByPhone: (data: LoginPhoneRequest) => 
     api.post<LoginResponse>('/auth/login/phone', data),
+  
+  loginByPassword: (data: LoginPasswordRequest) =>
+    api.post<LoginResponse>('/auth/login/password', data),
+  
+  register: (data: RegisterRequest) =>
+    api.post<LoginResponse>('/auth/register', data),
   
   sendVerifyCode: (phone: string) => 
     api.post<VerifyCodeResponse>('/auth/verify-code', { phone }),
@@ -31,5 +49,8 @@ export const authApi = {
     api.post('/auth/logout'),
   
   guest: () => 
-    api.get('/auth/guest')
+    api.get('/auth/guest'),
+
+  login: (data: LoginPhoneRequest) => 
+    api.post<LoginResponse>('/auth/login/phone', data),
 }
