@@ -1,6 +1,7 @@
 package com.neighbor.repository;
 
 import com.neighbor.entity.User;
+import com.neighbor.enums.AddressVerifyStatus;
 import com.neighbor.enums.UserRole;
 import com.neighbor.enums.UserStatus;
 import org.springframework.data.domain.Page;
@@ -10,6 +11,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -26,7 +28,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> findByRole(UserRole role, Pageable pageable);
 
     @Query("SELECT u FROM User u WHERE " +
-           "(:keyword IS NULL OR :keyword = '' OR u.nickname LIKE CONCAT('%', :keyword, '%') OR u.phone LIKE CONCAT('%', :keyword, '%')) " +
+           "(:keyword IS NULL OR u.nickname LIKE %:keyword% OR u.phone LIKE %:keyword%) " +
            "AND (:status IS NULL OR u.status = :status) " +
            "AND (:role IS NULL OR u.role = :role)")
     Page<User> searchUsers(@Param("keyword") String keyword,
@@ -40,4 +42,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     @Query("SELECT COUNT(u) FROM User u WHERE u.createdAt >= :since")
     Long countByCreatedAtAfter(@Param("since") java.time.LocalDateTime since);
+    
+    List<User> findByAddressVerifyStatus(AddressVerifyStatus status);
 }

@@ -22,7 +22,7 @@
           </div>
           <div>
             <p class="text-xl font-bold">{{ user?.lendCount || 0 }}</p>
-            <p class="text-[10px] text-gray-400 uppercase">正在借出</p>
+            <p class="text-[10px] text-gray-400 uppercase">累计借出</p>
           </div>
         </div>
         <div class="mt-6 space-y-2">
@@ -642,6 +642,160 @@
           </div>
         </div>
       </template>
+
+      <template v-else-if="activeMenu === 'settings'">
+        <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+          <div class="px-8 py-6 border-b border-gray-50">
+            <h3 class="text-xl font-bold italic">账号设置</h3>
+          </div>
+          
+          <div class="p-8 space-y-8">
+            <div class="flex items-center gap-6">
+              <div class="relative">
+                <img 
+                  :src="getImageUrl(settingsForm.avatar)" 
+                  class="w-24 h-24 rounded-full object-cover border-4 border-gray-100"
+                />
+                <label class="absolute bottom-0 right-0 bg-[#E2B04D] text-white p-2 rounded-full cursor-pointer hover:bg-[#d4a044] transition-colors">
+                  <span class="iconify text-sm" data-icon="solar:camera-bold"></span>
+                  <input type="file" accept="image/*" class="hidden" @change="handleAvatarChange" />
+                </label>
+              </div>
+              <div>
+                <p class="font-bold text-lg">{{ user?.nickname || '用户' }}</p>
+                <p class="text-sm text-gray-400">点击更换头像</p>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <h4 class="font-bold text-gray-700 border-b border-gray-100 pb-2">基本信息</h4>
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm text-gray-500 mb-1">昵称</label>
+                  <input 
+                    v-model="settingsForm.nickname" 
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#E2B04D] transition-colors"
+                    placeholder="请输入昵称"
+                    maxlength="50"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm text-gray-500 mb-1">手机号</label>
+                  <input 
+                    :value="user?.phone ? maskPhone(user.phone) : ''" 
+                    class="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-400 cursor-not-allowed"
+                    disabled
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm text-gray-500 mb-1">个人简介</label>
+                <textarea 
+                  v-model="settingsForm.bio" 
+                  class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#E2B04D] transition-colors resize-none"
+                  placeholder="介绍一下自己吧..."
+                  rows="3"
+                  maxlength="500"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <h4 class="font-bold text-gray-700 border-b border-gray-100 pb-2">账号安全</h4>
+              
+              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
+                <div>
+                  <p class="font-medium">登录密码</p>
+                  <p class="text-sm text-gray-400">定期更换密码可以保护账号安全</p>
+                </div>
+                <button class="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium hover:bg-gray-100 transition-colors">
+                  修改密码
+                </button>
+              </div>
+            </div>
+
+            <div class="space-y-4">
+              <h4 class="font-bold text-gray-700 border-b border-gray-100 pb-2">小区认证</h4>
+              
+              <div v-if="user?.addressVerifyStatus === 'APPROVED'" class="p-4 bg-green-50 rounded-xl">
+                <div class="flex items-center gap-2 text-green-600">
+                  <span class="iconify text-xl" data-icon="solar:check-circle-bold"></span>
+                  <span class="font-medium">已认证</span>
+                </div>
+                <p class="text-sm text-gray-500 mt-2">{{ user?.communityName }} {{ user?.building }} {{ user?.unit }}</p>
+              </div>
+              
+              <div v-else-if="user?.addressVerifyStatus === 'PENDING'" class="p-4 bg-yellow-50 rounded-xl">
+                <div class="flex items-center gap-2 text-yellow-600">
+                  <span class="iconify text-xl" data-icon="solar:clock-circle-bold"></span>
+                  <span class="font-medium">审核中</span>
+                </div>
+                <p class="text-sm text-gray-500 mt-2">预计1-3个工作日完成审核</p>
+              </div>
+              
+              <div v-else class="space-y-4">
+                <div v-if="user?.addressVerifyStatus === 'REJECTED'" class="p-3 bg-red-50 rounded-xl text-red-500 text-sm">
+                  认证未通过，请检查信息后重新提交
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm text-gray-500 mb-1">所属小区</label>
+                    <select 
+                      v-model="verifyForm.communityId"
+                      class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#E2B04D] transition-colors"
+                    >
+                      <option value="">请选择小区</option>
+                      <option v-for="c in communities" :key="c.id" :value="c.id">{{ c.name }}</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label class="block text-sm text-gray-500 mb-1">楼栋</label>
+                    <input 
+                      v-model="verifyForm.building" 
+                      class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#E2B04D] transition-colors"
+                      placeholder="例如：3栋"
+                    />
+                  </div>
+                </div>
+                <div class="w-1/2">
+                  <label class="block text-sm text-gray-500 mb-1">单元（选填）</label>
+                  <input 
+                    v-model="verifyForm.unit" 
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#E2B04D] transition-colors"
+                    placeholder="例如：1单元"
+                  />
+                </div>
+                <button 
+                  @click="submitAddressVerify" 
+                  :disabled="verifySubmitting || !verifyForm.communityId"
+                  class="px-6 py-3 bg-[#E2B04D] text-white rounded-xl font-medium hover:bg-[#d4a044] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {{ verifySubmitting ? '提交中...' : '提交认证' }}
+                </button>
+              </div>
+            </div>
+
+            <div class="flex justify-end gap-3 pt-4">
+              <button 
+                @click="resetSettingsForm" 
+                class="px-6 py-3 border border-gray-300 rounded-xl font-medium hover:bg-gray-50 transition-colors"
+              >
+                重置
+              </button>
+              <button 
+                @click="saveSettings" 
+                :disabled="settingsSaving"
+                class="px-6 py-3 bg-[#E2B04D] text-white rounded-xl font-medium hover:bg-[#d4a044] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {{ settingsSaving ? '保存中...' : '保存修改' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </template>
     </div>
   </main>
   
@@ -699,6 +853,7 @@ import { userApi } from '../api/user'
 import { borrowApi } from '../api/borrow'
 import { itemApi } from '../api/item'
 import { reviewApi } from '../api/review'
+import { publicApi } from '../api/public'
 import { disputeApi } from '../api/dispute'
 import { wsManager } from '../utils/websocket'
 
@@ -772,6 +927,7 @@ const borrowedItems = ref<BorrowItem[]>([])
 const myItems = ref<MyItem[]>([])
 const drafts = ref<MyItem[]>([])
 const reviews = ref<Review[]>([])
+const communities = ref<{ id: number; name: string }[]>([])
 const stats = ref<Stats>({
   pendingApprovalCount: 0,
   returnRequestedCount: 0,
@@ -797,7 +953,8 @@ const menuItems = [
   { key: 'items', label: '我的发布', icon: 'solar:box-bold' },
   { key: 'drafts', label: '草稿箱', icon: 'solar:file-bold' },
   { key: 'records', label: '借阅记录', icon: 'solar:reorder-bold' },
-  { key: 'reviews', label: '评价管理', icon: 'solar:chat-round-dots-bold' }
+  { key: 'reviews', label: '评价管理', icon: 'solar:chat-round-dots-bold' },
+  { key: 'settings', label: '账号设置', icon: 'solar:settings-bold' }
 ]
 
 const locationText = computed(() => {
@@ -823,6 +980,109 @@ const currentReviews = computed(() => {
 const recordItems = computed(() => {
   return recordTab.value === 'lent' ? lentItems.value : borrowedItems.value
 })
+
+const settingsForm = reactive({
+  nickname: '',
+  bio: '',
+  avatar: ''
+})
+const settingsSaving = ref(false)
+
+const verifyForm = reactive({
+  communityId: null as number | null,
+  building: '',
+  unit: ''
+})
+const verifySubmitting = ref(false)
+
+const maskPhone = (phone: string) => {
+  if (!phone || phone.length !== 11) return phone
+  return phone.replace(/(\d{3})\d{4}(\d{4})/, '$1****$2')
+}
+
+const initSettingsForm = () => {
+  if (user.value) {
+    settingsForm.nickname = user.value.nickname || ''
+    settingsForm.bio = (user.value as any).bio || ''
+    settingsForm.avatar = user.value.avatar || ''
+  }
+}
+
+const resetSettingsForm = () => {
+  initSettingsForm()
+}
+
+const handleAvatarChange = async (event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  if (!file) return
+
+  try {
+    const formData = new FormData()
+    formData.append('files', file)
+    const res = await fetch('http://localhost:8080/api/upload/images', {
+      method: 'POST',
+      body: formData
+    })
+    const data = await res.json()
+    if (data.data && data.data[0]) {
+      settingsForm.avatar = data.data[0].url || data.data[0].filename
+    }
+  } catch (error) {
+    alert('上传头像失败')
+  }
+}
+
+const saveSettings = async () => {
+  settingsSaving.value = true
+  try {
+    const updateData: Record<string, any> = {}
+    if (settingsForm.nickname !== user.value?.nickname) {
+      updateData.nickname = settingsForm.nickname
+    }
+    if (settingsForm.bio !== (user.value as any)?.bio) {
+      updateData.bio = settingsForm.bio
+    }
+    if (settingsForm.avatar !== user.value?.avatar) {
+      updateData.avatar = settingsForm.avatar
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      alert('没有修改的内容')
+      return
+    }
+
+    await userApi.updateUser(updateData)
+    await loadUserInfo()
+    alert('保存成功')
+  } catch (error: any) {
+    alert(error.message || '保存失败')
+  } finally {
+    settingsSaving.value = false
+  }
+}
+
+const submitAddressVerify = async () => {
+  if (!verifyForm.communityId) {
+    alert('请选择小区')
+    return
+  }
+  
+  verifySubmitting.value = true
+  try {
+    await userApi.submitAddressVerify({
+      communityId: verifyForm.communityId,
+      building: verifyForm.building,
+      unit: verifyForm.unit
+    })
+    await loadUserInfo()
+    alert('提交成功，请等待管理员审核')
+  } catch (error: any) {
+    alert(error.message || '提交失败')
+  } finally {
+    verifySubmitting.value = false
+  }
+}
 
 const logout = () => {
   authStore.logout()
@@ -1041,17 +1301,18 @@ const getImageUrl = (path: string | undefined) => {
 
 const loadUserInfo = async () => {
   try {
-    const userRes = await userApi.getCurrentUser()
+    const userRes = await userApi.getUser()
     user.value = userRes as User
     
-    const [lentRes, borrowedRes, itemsRes, draftsRes, reviewsRes, givenReviewsRes, statsRes] = await Promise.all([
+    const [lentRes, borrowedRes, itemsRes, draftsRes, reviewsRes, givenReviewsRes, statsRes, communitiesRes] = await Promise.all([
       userApi.getMyLent(),
       userApi.getMyBorrowed(),
       userApi.getMyItems(),
       userApi.getMyDrafts(),
       userApi.getMyReviews(),
       userApi.getMyGivenReviews(),
-      userApi.getUserStats()
+      userApi.getUserStats(),
+      publicApi.getCommunities()
     ])
     
     lentItems.value = (lentRes || []).map((item: any) => ({
@@ -1143,6 +1404,10 @@ const loadUserInfo = async () => {
       dueSoonCount: statsRes?.dueSoonCount || 0,
       todayCo2Saved: statsRes?.todayCo2Saved || user.value?.co2Saved || 0
     }
+    
+    communities.value = communitiesRes || []
+    
+    initSettingsForm()
   } catch (error) {
     console.error('加载用户信息失败', error)
   }

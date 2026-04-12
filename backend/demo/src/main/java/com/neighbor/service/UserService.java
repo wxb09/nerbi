@@ -1,5 +1,6 @@
 package com.neighbor.service;
 
+import com.neighbor.dto.AddressVerifyRequest;
 import com.neighbor.dto.UserDTO;
 import com.neighbor.dto.UserStatsDTO;
 import com.neighbor.entity.User;
@@ -19,4 +20,8 @@ public interface UserService {
     List<Map<String, Object>> getMyGivenReviews(Long userId);
     List<Map<String, Object>> getMyDrafts(Long userId);
     UserStatsDTO getUserStats(Long userId);
+    
+    void submitAddressVerify(Long userId, AddressVerifyRequest request);
+    List<Map<String, Object>> getPendingAddressVerifies();
+    void approveAddressVerify(Long userId, boolean approved);
 }

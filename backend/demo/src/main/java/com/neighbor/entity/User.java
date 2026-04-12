@@ -1,5 +1,6 @@
 package com.neighbor.entity;
 
+import com.neighbor.enums.AddressVerifyStatus;
 import com.neighbor.enums.UserRole;
 import com.neighbor.enums.UserStatus;
 import jakarta.persistence.*;
@@ -39,6 +40,10 @@ public class User {
 
     @Column(length = 20)
     private String unit;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "address_verify_status", length = 20)
+    private AddressVerifyStatus addressVerifyStatus = AddressVerifyStatus.NONE;
 
     @Column(name = "credit_score", precision = 3, scale = 2)
     private BigDecimal creditScore = BigDecimal.valueOf(10.00);

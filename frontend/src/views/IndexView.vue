@@ -4,7 +4,7 @@
     <div class="bg-[#F3EFEA] rounded-[2rem] p-10 border border-[#E2B04D]/20">
       <h1 class="text-4xl font-bold text-[#2D3436]">让社区物品<span class="text-[#E2B04D]">自由流动</span></h1>
       <p class="text-gray-600 mt-4">先完成页面与跳转，接口后续接入。</p>
-      <RouterLink class="inline-block mt-6 bg-[#E2B04D] text-white px-6 py-3 rounded-2xl font-bold" to="/publish">我也要发布</RouterLink>
+      <RouterLink class="inline-block mt-6 bg-[#E2B04D] text-white px-8 py-4 rounded-2xl font-bold shadow-[5px_5px_0_0_#2D3436] hover:translate-y-1 hover:shadow-none transition-all duration-200" to="/publish">我也要发布</RouterLink>
     </div>
   </header>
 
@@ -95,7 +95,6 @@
       </article>
     </div>
     
-    <!-- 分页组件 -->
     <div v-if="totalPages > 1" class="flex justify-center items-center gap-2 mt-8">
       <button 
         @click="changePage(currentPage - 1)" 
@@ -126,6 +125,45 @@
       </button>
     </div>
   </main>
+
+  <footer class="bg-[#2D3436] text-white mt-20 py-16 px-6">
+    <div class="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-4 gap-12 text-sm">
+      <div class="space-y-4">
+        <div class="flex items-center space-x-2">
+          <span class="iconify text-3xl text-[#E2B04D]" data-icon="solar:share-circle-bold-duotone"></span>
+          <span class="text-2xl font-bold tracking-tight">邻里共享<span class="text-[#E2B04D]">.</span></span>
+        </div>
+        <p class="text-gray-400 leading-relaxed">2026年，让我们重新发现社区的价值。通过共享减少浪费，通过交流建立温暖连接。</p>
+      </div>
+      <div class="space-y-4">
+        <h4 class="text-lg font-bold">平台指南</h4>
+        <ul class="space-y-2 text-gray-400">
+          <li><a class="hover:text-[#E2B04D]" href="#">借用流程说明</a></li>
+          <li><a class="hover:text-[#E2B04D]" href="#">信用分计算规则</a></li>
+          <li><a class="hover:text-[#E2B04D]" href="#">纠纷处理指南</a></li>
+          <li><a class="hover:text-[#E2B04D]" href="#">免责声明</a></li>
+        </ul>
+      </div>
+      <div class="space-y-4">
+        <h4 class="text-lg font-bold">快速导航</h4>
+        <ul class="space-y-2 text-gray-400">
+          <li><RouterLink class="hover:text-[#E2B04D]" to="/index">发现所有物品</RouterLink></li>
+          <li><RouterLink class="hover:text-[#E2B04D]" to="/forum">社区吐槽发帖</RouterLink></li>
+          <li><RouterLink class="hover:text-[#E2B04D]" to="/publish">我要发布闲置</RouterLink></li>
+          <li><RouterLink class="hover:text-[#E2B04D]" to="/profile">个人中心</RouterLink></li>
+        </ul>
+      </div>
+      <div class="space-y-4">
+        <h4 class="text-lg font-bold">联系我们</h4>
+        <div class="flex space-x-4">
+          <span class="iconify text-2xl cursor-pointer hover:text-[#E2B04D]" data-icon="ri:wechat-fill"></span>
+          <span class="iconify text-2xl cursor-pointer hover:text-[#E2B04D]" data-icon="ri:weibo-fill"></span>
+        </div>
+        <p class="text-gray-400 mt-4">客服：400-820-2026</p>
+        <p class="text-gray-500">© 2026 社区邻里共享平台</p>
+      </div>
+    </div>
+  </footer>
 </template>
 
 <script setup lang="ts">
@@ -142,13 +180,11 @@ const selectedCategoryId = ref('')
 const communities = ref<Community[]>([])
 const categories = ref<Category[]>([])
 
-// 分页相关
 const currentPage = ref(1)
-const pageSize = ref(20)
+const pageSize = ref(8)
 const totalPages = ref(1)
 const totalElements = ref(0)
 
-// 搜索防抖定时器
 let searchTimer: any = null
 
 const loadItems = async () => {
@@ -178,7 +214,6 @@ const loadItems = async () => {
 }
 
 const handleSearchInput = () => {
-  // 防抖：500ms 后执行搜索
   if (searchTimer) {
     clearTimeout(searchTimer)
   }
@@ -218,11 +253,9 @@ const changePage = (page: number) => {
   if (page < 1 || page > totalPages.value) return
   currentPage.value = page
   loadItems()
-  // 滚动到顶部
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
 
-// 计算显示的页码（最多显示 5 个页码）
 const displayPages = computed(() => {
   const pages: number[] = []
   const start = Math.max(1, currentPage.value - 2)
@@ -235,7 +268,6 @@ const displayPages = computed(() => {
   return pages
 })
 
-// 限制标签显示数量
 const displayTags = (tags: string[]) => {
   if (!tags) return []
   return tags.slice(0, 3)

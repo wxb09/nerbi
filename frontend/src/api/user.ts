@@ -1,11 +1,21 @@
 import api from './api'
 
+export interface UserStats {
+  pendingApprovalCount: number
+  returnRequestedCount: number
+  dueSoonCount: number
+  todayCo2Saved: number
+}
+
 export const userApi = {
-  getCurrentUser: () => 
-    api.get('/users/me'),
+  getUser: () => api.get('/users/me'),
   
-  updateUser: (data: Record<string, any>) => 
-    api.put('/users/me', data),
+  updateUser: (data: Record<string, any>) => api.put('/users/me', data),
+  
+  getUserStats: () => api.get<UserStats>('/users/me/stats'),
+  
+  submitAddressVerify: (data: { communityId: number; building?: string; unit?: string }) =>
+    api.post('/users/me/address-verify', data),
   
   getUserProfile: (id: string) => 
     api.get(`/users/${id}/profile`),
@@ -30,7 +40,4 @@ export const userApi = {
   
   getMyDrafts: () => 
     api.get('/users/me/drafts'),
-  
-  getUserStats: () => 
-    api.get('/users/me/stats')
 }

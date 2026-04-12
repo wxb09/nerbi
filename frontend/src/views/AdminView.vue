@@ -60,6 +60,7 @@
         <AdminUsers v-else-if="activeTab === 'users'" />
         <AdminItems v-else-if="activeTab === 'items'" />
         <AdminBorrows v-else-if="activeTab === 'borrows'" />
+        <AdminVerifies v-else-if="activeTab === 'verifies'" />
 
         <footer class="mt-8 pt-6 border-t border-[#E8D48B]/15 text-center">
           <p class="text-xs text-[#B8AE9E]">© 2026 邻里共享平台 · 管理后台</p>
@@ -77,6 +78,7 @@ import AdminDashboard from '../components/admin/AdminDashboard.vue'
 import AdminUsers from '../components/admin/AdminUsers.vue'
 import AdminItems from '../components/admin/AdminItems.vue'
 import AdminBorrows from '../components/admin/AdminBorrows.vue'
+import AdminVerifies from '../components/admin/AdminVerifies.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -91,6 +93,7 @@ const navItems = [
   { key: 'dashboard', label: '数据仪表盘', icon: 'solar:chart-square-bold' },
   { key: 'items', label: '物品审核', icon: 'solar:box-bold' },
   { key: 'borrows', label: '借阅纠纷', icon: 'solar:shield-warning-bold' },
+  { key: 'verifies', label: '认证审核', icon: 'solar:verified-check-bold' },
   { key: 'users', label: '用户管理', icon: 'solar:users-group-rounded-bold' },
 ]
 

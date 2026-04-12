@@ -16,6 +16,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/admin")
 public class AdminController {
@@ -195,6 +198,24 @@ public class AdminController {
         log.info("resolveDispute called: disputeId={}, action={}", id, request.action());
         checkAdmin(authentication);
         adminService.resolveDispute(id, request, getUserId(authentication));
+        return ApiResponse.ok();
+    }
+
+    @GetMapping("/address-verifies")
+    public ApiResponse<List<Map<String, Object>>> getPendingAddressVerifies(Authentication authentication) {
+        log.info("getPendingAddressVerifies called");
+        checkAdmin(authentication);
+        return ApiResponse.ok(adminService.getPendingAddressVerifies());
+    }
+
+    @PostMapping("/address-verifies/{userId}")
+    public ApiResponse<Void> approveAddressVerify(
+            Authentication authentication,
+            @PathVariable Long userId,
+            @RequestParam boolean approved) {
+        log.info("approveAddressVerify called: userId={}, approved={}", userId, approved);
+        checkAdmin(authentication);
+        adminService.approveAddressVerify(userId, approved);
         return ApiResponse.ok();
     }
 }

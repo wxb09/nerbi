@@ -2,9 +2,11 @@ package com.neighbor.controller.api;
 
 import com.neighbor.auth.AuthUser;
 import com.neighbor.common.api.ApiResponse;
+import com.neighbor.dto.AddressVerifyRequest;
 import com.neighbor.dto.UserDTO;
 import com.neighbor.dto.UserStatsDTO;
 import com.neighbor.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +33,13 @@ public class UserController {
     public ApiResponse<UserDTO> updateUser(Authentication authentication, @RequestBody Map<String, Object> updateData) {
         Long userId = getUserIdFromAuth(authentication);
         return ApiResponse.ok(userService.updateUser(userId, updateData));
+    }
+
+    @PostMapping("/me/address-verify")
+    public ApiResponse<Void> submitAddressVerify(Authentication authentication, @Valid @RequestBody AddressVerifyRequest request) {
+        Long userId = getUserIdFromAuth(authentication);
+        userService.submitAddressVerify(userId, request);
+        return ApiResponse.ok(null);
     }
 
     @GetMapping("/{id}/profile")

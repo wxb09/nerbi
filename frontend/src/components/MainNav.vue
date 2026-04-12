@@ -45,7 +45,7 @@
           <RouterLink class="text-sm px-3 py-1.5 rounded-full border border-gray-200" to="/profile">
             我的
           </RouterLink>
-          <RouterLink class="text-sm bg-[#2D3436] text-white px-4 py-2 rounded-xl" to="/login">
+          <RouterLink class="text-sm bg-[#E2B04D] text-white px-4 py-2 rounded-xl" to="/login">
             登录
           </RouterLink>
         </div>

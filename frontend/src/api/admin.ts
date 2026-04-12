@@ -108,4 +108,10 @@ export const adminApi = {
 
   createDispute: (borrowId: number, reason: string) =>
     api.post('/admin/disputes', { borrowId, reason }),
+
+  getPendingAddressVerifies: () =>
+    api.get<any[]>('/admin/address-verifies'),
+
+  approveAddressVerify: (userId: number, approved: boolean) =>
+    api.post(`/admin/address-verifies/${userId}?approved=${approved}`),
 }

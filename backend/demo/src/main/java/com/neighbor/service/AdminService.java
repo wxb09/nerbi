@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class AdminService {
@@ -235,6 +236,44 @@ public class AdminService {
             messageService.sendMessage(borrow.getLender().getId(), MessageType.SYSTEM,
                     "纠纷调研通知", "您涉及的借阅纠纷正在调研中" +
                     (request.resolution() != null ? "：" + request.resolution() : "") + "，请耐心等待。", borrow.getId());
+        }
+    }
+
+    public List<Map<String, Object>> getPendingAddressVerifies() {
+        return userRepository.findByAddressVerifyStatus(AddressVerifyStatus.PENDING).stream()
+                .map(user -> {
+                    Map<String, Object> item = new java.util.HashMap<>();
+                    item.put("userId", user.getId());
+                    item.put("nickname", user.getNickname());
+                    item.put("phone", user.getPhone());
+                    item.put("communityId", user.getCommunity() != null ? user.getCommunity().getId() : null);
+                    item.put("communityName", user.getCommunity() != null ? user.getCommunity().getName() : "");
+                    item.put("building", user.getBuilding());
+                    item.put("unit", user.getUnit());
+                    item.put("avatar", user.getAvatar());
+                    return item;
+                })
+                .toList();
+    }
+
+    @Transactional
+    public void approveAddressVerify(Long userId, boolean approved) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(4003, "用户不存在"));
+        
+        if (user.getAddressVerifyStatus() != AddressVerifyStatus.PENDING) {
+            throw new BusinessException(2001, "该用户不在待审核状态");
+        }
+        
+        user.setAddressVerifyStatus(approved ? AddressVerifyStatus.APPROVED : AddressVerifyStatus.REJECTED);
+        userRepository.save(user);
+
+        if (approved) {
+            messageService.sendMessage(userId, MessageType.SYSTEM,
+                    "小区认证通过", "您的小区认证已通过审核，现在可以发布物品了。", null);
+        } else {
+            messageService.sendMessage(userId, MessageType.SYSTEM,
+                    "小区认证未通过", "您的小区认证未通过审核，请检查信息后重新提交。", null);
         }
     }
 

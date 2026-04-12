@@ -1,8 +1,10 @@
 package com.neighbor.service.impl;
 
+import com.neighbor.dto.AddressVerifyRequest;
 import com.neighbor.dto.UserDTO;
 import com.neighbor.dto.UserStatsDTO;
 import com.neighbor.entity.*;
+import com.neighbor.enums.AddressVerifyStatus;
 import com.neighbor.enums.BorrowStatus;
 import com.neighbor.enums.ItemStatus;
 import com.neighbor.repository.*;
@@ -304,17 +306,73 @@ public class UserServiceImpl implements UserService {
 
     private UserDTO convertToUserDTO(User user) {
         String communityName = user.getCommunity() != null ? user.getCommunity().getName() : "";
+        Long communityId = user.getCommunity() != null ? user.getCommunity().getId() : null;
+        String addressVerifyStatus = user.getAddressVerifyStatus() != null 
+                ? user.getAddressVerifyStatus().name() : "NONE";
         return new UserDTO(
                 user.getId(),
                 user.getNickname(),
                 user.getAvatar(),
                 user.getPhone(),
+                user.getBio(),
+                communityId,
                 communityName,
                 user.getBuilding(),
+                user.getUnit(),
+                addressVerifyStatus,
                 user.getCreditScore(),
                 user.getBorrowCount(),
                 user.getLendCount(),
                 user.getCo2Saved()
         );
+    }
+
+    @Override
+    public void submitAddressVerify(Long userId, AddressVerifyRequest request) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+        
+        Community community = communityRepository.findById(request.communityId())
+                .orElseThrow(() -> new RuntimeException("小区不存在"));
+        
+        user.setCommunity(community);
+        user.setBuilding(request.building());
+        user.setUnit(request.unit());
+        user.setAddressVerifyStatus(AddressVerifyStatus.PENDING);
+        
+        userRepository.save(user);
+    }
+
+    @Override
+    public List<Map<String, Object>> getPendingAddressVerifies() {
+        List<User> pendingUsers = userRepository.findByAddressVerifyStatus(AddressVerifyStatus.PENDING);
+        
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (User user : pendingUsers) {
+            Map<String, Object> item = new HashMap<>();
+            item.put("userId", user.getId());
+            item.put("nickname", user.getNickname());
+            item.put("phone", user.getPhone());
+            item.put("communityId", user.getCommunity() != null ? user.getCommunity().getId() : null);
+            item.put("communityName", user.getCommunity() != null ? user.getCommunity().getName() : "");
+            item.put("building", user.getBuilding());
+            item.put("unit", user.getUnit());
+            item.put("avatar", user.getAvatar());
+            result.add(item);
+        }
+        return result;
+    }
+
+    @Override
+    public void approveAddressVerify(Long userId, boolean approved) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("用户不存在"));
+        
+        if (user.getAddressVerifyStatus() != AddressVerifyStatus.PENDING) {
+            throw new RuntimeException("该用户不在待审核状态");
+        }
+        
+        user.setAddressVerifyStatus(approved ? AddressVerifyStatus.APPROVED : AddressVerifyStatus.REJECTED);
+        userRepository.save(user);
     }
 }
