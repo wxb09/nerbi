@@ -40,7 +40,7 @@
         <button 
           v-for="item in menuItems" 
           :key="item.key"
-          @click="activeMenu = item.key"
+          @click="activeMenu = item.key; if (item.key === 'settings') settingsSubTab = 'profile'"
           :class="[
             'w-full flex items-center space-x-4 p-5 transition-colors text-left',
             activeMenu === item.key 
@@ -51,6 +51,25 @@
           <span class="iconify text-xl" :class="activeMenu === item.key ? '' : 'text-gray-400'" :data-icon="item.icon"></span>
           <span>{{ item.label }}</span>
         </button>
+        
+        <!-- 账号设置子菜单 -->
+        <div v-if="activeMenu === 'settings'" class="border-t border-gray-100 bg-gray-50/50">
+          <button 
+            v-for="sub in settingsSubMenus" 
+            :key="sub.key"
+            @click="settingsSubTab = sub.key"
+            :class="[
+              'w-full flex items-center space-x-3 px-5 py-3 pl-12 text-sm transition-colors text-left',
+              settingsSubTab === sub.key 
+                ? 'text-[#E2B04D] font-medium bg-[#E2B04D]/5' 
+                : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+            ]"
+          >
+            <span class="iconify text-base" :data-icon="sub.icon"></span>
+            <span>{{ sub.label }}</span>
+          </button>
+        </div>
+        
         <button 
           @click="logout"
           class="w-full flex items-center space-x-4 p-5 hover:bg-gray-50 border-t border-gray-50 text-red-400 transition-colors text-left"
@@ -644,44 +663,46 @@
       </template>
 
       <template v-else-if="activeMenu === 'settings'">
-        <div class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
-          <div class="px-8 py-6 border-b border-gray-50">
-            <h3 class="text-xl font-bold italic">账号设置</h3>
-          </div>
-          
-          <div class="p-8 space-y-8">
-            <div class="flex items-center gap-6">
-              <div class="relative">
-                <img 
-                  :src="getImageUrl(settingsForm.avatar)" 
-                  class="w-24 h-24 rounded-full object-cover border-4 border-gray-100"
-                />
-                <label class="absolute bottom-0 right-0 bg-[#E2B04D] text-white p-2 rounded-full cursor-pointer hover:bg-[#d4a044] transition-colors">
-                  <span class="iconify text-sm" data-icon="solar:camera-bold"></span>
-                  <input type="file" accept="image/*" class="hidden" @change="handleAvatarChange" />
-                </label>
+        <div class="space-y-6">
+          <!-- 基本信息 -->
+          <div id="settings-profile" class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+            <div class="px-8 py-5 border-b border-gray-50 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
+                <span class="iconify text-xl text-gray-500" data-icon="solar:user-bold"></span>
               </div>
-              <div>
-                <p class="font-bold text-lg">{{ user?.nickname || '用户' }}</p>
-                <p class="text-sm text-gray-400">点击更换头像</p>
-              </div>
+              <h3 class="text-lg font-bold text-[#2D3436]">基本信息</h3>
             </div>
+            
+            <div class="p-8 space-y-6">
+              <div class="flex items-center gap-6">
+                <div class="relative group">
+                  <img 
+                    :src="getImageUrl(settingsForm.avatar)" 
+                    class="w-20 h-20 rounded-full object-cover border-4 border-gray-100 group-hover:border-[#E2B04D]/30 transition-colors"
+                  />
+                  <label class="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                    <span class="iconify text-white text-xl" data-icon="solar:camera-bold"></span>
+                    <input type="file" accept="image/*" class="hidden" @change="handleAvatarChange" />
+                  </label>
+                </div>
+                <div class="flex-1">
+                  <p class="text-sm text-gray-400 mb-1">点击头像更换</p>
+                  <p class="font-medium text-lg">{{ settingsForm.nickname || '用户' }}</p>
+                </div>
+              </div>
 
-            <div class="space-y-4">
-              <h4 class="font-bold text-gray-700 border-b border-gray-100 pb-2">基本信息</h4>
-              
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label class="block text-sm text-gray-500 mb-1">昵称</label>
+                  <label class="block text-sm text-gray-500 mb-1.5">昵称</label>
                   <input 
                     v-model="settingsForm.nickname" 
-                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#E2B04D] transition-colors"
+                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#E2B04D] focus:bg-white transition-colors"
                     placeholder="请输入昵称"
                     maxlength="50"
                   />
                 </div>
                 <div>
-                  <label class="block text-sm text-gray-500 mb-1">手机号</label>
+                  <label class="block text-sm text-gray-500 mb-1.5">手机号</label>
                   <input 
                     :value="user?.phone ? maskPhone(user.phone) : ''" 
                     class="w-full px-4 py-3 bg-gray-100 border border-gray-200 rounded-xl text-gray-400 cursor-not-allowed"
@@ -691,107 +712,191 @@
               </div>
 
               <div>
-                <label class="block text-sm text-gray-500 mb-1">个人简介</label>
+                <label class="block text-sm text-gray-500 mb-1.5">个人简介</label>
                 <textarea 
                   v-model="settingsForm.bio" 
-                  class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#E2B04D] transition-colors resize-none"
+                  class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#E2B04D] focus:bg-white transition-colors resize-none"
                   placeholder="介绍一下自己吧..."
                   rows="3"
                   maxlength="500"
                 ></textarea>
               </div>
-            </div>
 
-            <div class="space-y-4">
-              <h4 class="font-bold text-gray-700 border-b border-gray-100 pb-2">账号安全</h4>
-              
-              <div class="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
-                <div>
-                  <p class="font-medium">登录密码</p>
-                  <p class="text-sm text-gray-400">定期更换密码可以保护账号安全</p>
-                </div>
-                <button class="px-4 py-2 border border-gray-300 rounded-xl text-sm font-medium hover:bg-gray-100 transition-colors">
-                  修改密码
+              <div class="flex justify-end gap-3 pt-2 border-t border-gray-50">
+                <button 
+                  @click="resetSettingsForm" 
+                  class="px-6 py-2.5 border border-gray-200 rounded-xl text-sm font-medium text-gray-600 hover:bg-gray-50 transition-colors"
+                >
+                  重置
+                </button>
+                <button 
+                  @click="saveSettings" 
+                  :disabled="settingsSaving"
+                  class="px-6 py-2.5 bg-[#2D3436] text-white rounded-xl text-sm font-medium hover:bg-[#1a1a1a] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {{ settingsSaving ? '保存中...' : '保存修改' }}
                 </button>
               </div>
             </div>
+          </div>
 
-            <div class="space-y-4">
-              <h4 class="font-bold text-gray-700 border-b border-gray-100 pb-2">小区认证</h4>
-              
-              <div v-if="user?.addressVerifyStatus === 'APPROVED'" class="p-4 bg-green-50 rounded-xl">
-                <div class="flex items-center gap-2 text-green-600">
-                  <span class="iconify text-xl" data-icon="solar:check-circle-bold"></span>
-                  <span class="font-medium">已认证</span>
+          <!-- 小区认证 -->
+          <div id="settings-verify" class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+            <div class="px-8 py-5 border-b border-gray-50 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-[#E2B04D]/10 flex items-center justify-center">
+                  <span class="iconify text-xl text-[#E2B04D]" data-icon="solar:home-2-bold"></span>
                 </div>
-                <p class="text-sm text-gray-500 mt-2">{{ user?.communityName }} {{ user?.building }} {{ user?.unit }}</p>
+                <h3 class="text-lg font-bold text-[#2D3436]">小区认证</h3>
+              </div>
+              <span v-if="user?.addressVerifyStatus === 'APPROVED'" class="px-3 py-1 bg-green-100 text-green-600 rounded-full text-sm font-medium flex items-center gap-1">
+                <span class="iconify" data-icon="solar:check-circle-bold"></span>
+                已认证
+              </span>
+              <span v-else-if="user?.addressVerifyStatus === 'PENDING'" class="px-3 py-1 bg-yellow-100 text-yellow-600 rounded-full text-sm font-medium flex items-center gap-1">
+                <span class="iconify" data-icon="solar:clock-circle-bold"></span>
+                审核中
+              </span>
+              <span v-else class="px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-sm font-medium">未认证</span>
+            </div>
+            
+            <div class="p-8">
+              <!-- 已认证状态 -->
+              <div v-if="user?.addressVerifyStatus === 'APPROVED'" class="space-y-4">
+                <div class="flex items-center gap-4 p-5 bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl">
+                  <div class="w-14 h-14 rounded-xl bg-green-100 flex items-center justify-center">
+                    <span class="iconify text-3xl text-green-500" data-icon="solar:verified-check-bold"></span>
+                  </div>
+                  <div class="flex-1">
+                    <p class="font-medium text-green-700 text-lg">认证通过</p>
+                    <p class="text-gray-500">{{ user?.communityName }} {{ user?.building }} {{ user?.unit }}</p>
+                  </div>
+                </div>
+                <div class="p-4 bg-[#FFF9EE] rounded-xl">
+                  <p class="text-sm text-[#8C7D66]">认证权益已激活：可发布物品 · 显示认证标识 · 获得更多信任</p>
+                </div>
               </div>
               
-              <div v-else-if="user?.addressVerifyStatus === 'PENDING'" class="p-4 bg-yellow-50 rounded-xl">
-                <div class="flex items-center gap-2 text-yellow-600">
-                  <span class="iconify text-xl" data-icon="solar:clock-circle-bold"></span>
-                  <span class="font-medium">审核中</span>
+              <!-- 审核中状态 -->
+              <div v-else-if="user?.addressVerifyStatus === 'PENDING'" class="space-y-4">
+                <div class="flex items-center gap-4 p-5 bg-gradient-to-r from-yellow-50 to-amber-50 rounded-2xl">
+                  <div class="w-14 h-14 rounded-xl bg-yellow-100 flex items-center justify-center">
+                    <span class="iconify text-3xl text-yellow-500" data-icon="solar:clock-circle-bold"></span>
+                  </div>
+                  <div class="flex-1">
+                    <p class="font-medium text-yellow-700 text-lg">审核中</p>
+                    <p class="text-gray-500">预计1-3个工作日完成审核，请耐心等待</p>
+                  </div>
                 </div>
-                <p class="text-sm text-gray-500 mt-2">预计1-3个工作日完成审核</p>
               </div>
               
-              <div v-else class="space-y-4">
-                <div v-if="user?.addressVerifyStatus === 'REJECTED'" class="p-3 bg-red-50 rounded-xl text-red-500 text-sm">
+              <!-- 未认证/被拒绝 -->
+              <div v-else class="space-y-5">
+                <div v-if="user?.addressVerifyStatus === 'REJECTED'" class="p-4 bg-red-50 rounded-xl text-red-500 text-sm flex items-center gap-2">
+                  <span class="iconify text-lg" data-icon="solar:danger-circle-bold"></span>
                   认证未通过，请检查信息后重新提交
                 </div>
+
+                <div class="p-4 bg-[#FFF9EE] rounded-xl">
+                  <p class="text-sm text-[#8C7D66] mb-2">完成认证后您可以：</p>
+                  <div class="flex flex-wrap gap-3 text-sm">
+                    <span class="flex items-center gap-1.5 text-[#2D3436]">
+                      <span class="iconify text-green-500" data-icon="solar:check-circle-bold"></span>
+                      发布闲置物品
+                    </span>
+                    <span class="flex items-center gap-1.5 text-[#2D3436]">
+                      <span class="iconify text-green-500" data-icon="solar:check-circle-bold"></span>
+                      显示认证标识
+                    </span>
+                    <span class="flex items-center gap-1.5 text-[#2D3436]">
+                      <span class="iconify text-green-500" data-icon="solar:check-circle-bold"></span>
+                      获得更多信任
+                    </span>
+                  </div>
+                </div>
                 
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
-                    <label class="block text-sm text-gray-500 mb-1">所属小区</label>
+                    <label class="block text-sm text-gray-500 mb-1.5">所属小区 <span class="text-red-400">*</span></label>
                     <select 
                       v-model="verifyForm.communityId"
-                      class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#E2B04D] transition-colors"
+                      class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#E2B04D] focus:bg-white transition-colors"
                     >
-                      <option value="">请选择小区</option>
+                      <option :value="null">请选择小区</option>
                       <option v-for="c in communities" :key="c.id" :value="c.id">{{ c.name }}</option>
                     </select>
                   </div>
                   <div>
-                    <label class="block text-sm text-gray-500 mb-1">楼栋</label>
+                    <label class="block text-sm text-gray-500 mb-1.5">楼栋 <span class="text-red-400">*</span></label>
                     <input 
                       v-model="verifyForm.building" 
-                      class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#E2B04D] transition-colors"
+                      class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#E2B04D] focus:bg-white transition-colors"
                       placeholder="例如：3栋"
                     />
                   </div>
+                  <div>
+                    <label class="block text-sm text-gray-500 mb-1.5">单元</label>
+                    <input 
+                      v-model="verifyForm.unit" 
+                      class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#E2B04D] focus:bg-white transition-colors"
+                      placeholder="例如：1单元"
+                    />
+                  </div>
                 </div>
-                <div class="w-1/2">
-                  <label class="block text-sm text-gray-500 mb-1">单元（选填）</label>
-                  <input 
-                    v-model="verifyForm.unit" 
-                    class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl outline-none focus:border-[#E2B04D] transition-colors"
-                    placeholder="例如：1单元"
-                  />
+                
+                <div class="flex justify-end pt-2">
+                  <button 
+                    @click="submitAddressVerify" 
+                    :disabled="verifySubmitting || !verifyForm.communityId"
+                    class="px-8 py-3 bg-[#E2B04D] text-white rounded-xl font-medium hover:bg-[#d4a044] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {{ verifySubmitting ? '提交中...' : '提交认证' }}
+                  </button>
                 </div>
-                <button 
-                  @click="submitAddressVerify" 
-                  :disabled="verifySubmitting || !verifyForm.communityId"
-                  class="px-6 py-3 bg-[#E2B04D] text-white rounded-xl font-medium hover:bg-[#d4a044] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {{ verifySubmitting ? '提交中...' : '提交认证' }}
-                </button>
               </div>
             </div>
+          </div>
 
-            <div class="flex justify-end gap-3 pt-4">
-              <button 
-                @click="resetSettingsForm" 
-                class="px-6 py-3 border border-gray-300 rounded-xl font-medium hover:bg-gray-50 transition-colors"
-              >
-                重置
-              </button>
-              <button 
-                @click="saveSettings" 
-                :disabled="settingsSaving"
-                class="px-6 py-3 bg-[#E2B04D] text-white rounded-xl font-medium hover:bg-[#d4a044] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {{ settingsSaving ? '保存中...' : '保存修改' }}
-              </button>
+          <!-- 账号安全 -->
+          <div id="settings-security" class="bg-white rounded-[2rem] border border-gray-100 shadow-sm overflow-hidden">
+            <div class="px-8 py-5 border-b border-gray-50 flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center">
+                <span class="iconify text-xl text-gray-500" data-icon="solar:lock-password-bold"></span>
+              </div>
+              <h3 class="text-lg font-bold text-[#2D3436]">账号安全</h3>
+            </div>
+            
+            <div class="p-8 space-y-4">
+              <div class="flex items-center justify-between p-5 bg-gray-50 rounded-xl hover:bg-gray-100/50 transition-colors">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <span class="iconify text-xl text-blue-500" data-icon="solar:phone-bold"></span>
+                  </div>
+                  <div>
+                    <p class="text-sm text-gray-500">绑定手机</p>
+                    <p class="font-medium">{{ user?.phone ? maskPhone(user.phone) : '-' }}</p>
+                  </div>
+                </div>
+                <span class="text-xs text-green-500 flex items-center gap-1">
+                  <span class="iconify" data-icon="solar:check-circle-bold"></span>
+                  已绑定
+                </span>
+              </div>
+              
+              <div class="flex items-center justify-between p-5 bg-gray-50 rounded-xl hover:bg-gray-100/50 transition-colors">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-lg bg-purple-50 flex items-center justify-center">
+                    <span class="iconify text-xl text-purple-500" data-icon="solar:lock-bold"></span>
+                  </div>
+                  <div>
+                    <p class="text-sm text-gray-500">登录密码</p>
+                    <p class="font-medium">••••••••</p>
+                  </div>
+                </div>
+                <button class="px-4 py-2 text-sm text-[#E2B04D] font-medium hover:bg-[#E2B04D]/10 rounded-lg transition-colors">
+                  修改密码
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -844,7 +949,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, reactive } from 'vue'
+import { ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import MainNav from '../components/MainNav.vue'
 import ReviewModal from '../components/ReviewModal.vue'
@@ -956,6 +1061,20 @@ const menuItems = [
   { key: 'reviews', label: '评价管理', icon: 'solar:chat-round-dots-bold' },
   { key: 'settings', label: '账号设置', icon: 'solar:settings-bold' }
 ]
+
+const settingsSubMenus = [
+  { key: 'profile', label: '基本信息', icon: 'solar:user-bold' },
+  { key: 'verify', label: '小区认证', icon: 'solar:home-2-bold' },
+  { key: 'security', label: '账号安全', icon: 'solar:lock-password-bold' }
+]
+const settingsSubTab = ref('profile')
+
+watch(settingsSubTab, (newVal) => {
+  const el = document.getElementById(`settings-${newVal}`)
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
+})
 
 const locationText = computed(() => {
   if (!user.value) return ''

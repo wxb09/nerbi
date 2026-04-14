@@ -63,10 +63,6 @@ public class BorrowService {
         Item item = itemRepository.findById(request.itemId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
         
-        if (item.getStatus() != ItemStatus.AVAILABLE) {
-            throw new BusinessException(ErrorCode.ITEM_NOT_AVAILABLE);
-        }
-        
         User borrower = userRepository.findById(borrowerId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.USER_NOT_FOUND));
         
@@ -82,6 +78,11 @@ public class BorrowService {
         
         if (request.startDate().isBefore(LocalDate.now())) {
             throw new BusinessException(ErrorCode.START_DATE_IN_PAST);
+        }
+        
+        if (item.getStatus() != ItemStatus.AVAILABLE) {
+            log.warn("[BorrowService] 物品不可用: itemId={}, status={}", item.getId(), item.getStatus());
+            throw new BusinessException(ErrorCode.ITEM_NOT_AVAILABLE);
         }
         
         Borrow borrow = new Borrow();
@@ -128,8 +129,14 @@ public class BorrowService {
         if (request.approved()) {
             log.info("[BorrowService] 审批通过: borrowerId={}, itemId={}", borrowerId, itemId);
             
+            int updatedItems = itemRepository.updateStatusIfMatch(itemId, ItemStatus.AVAILABLE, ItemStatus.BORROWED);
+            if (updatedItems == 0) {
+                log.warn("[BorrowService] 审批时物品状态已变化，可能已被其他借阅占用: itemId={}, currentStatus={}", 
+                         itemId, borrow.getItem().getStatus());
+                throw new BusinessException(ErrorCode.ITEM_NOT_AVAILABLE);
+            }
+            
             borrow.setStatus(BorrowStatus.APPROVED);
-            borrow.getItem().setStatus(ItemStatus.BORROWED);
             messageService.sendBorrowNotification(borrow, MessageType.BORROW_APPROVED);
             
             log.debug("[BorrowService] 推送给借入者: borrowerId={}", borrowerId);
@@ -247,6 +254,12 @@ public class BorrowService {
         
         if (borrow.getStatus() != BorrowStatus.PENDING && borrow.getStatus() != BorrowStatus.APPROVED) {
             throw new BusinessException(ErrorCode.BORROW_STATUS_INVALID);
+        }
+        
+        if (borrow.getStatus() == BorrowStatus.APPROVED) {
+            log.info("[BorrowService] 取消已审批的借阅，恢复物品状态: itemId={}", borrow.getItem().getId());
+            borrow.getItem().setStatus(ItemStatus.AVAILABLE);
+            itemRepository.save(borrow.getItem());
         }
         
         borrow.setStatus(BorrowStatus.CANCELLED);
