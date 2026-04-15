@@ -57,6 +57,7 @@
 
       <div class="flex-1 overflow-y-auto p-7">
         <AdminDashboard v-if="activeTab === 'dashboard'" />
+        <AdminDepositDisputes v-else-if="activeTab === 'deposit-disputes'" />
         <AdminUsers v-else-if="activeTab === 'users'" />
         <AdminItems v-else-if="activeTab === 'items'" />
         <AdminBorrows v-else-if="activeTab === 'borrows'" />
@@ -79,6 +80,7 @@ import AdminUsers from '../components/admin/AdminUsers.vue'
 import AdminItems from '../components/admin/AdminItems.vue'
 import AdminBorrows from '../components/admin/AdminBorrows.vue'
 import AdminVerifies from '../components/admin/AdminVerifies.vue'
+import AdminDepositDisputes from '../components/admin/AdminDepositDisputes.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -91,6 +93,7 @@ const adminName = computed(() => {
 
 const navItems = [
   { key: 'dashboard', label: '数据仪表盘', icon: 'solar:chart-square-bold' },
+  { key: 'deposit-disputes', label: '押金纠纷', icon: 'solar:wallet-money-bold' },
   { key: 'items', label: '物品审核', icon: 'solar:box-bold' },
   { key: 'borrows', label: '借阅纠纷', icon: 'solar:shield-warning-bold' },
   { key: 'verifies', label: '认证审核', icon: 'solar:verified-check-bold' },

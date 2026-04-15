@@ -70,6 +70,29 @@ export interface Dispute {
   resolvedAt: string | null
 }
 
+export interface DepositDispute {
+  id: number
+  paymentId: number
+  borrowId: number
+  itemName: string | null
+  initiatorId: number
+  initiatorName: string
+  initiatorType: 'LENDER' | 'BORROWER'
+  disputeType: 'DAMAGE' | 'LOSS' | 'OVERDUE' | 'MISSING_PARTS' | 'OTHER'
+  description: string
+  evidenceImages: string | null
+  claimAmount: number
+  claimReason: string | null
+  status: 'PENDING' | 'PROCESSING' | 'APPROVED' | 'REJECTED' | 'CANCELLED'
+  actualDeduction: number | null
+  resolution: string | null
+  handlerId: number | null
+  handlerName: string | null
+  handledAt: string | null
+  depositAmount: number
+  createdAt: string
+}
+
 export interface PageResult<T> {
   content: T[]
   totalElements: number
@@ -114,4 +137,16 @@ export const adminApi = {
 
   approveAddressVerify: (userId: number, approved: boolean) =>
     api.post(`/admin/address-verifies/${userId}?approved=${approved}`),
+
+  getDepositDisputes: (params: { status?: string; page?: number; size?: number }) =>
+    api.get<PageResult<DepositDispute>>('/admin/deposit-disputes', { params }),
+
+  getDepositDispute: (id: number) =>
+    api.get<DepositDispute>(`/admin/deposit-disputes/${id}`),
+
+  resolveDepositDispute: (id: number, data: { action: string; actualDeduction?: number; resolution?: string }) =>
+    api.post<DepositDispute>(`/admin/deposit-disputes/${id}/resolve`, data),
+
+  getDepositDisputeStats: () =>
+    api.get<{ pendingCount: number; processingCount: number; approvedCount: number; rejectedCount: number }>('/admin/deposit-disputes/stats'),
 }

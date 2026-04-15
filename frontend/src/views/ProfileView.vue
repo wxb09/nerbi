@@ -343,6 +343,12 @@
                               >
                                 跳过退还（测试）
                               </button>
+                              <button 
+                                @click="openDepositDisputeModal(item)"
+                                class="w-full px-3 py-2 text-sm hover:bg-gray-50 rounded-lg text-orange-500 text-center"
+                              >
+                                发起押金纠纷
+                              </button>
                             </div>
                             
                             <!-- 分隔线 -->
@@ -938,6 +944,13 @@
     @success="handlePaymentSuccess"
   />
 
+  <DepositDisputeModal
+    :visible="showDepositDisputeModal"
+    :borrow-info="disputingBorrow"
+    @close="showDepositDisputeModal = false"
+    @success="handleDepositDisputeSuccess"
+  />
+
   <Teleport to="body">
     <div v-if="appealModal.show" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center" @click.self="appealModal.show = false">
       <div class="bg-white rounded-3xl p-8 w-[90%] max-w-md shadow-2xl">
@@ -981,6 +994,7 @@ import { useRouter, RouterLink } from 'vue-router'
 import MainNav from '../components/MainNav.vue'
 import ReviewModal from '../components/ReviewModal.vue'
 import PaymentModal from '../components/PaymentModal.vue'
+import DepositDisputeModal from '../components/DepositDisputeModal.vue'
 import { useAuthStore } from '../stores/auth'
 import { userApi } from '../api/user'
 import { borrowApi } from '../api/borrow'
@@ -1078,6 +1092,8 @@ const reviewedItems = ref<Set<number>>(new Set())
 const reviewedUsers = ref<Set<number>>(new Set())
 const showPaymentModal = ref(false)
 const payingBorrow = ref<any>(null)
+const showDepositDisputeModal = ref(false)
+const disputingBorrow = ref<any>(null)
 const openMenuId = ref<number | null>(null)
 const reviewTab = ref<'received' | 'given'>('received')
 const givenReviews = ref<Review[]>([])
@@ -1344,6 +1360,23 @@ const skipRefundDeposit = async (item: BorrowItem) => {
   } catch (error: any) {
     alert(error.message || '操作失败')
   }
+}
+
+const openDepositDisputeModal = (item: BorrowItem) => {
+  openMenuId.value = null
+  disputingBorrow.value = {
+    id: item.id,
+    itemName: item.itemName,
+    itemImage: item.itemImage,
+    counterpartyName: item.counterpartyName,
+    deposit: item.deposit || 0
+  }
+  showDepositDisputeModal.value = true
+}
+
+const handleDepositDisputeSuccess = () => {
+  showDepositDisputeModal.value = false
+  loadUserInfo()
 }
 
 const applyReturn = async (item: BorrowItem) => {
