@@ -31,6 +31,13 @@ public enum ErrorCode {
     PAYMENT_NO_DEPOSIT(6006, "无押金可退"),
     PAYMENT_ALREADY_REFUNDED(6007, "押金已退还"),
     PAYMENT_STATUS_INVALID(6008, "支付状态不允许当前操作"),
+    DEPOSIT_DISPUTE_NOT_FOUND(6101, "押金纠纷不存在"),
+    DEPOSIT_DISPUTE_ALREADY_EXISTS(6102, "该借阅已有进行中的押金纠纷"),
+    DEPOSIT_DISPUTE_ALREADY_HANDLED(6103, "押金纠纷已处理"),
+    DEPOSIT_DISPUTE_NO_PERMISSION(6104, "无权操作该押金纠纷"),
+    DEPOSIT_DISPUTE_CLAIM_EXCEED(6105, "申请扣款金额超过押金"),
+    DEPOSIT_DISPUTE_DEDUCTION_EXCEED(6106, "扣款金额超过押金"),
+    DEPOSIT_DISPUTE_INVALID_ACTION(6107, "无效的纠纷处理操作"),
     SYSTEM_ERROR(9000, "系统异常");
 
     private final int code;

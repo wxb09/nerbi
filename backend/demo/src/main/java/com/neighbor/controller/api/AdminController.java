@@ -4,11 +4,13 @@ import com.neighbor.auth.AuthUser;
 import com.neighbor.common.api.ApiResponse;
 import com.neighbor.dto.*;
 import com.neighbor.enums.BorrowStatus;
+import com.neighbor.enums.DepositDisputeStatus;
 import com.neighbor.enums.DisputeStatus;
 import com.neighbor.enums.ItemStatus;
 import com.neighbor.enums.UserRole;
 import com.neighbor.enums.UserStatus;
 import com.neighbor.service.AdminService;
+import com.neighbor.service.DepositDisputeService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,9 +27,11 @@ public class AdminController {
 
     private static final Logger log = LoggerFactory.getLogger(AdminController.class);
     private final AdminService adminService;
+    private final DepositDisputeService depositDisputeService;
 
-    public AdminController(AdminService adminService) {
+    public AdminController(AdminService adminService, DepositDisputeService depositDisputeService) {
         this.adminService = adminService;
+        this.depositDisputeService = depositDisputeService;
     }
 
     private void checkAdmin(Authentication authentication) {
@@ -217,5 +221,47 @@ public class AdminController {
         checkAdmin(authentication);
         adminService.approveAddressVerify(userId, approved);
         return ApiResponse.ok();
+    }
+
+    @GetMapping("/deposit-disputes")
+    public ApiResponse<Page<DepositDisputeDTO>> getDepositDisputes(
+            Authentication authentication,
+            @RequestParam(required = false) DepositDisputeStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        log.info("getDepositDisputes called: status={}, page={}, size={}", status, page, size);
+        checkAdmin(authentication);
+        Page<DepositDisputeDTO> result = depositDisputeService.getAdminDisputes(status, page, size);
+        return ApiResponse.ok(result);
+    }
+
+    @GetMapping("/deposit-disputes/{id}")
+    public ApiResponse<DepositDisputeDTO> getDepositDisputeDetail(
+            Authentication authentication,
+            @PathVariable Long id) {
+        log.info("getDepositDisputeDetail called: id={}", id);
+        checkAdmin(authentication);
+        Long userId = getUserId(authentication);
+        DepositDisputeDTO result = depositDisputeService.getDispute(id, userId);
+        return ApiResponse.ok(result);
+    }
+
+    @PostMapping("/deposit-disputes/{id}/resolve")
+    public ApiResponse<DepositDisputeDTO> resolveDepositDispute(
+            Authentication authentication,
+            @PathVariable Long id,
+            @Valid @RequestBody ResolveDepositDisputeRequest request) {
+        log.info("resolveDepositDispute called: id={}, action={}", id, request.action());
+        checkAdmin(authentication);
+        Long adminId = getUserId(authentication);
+        DepositDisputeDTO result = depositDisputeService.resolveDispute(id, request, adminId);
+        return ApiResponse.ok(result);
+    }
+
+    @GetMapping("/deposit-disputes/stats")
+    public ApiResponse<Map<String, Object>> getDepositDisputeStats(Authentication authentication) {
+        log.info("getDepositDisputeStats called");
+        checkAdmin(authentication);
+        return ApiResponse.ok(depositDisputeService.getDisputeStats());
     }
 }

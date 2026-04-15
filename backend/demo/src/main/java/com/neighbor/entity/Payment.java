@@ -1,5 +1,6 @@
 package com.neighbor.entity;
 
+import com.neighbor.enums.DepositDisputeType;
 import com.neighbor.enums.PaymentStatus;
 import com.neighbor.enums.PaymentType;
 import jakarta.persistence.*;
@@ -65,6 +66,22 @@ public class Payment {
 
     @Column(name = "item_snapshot", length = 200)
     private String itemSnapshot;
+
+    @Column(name = "deduction_amount", precision = 10, scale = 2)
+    private BigDecimal deductionAmount = BigDecimal.ZERO;
+
+    @Column(name = "deduction_reason", length = 500)
+    private String deductionReason;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "deduction_type", length = 20)
+    private DepositDisputeType deductionType;
+
+    @Column(name = "deduction_evidence", length = 2000)
+    private String deductionEvidence;
+
+    @Column(name = "actual_refund_amount", precision = 10, scale = 2)
+    private BigDecimal actualRefundAmount;
 
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;

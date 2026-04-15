@@ -460,6 +460,10 @@ public class PaymentService {
                 payment.getPaidAt(),
                 payment.getRefundAmount(),
                 payment.getRefundedAt(),
+                payment.getDeductionAmount(),
+                payment.getDeductionReason(),
+                payment.getDeductionType(),
+                payment.getActualRefundAmount(),
                 payment.getCreatedAt()
         );
     }

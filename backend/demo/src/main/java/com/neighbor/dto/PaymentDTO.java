@@ -1,5 +1,6 @@
 package com.neighbor.dto;
 
+import com.neighbor.enums.DepositDisputeType;
 import com.neighbor.enums.PaymentStatus;
 import com.neighbor.enums.PaymentType;
 import java.math.BigDecimal;
@@ -23,5 +24,9 @@ public record PaymentDTO(
     LocalDateTime paidAt,
     BigDecimal refundAmount,
     LocalDateTime refundedAt,
+    BigDecimal deductionAmount,
+    String deductionReason,
+    DepositDisputeType deductionType,
+    BigDecimal actualRefundAmount,
     LocalDateTime createdAt
 ) {}
