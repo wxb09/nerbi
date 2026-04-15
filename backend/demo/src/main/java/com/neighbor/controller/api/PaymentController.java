@@ -88,6 +88,24 @@ public class PaymentController {
         return ApiResponse.ok(Map.of("status", "REFUNDED"));
     }
 
+    @PostMapping("/{borrowId}/skip-pay")
+    public ApiResponse<Map<String, String>> skipPayment(
+            Authentication authentication,
+            @PathVariable Long borrowId) {
+        Long payerId = getUserIdFromAuth(authentication);
+        paymentService.skipPayment(borrowId, payerId);
+        return ApiResponse.ok(Map.of("status", "PAID"));
+    }
+
+    @PostMapping("/{borrowId}/skip-refund")
+    public ApiResponse<Map<String, String>> skipRefund(
+            Authentication authentication,
+            @PathVariable Long borrowId) {
+        Long operatorId = getUserIdFromAuth(authentication);
+        paymentService.skipRefund(borrowId, operatorId);
+        return ApiResponse.ok(Map.of("status", "REFUNDED"));
+    }
+
     private Map<String, String> extractParams(HttpServletRequest request) {
         Map<String, String> params = new HashMap<>();
         Map<String, String[]> requestParams = request.getParameterMap();

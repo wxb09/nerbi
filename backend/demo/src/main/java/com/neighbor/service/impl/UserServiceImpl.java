@@ -125,6 +125,8 @@ public class UserServiceImpl implements UserService {
             borrowMap.put("status", borrow.getStatus());
             borrowMap.put("startTime", borrow.getStartDate());
             borrowMap.put("endTime", borrow.getEndDate());
+            borrowMap.put("pricePerDay", borrow.getItem().getPricePerDay());
+            borrowMap.put("deposit", borrow.getItem().getDeposit());
             
             List<ItemImage> images = itemImageRepository.findByItemIdOrderBySortOrderAsc(borrow.getItem().getId());
             if (!images.isEmpty()) {
@@ -151,6 +153,8 @@ public class UserServiceImpl implements UserService {
             borrowMap.put("status", borrow.getStatus());
             borrowMap.put("startTime", borrow.getStartDate());
             borrowMap.put("endTime", borrow.getEndDate());
+            borrowMap.put("pricePerDay", borrow.getItem().getPricePerDay());
+            borrowMap.put("deposit", borrow.getItem().getDeposit());
             
             List<ItemImage> images = itemImageRepository.findByItemIdOrderBySortOrderAsc(borrow.getItem().getId());
             if (!images.isEmpty()) {

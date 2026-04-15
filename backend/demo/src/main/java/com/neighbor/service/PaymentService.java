@@ -337,6 +337,104 @@ public class PaymentService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
+    public void skipPayment(Long borrowId, Long payerId) {
+        log.info("[PaymentService] 跳过支付(测试): borrowId={}, payerId={}", borrowId, payerId);
+
+        Borrow borrow = borrowRepository.findById(borrowId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BORROW_NOT_FOUND));
+
+        if (!borrow.getBorrower().getId().equals(payerId)) {
+            throw new BusinessException(ErrorCode.NOT_YOUR_BORROW_REQUEST);
+        }
+
+        if (borrow.getStatus() != BorrowStatus.APPROVED) {
+            throw new BusinessException(ErrorCode.BORROW_STATUS_INVALID);
+        }
+
+        if (paymentRepository.existsByBorrowIdAndStatus(borrowId, PaymentStatus.PAID)) {
+            throw new BusinessException(ErrorCode.PAYMENT_ALREADY_PAID);
+        }
+
+        Item item = borrow.getItem();
+        long days = java.time.temporal.ChronoUnit.DAYS.between(borrow.getStartDate(), borrow.getEndDate()) + 1;
+        if (days <= 0) days = 1;
+
+        BigDecimal rentAmount = item.getPricePerDay().multiply(BigDecimal.valueOf(days));
+        BigDecimal depositAmount = item.getDeposit();
+        BigDecimal totalAmount = rentAmount.add(depositAmount);
+
+        PaymentType paymentType;
+        if (rentAmount.compareTo(BigDecimal.ZERO) > 0 && depositAmount.compareTo(BigDecimal.ZERO) > 0) {
+            paymentType = PaymentType.RENT_AND_DEPOSIT;
+        } else if (depositAmount.compareTo(BigDecimal.ZERO) > 0) {
+            paymentType = PaymentType.DEPOSIT;
+        } else {
+            paymentType = PaymentType.RENT;
+        }
+
+        String outTradeNo = generateOutTradeNo(borrowId);
+
+        Payment payment = new Payment();
+        payment.setOutTradeNo(outTradeNo);
+        payment.setBorrow(borrow);
+        payment.setPayer(borrow.getBorrower());
+        payment.setPayee(borrow.getLender());
+        payment.setPaymentType(paymentType);
+        payment.setRentAmount(rentAmount);
+        payment.setDepositAmount(depositAmount);
+        payment.setTotalAmount(totalAmount);
+        payment.setStatus(PaymentStatus.PAID);
+        payment.setTradeNo("SKIP_" + outTradeNo);
+        payment.setPaidAt(LocalDateTime.now());
+        payment.setItemSnapshot(item.getName());
+        paymentRepository.save(payment);
+
+        borrow.setStatus(BorrowStatus.ACTIVE);
+        borrowRepository.save(borrow);
+
+        log.info("[PaymentService] 跳过支付完成: borrowId={}", borrowId);
+    }
+
+    @Transactional
+    public void skipRefund(Long borrowId, Long operatorId) {
+        log.info("[PaymentService] 跳过退还(测试): borrowId={}, operatorId={}", borrowId, operatorId);
+
+        Borrow borrow = borrowRepository.findById(borrowId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.BORROW_NOT_FOUND));
+
+        if (!borrow.getLender().getId().equals(operatorId)) {
+            throw new BusinessException(ErrorCode.NOT_YOUR_BORROW_REQUEST);
+        }
+
+        if (borrow.getStatus() != BorrowStatus.RETURNED) {
+            throw new BusinessException(ErrorCode.BORROW_STATUS_INVALID);
+        }
+
+        List<Payment> payments = paymentRepository.findByBorrowIdAndStatus(borrowId, PaymentStatus.PAID);
+        if (payments.isEmpty()) {
+            throw new BusinessException(ErrorCode.PAYMENT_NOT_FOUND);
+        }
+
+        Payment payment = payments.get(0);
+
+        if (payment.getDepositAmount().compareTo(BigDecimal.ZERO) <= 0) {
+            throw new BusinessException(ErrorCode.PAYMENT_NO_DEPOSIT);
+        }
+
+        if (payment.getStatus() == PaymentStatus.REFUNDED || payment.getStatus() == PaymentStatus.REFUNDING) {
+            throw new BusinessException(ErrorCode.PAYMENT_ALREADY_REFUNDED);
+        }
+
+        payment.setStatus(PaymentStatus.REFUNDED);
+        payment.setRefundAmount(payment.getDepositAmount());
+        payment.setRefundTradeNo("SKIP_REFUND_" + payment.getOutTradeNo());
+        payment.setRefundedAt(LocalDateTime.now());
+        paymentRepository.save(payment);
+
+        log.info("[PaymentService] 跳过退还完成: borrowId={}", borrowId);
+    }
+
     private String generateOutTradeNo(Long borrowId) {
         String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
         int random = ThreadLocalRandom.current().nextInt(1000, 9999);

@@ -232,10 +232,10 @@
                       <template v-else>
                         <button 
                           v-if="item.status === 'APPROVED'"
-                          @click="confirmPickup(item)" 
-                          class="bg-[#2D3436] text-white px-3 py-1 rounded-md text-[10px] uppercase font-bold"
+                          @click="openPaymentModal(item)" 
+                          class="bg-[#E2B04D] text-white px-3 py-1 rounded-md text-[10px] uppercase font-bold"
                         >
-                          确认取件
+                          确认取货
                         </button>
                         <button 
                           v-if="item.status === 'ACTIVE'"
@@ -322,6 +322,26 @@
                                 class="w-full px-3 py-2 text-sm hover:bg-gray-50 rounded-lg text-gray-500 text-center"
                               >
                                 取消借阅
+                              </button>
+                            </div>
+                            
+                            <!-- 分隔线 -->
+                            <div v-if="item.status === 'RETURNED' && activeTab === 'lent'" class="my-1 border-t border-gray-100"></div>
+                            
+                            <!-- 退还押金（借出者，RETURNED状态）-->
+                            <div v-if="item.status === 'RETURNED' && activeTab === 'lent'" class="px-3 py-1.5">
+                              <p class="text-[10px] text-gray-400 uppercase tracking-wider mb-1 text-center">押金</p>
+                              <button 
+                                @click="refundDeposit(item)"
+                                class="w-full px-3 py-2 text-sm hover:bg-gray-50 rounded-lg text-blue-600 text-center"
+                              >
+                                退还押金
+                              </button>
+                              <button 
+                                @click="skipRefundDeposit(item)"
+                                class="w-full px-3 py-2 text-sm hover:bg-gray-50 rounded-lg text-gray-400 text-center"
+                              >
+                                跳过退还（测试）
                               </button>
                             </div>
                             
@@ -911,6 +931,13 @@
     @success="handleReviewSuccess"
   />
 
+  <PaymentModal
+    :visible="showPaymentModal"
+    :borrow-info="payingBorrow"
+    @close="showPaymentModal = false"
+    @success="handlePaymentSuccess"
+  />
+
   <Teleport to="body">
     <div v-if="appealModal.show" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center" @click.self="appealModal.show = false">
       <div class="bg-white rounded-3xl p-8 w-[90%] max-w-md shadow-2xl">
@@ -953,6 +980,7 @@ import { ref, computed, onMounted, onUnmounted, reactive, watch } from 'vue'
 import { useRouter, RouterLink } from 'vue-router'
 import MainNav from '../components/MainNav.vue'
 import ReviewModal from '../components/ReviewModal.vue'
+import PaymentModal from '../components/PaymentModal.vue'
 import { useAuthStore } from '../stores/auth'
 import { userApi } from '../api/user'
 import { borrowApi } from '../api/borrow'
@@ -960,6 +988,7 @@ import { itemApi } from '../api/item'
 import { reviewApi } from '../api/review'
 import { publicApi } from '../api/public'
 import { disputeApi } from '../api/dispute'
+import { paymentApi } from '../api/payment'
 import { wsManager } from '../utils/websocket'
 
 interface User {
@@ -989,6 +1018,8 @@ interface BorrowItem {
   status: string
   isBorrower?: boolean
   defaultReviewType?: 'ITEM' | 'USER'
+  pricePerDay?: number
+  deposit?: number
 }
 
 interface MyItem {
@@ -1045,6 +1076,8 @@ const reviewingBorrow = ref<BorrowItem | null>(null)
 const reviewedBorrows = ref<Set<number>>(new Set())
 const reviewedItems = ref<Set<number>>(new Set())
 const reviewedUsers = ref<Set<number>>(new Set())
+const showPaymentModal = ref(false)
+const payingBorrow = ref<any>(null)
 const openMenuId = ref<number | null>(null)
 const reviewTab = ref<'received' | 'given'>('received')
 const givenReviews = ref<Review[]>([])
@@ -1266,6 +1299,53 @@ const confirmPickup = async (item: BorrowItem) => {
   }
 }
 
+const openPaymentModal = (item: BorrowItem) => {
+  openMenuId.value = null
+  const startDate = new Date(item.startTime)
+  const endDate = new Date(item.endTime)
+  const borrowDays = Math.max(1, Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1)
+  payingBorrow.value = {
+    id: item.id,
+    itemName: item.itemName,
+    itemImage: item.itemImage,
+    counterpartyName: item.counterpartyName,
+    pricePerDay: item.pricePerDay || 0,
+    deposit: item.deposit || 0,
+    borrowDays,
+    startTime: item.startTime,
+    endTime: item.endTime
+  }
+  showPaymentModal.value = true
+}
+
+const handlePaymentSuccess = () => {
+  showPaymentModal.value = false
+  loadUserInfo()
+}
+
+const refundDeposit = async (item: BorrowItem) => {
+  openMenuId.value = null
+  if (!confirm('确认通过支付宝退还押金？')) return
+  try {
+    await paymentApi.refundDeposit(item.id)
+    alert('押金退还成功')
+    loadUserInfo()
+  } catch (error: any) {
+    alert(error.message || '退还失败')
+  }
+}
+
+const skipRefundDeposit = async (item: BorrowItem) => {
+  openMenuId.value = null
+  try {
+    await paymentApi.skipRefund(item.id)
+    alert('已跳过退还（测试）')
+    loadUserInfo()
+  } catch (error: any) {
+    alert(error.message || '操作失败')
+  }
+}
+
 const applyReturn = async (item: BorrowItem) => {
   if (!confirm('确认申请归还该物品？')) return
   try {
@@ -1457,7 +1537,9 @@ const loadUserInfo = async () => {
       startTime: item.startTime,
       endTime: item.endTime,
       status: item.status,
-      isBorrower: false
+      isBorrower: false,
+      pricePerDay: item.pricePerDay,
+      deposit: item.deposit
     }))
     
     borrowedItems.value = (borrowedRes || []).map((item: any) => ({
@@ -1472,7 +1554,9 @@ const loadUserInfo = async () => {
       startTime: item.startTime,
       endTime: item.endTime,
       status: item.status,
-      isBorrower: true
+      isBorrower: true,
+      pricePerDay: item.pricePerDay,
+      deposit: item.deposit
     }))
     
     await batchCheckReviewStatus([...lentItems.value, ...borrowedItems.value])
