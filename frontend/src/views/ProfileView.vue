@@ -117,7 +117,7 @@
             <h3 class="text-xl font-bold italic">当前物品流转</h3>
             <div class="flex space-x-6 text-sm">
               <button 
-                @click="activeTab = 'lent'"
+                @click="activeTab = 'lent'; dashboardShowMore = false"
                 :class="[
                   'font-bold py-1',
                   activeTab === 'lent' ? 'text-[#E2B04D] border-b-2 border-[#E2B04D]' : 'text-gray-400 hover:text-gray-600'
@@ -126,7 +126,7 @@
                 我借出的
               </button>
               <button 
-                @click="activeTab = 'borrowed'"
+                @click="activeTab = 'borrowed'; dashboardShowMore = false"
                 :class="[
                   'font-bold py-1',
                   activeTab === 'borrowed' ? 'text-[#E2B04D] border-b-2 border-[#E2B04D]' : 'text-gray-400 hover:text-gray-600'
@@ -361,9 +361,9 @@
               </tbody>
             </table>
           </div>
-          <div class="p-6 bg-gray-50 text-center">
-            <button @click="viewHistory" class="text-xs font-bold text-[#E2B04D] hover:underline uppercase tracking-widest">
-              查看历史所有记录
+          <div v-if="hasMoreItems || dashboardShowMore" class="p-6 bg-gray-50 text-center">
+            <button @click="toggleDashboardShowMore" class="text-xs font-bold text-[#E2B04D] hover:underline uppercase tracking-widest">
+              {{ dashboardShowMore ? '收起' : '查看更多' }}
             </button>
           </div>
         </div>
@@ -1051,6 +1051,8 @@ const givenReviews = ref<Review[]>([])
 
 const activeMenu = ref('dashboard')
 const activeTab = ref('lent')
+const dashboardShowMore = ref(false)
+const dashboardLimit = 6
 const recordTab = ref('lent')
 
 const menuItems = [
@@ -1089,7 +1091,16 @@ const ecoProgress = computed(() => {
 })
 
 const currentItems = computed(() => {
-  return activeTab.value === 'lent' ? lentItems.value : borrowedItems.value
+  const items = activeTab.value === 'lent' ? lentItems.value : borrowedItems.value
+  if (dashboardShowMore.value) {
+    return items
+  }
+  return items.slice(0, dashboardLimit)
+})
+
+const hasMoreItems = computed(() => {
+  const items = activeTab.value === 'lent' ? lentItems.value : borrowedItems.value
+  return items.length > dashboardLimit
 })
 
 const currentReviews = computed(() => {
@@ -1266,8 +1277,8 @@ const applyReturn = async (item: BorrowItem) => {
   }
 }
 
-const viewHistory = () => {
-  todo('查看历史记录')
+const toggleDashboardShowMore = () => {
+  dashboardShowMore.value = !dashboardShowMore.value
 }
 
 const editItem = (item: MyItem) => {

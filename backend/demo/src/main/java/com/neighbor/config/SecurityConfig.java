@@ -49,6 +49,8 @@ public class SecurityConfig {
                         .requestMatchers("/api/upload/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers("/ws/**").permitAll()
+                        .requestMatchers("/api/payments/notify").permitAll()
+                        .requestMatchers("/api/payments/return").permitAll()
                         .anyRequest().authenticated()
                 );
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

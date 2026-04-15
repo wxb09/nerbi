@@ -23,6 +23,14 @@ public enum ErrorCode {
     REVIEW_ALREADY_EXISTS(5002, "该借阅已评价"),
     REVIEW_BORROW_NOT_RETURNED(5003, "借阅未完成，无法评价"),
     REVIEW_NOT_YOUR_BORROW(5004, "只能评价自己的借阅记录"),
+    PAYMENT_NOT_FOUND(6001, "支付记录不存在"),
+    PAYMENT_ALREADY_PAID(6002, "该借阅已支付"),
+    PAYMENT_AMOUNT_ZERO(6003, "支付金额不能为零"),
+    PAYMENT_ALIPAY_ERROR(6004, "支付宝接口错误"),
+    PAYMENT_REFUND_FAILED(6005, "退款失败"),
+    PAYMENT_NO_DEPOSIT(6006, "无押金可退"),
+    PAYMENT_ALREADY_REFUNDED(6007, "押金已退还"),
+    PAYMENT_STATUS_INVALID(6008, "支付状态不允许当前操作"),
     SYSTEM_ERROR(9000, "系统异常");
 
     private final int code;

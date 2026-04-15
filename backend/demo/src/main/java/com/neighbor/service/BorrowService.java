@@ -39,15 +39,17 @@ public class BorrowService {
     private final UserRepository userRepository;
     private final MessageService messageService;
     private final WebSocketPushService webSocketPushService;
+    private final PaymentService paymentService;
 
     public BorrowService(BorrowRepository borrowRepository, ItemRepository itemRepository, 
                          UserRepository userRepository, MessageService messageService,
-                         WebSocketPushService webSocketPushService) {
+                         WebSocketPushService webSocketPushService, PaymentService paymentService) {
         this.borrowRepository = borrowRepository;
         this.itemRepository = itemRepository;
         this.userRepository = userRepository;
         this.messageService = messageService;
         this.webSocketPushService = webSocketPushService;
+        this.paymentService = paymentService;
     }
 
     @Transactional(readOnly = true)
@@ -260,6 +262,7 @@ public class BorrowService {
             log.info("[BorrowService] 取消已审批的借阅，恢复物品状态: itemId={}", borrow.getItem().getId());
             borrow.getItem().setStatus(ItemStatus.AVAILABLE);
             itemRepository.save(borrow.getItem());
+            paymentService.closePayment(borrowId, borrowerId);
         }
         
         borrow.setStatus(BorrowStatus.CANCELLED);
