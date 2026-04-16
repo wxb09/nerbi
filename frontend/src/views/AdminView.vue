@@ -25,6 +25,30 @@
           <span class="iconify nav-icon" :data-icon="item.icon"></span>
           <span v-if="!sidebarCollapsed" class="nav-text">{{ item.label }}</span>
         </a>
+
+        <p v-if="!sidebarCollapsed" class="px-4 pt-5 pb-2 text-[10px] font-bold text-white/25 uppercase tracking-[0.18em]">运营</p>
+        <a
+          v-for="item in opsItems"
+          :key="item.key"
+          class="nav-item"
+          :class="activeTab === item.key ? 'active' : ''"
+          @click="activeTab = item.key"
+        >
+          <span class="iconify nav-icon" :data-icon="item.icon"></span>
+          <span v-if="!sidebarCollapsed" class="nav-text">{{ item.label }}</span>
+        </a>
+
+        <p v-if="!sidebarCollapsed" class="px-4 pt-5 pb-2 text-[10px] font-bold text-white/25 uppercase tracking-[0.18em]">设置</p>
+        <a
+          v-for="item in sysItems"
+          :key="item.key"
+          class="nav-item"
+          :class="activeTab === item.key ? 'active' : ''"
+          @click="activeTab = item.key"
+        >
+          <span class="iconify nav-icon" :data-icon="item.icon"></span>
+          <span v-if="!sidebarCollapsed" class="nav-text">{{ item.label }}</span>
+        </a>
       </nav>
 
       <div v-if="!sidebarCollapsed" class="p-4 border-t border-white/[0.06]">
@@ -62,6 +86,9 @@
         <AdminItems v-else-if="activeTab === 'items'" />
         <AdminBorrows v-else-if="activeTab === 'borrows'" />
         <AdminVerifies v-else-if="activeTab === 'verifies'" />
+        <AdminHome v-else-if="activeTab === 'home'" />
+        <AdminCommunity v-else-if="activeTab === 'community'" />
+        <AdminSettings v-else-if="activeTab === 'settings'" />
 
         <footer class="mt-8 pt-6 border-t border-[#E8D48B]/15 text-center">
           <p class="text-xs text-[#B8AE9E]">© 2026 邻里共享平台 · 管理后台</p>
@@ -81,6 +108,9 @@ import AdminItems from '../components/admin/AdminItems.vue'
 import AdminBorrows from '../components/admin/AdminBorrows.vue'
 import AdminVerifies from '../components/admin/AdminVerifies.vue'
 import AdminDepositDisputes from '../components/admin/AdminDepositDisputes.vue'
+import AdminHome from '../components/admin/AdminHome.vue'
+import AdminCommunity from '../components/admin/AdminCommunity.vue'
+import AdminSettings from '../components/admin/AdminSettings.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -100,8 +130,17 @@ const navItems = [
   { key: 'users', label: '用户管理', icon: 'solar:users-group-rounded-bold' },
 ]
 
+const opsItems = [
+  { key: 'home', label: '首页管理', icon: 'solar:home-bold' },
+  { key: 'community', label: '社区管理', icon: 'solar:buildings-bold' },
+]
+
+const sysItems = [
+  { key: 'settings', label: '系统设置', icon: 'solar:settings-bold' },
+]
+
 const currentTitle = computed(() => {
-  const item = navItems.find(n => n.key === activeTab.value)
+  const item = navItems.find(n => n.key === activeTab.value) || opsItems.find(n => n.key === activeTab.value) || sysItems.find(n => n.key === activeTab.value)
   return item?.label || '管理后台'
 })
 

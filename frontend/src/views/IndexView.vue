@@ -1,10 +1,21 @@
 <template>
   <MainNav />
   <header class="max-w-7xl mx-auto px-6 pt-12 pb-8">
-    <div class="bg-[#F3EFEA] rounded-[2rem] p-10 border border-[#E2B04D]/20">
-      <h1 class="text-4xl font-bold text-[#2D3436]">让社区物品<span class="text-[#E2B04D]">自由流动</span></h1>
-      <p class="text-gray-600 mt-4">先完成页面与跳转，接口后续接入。</p>
-      <RouterLink class="inline-block mt-6 bg-[#E2B04D] text-white px-8 py-4 rounded-2xl font-bold shadow-[5px_5px_0_0_#2D3436] hover:translate-y-1 hover:shadow-none transition-all duration-200" to="/publish">我也要发布</RouterLink>
+    <div class="bg-[#F3EFEA] rounded-[2rem] p-10 border border-[#E2B04D]/20 flex items-center justify-between gap-8">
+      <div class="flex-[4]">
+        <h1 class="text-4xl font-bold text-[#2D3436]">让社区物品<span class="text-[#E2B04D]">自由流动</span></h1>
+        <p class="text-gray-600 mt-4">在 2026 年，我们重新定义邻里关系。不再购买只用一次的工具，通过<br />借用连接身边的信任。</p>
+        <RouterLink class="inline-block mt-6 bg-[#E2B04D] text-white px-8 py-4 rounded-2xl font-bold shadow-[5px_5px_0_0_#2D3436] hover:translate-y-1 hover:shadow-none transition-all duration-200" to="/publish">我也要发布</RouterLink>
+      </div>
+      <div class="flex-[2] flex-shrink-0 hidden lg:block">
+        <div class="relative">
+          <img 
+            src="https://modao.cc/agent-py/media/generated_images/2026-03-19/21bdd8ad59974a7cb41d15bf7841b460.jpg" 
+            alt="邻里共享"
+            class="w-64 h-48 object-cover rounded-2xl border-4 border-white shadow-[8px_8px_20px_rgba(0,0,0,0.15)] rotate-3 hover:rotate-0 transition-transform duration-300"
+          />
+        </div>
+      </div>
     </div>
   </header>
 
