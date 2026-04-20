@@ -41,12 +41,6 @@ public class PostService {
 
     @Transactional(readOnly = true)
     public Page<PostListDTO> getPosts(Long communityId, String type, String sort, Long currentUserId, Pageable pageable) {
-        Page<Post> posts;
-
-        if ("hot".equals(sort)) {
-            return getHotPosts(communityId, currentUserId, pageable);
-        }
-
         PostType postType = null;
         if (type != null) {
             try {
@@ -56,6 +50,11 @@ public class PostService {
             }
         }
 
+        if ("hot".equals(sort)) {
+            return getHotPosts(communityId, postType, currentUserId, pageable);
+        }
+
+        Page<Post> posts;
         if (communityId != null && postType != null) {
             posts = postRepository.findByCommunityIdAndTypeAndStatus(communityId, postType, "PUBLISHED", pageable);
         } else if (communityId != null) {
@@ -70,10 +69,14 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
-    public Page<PostListDTO> getHotPosts(Long communityId, Long currentUserId, Pageable pageable) {
+    public Page<PostListDTO> getHotPosts(Long communityId, PostType postType, Long currentUserId, Pageable pageable) {
         Page<Post> posts;
-        if (communityId != null) {
+        if (communityId != null && postType != null) {
+            posts = postRepository.findHotPostsByCommunityAndType(communityId, postType, "PUBLISHED", pageable);
+        } else if (communityId != null) {
             posts = postRepository.findHotPosts(communityId, "PUBLISHED", pageable);
+        } else if (postType != null) {
+            posts = postRepository.findHotPostsByType(postType, "PUBLISHED", pageable);
         } else {
             posts = postRepository.findHotPostsAll("PUBLISHED", pageable);
         }

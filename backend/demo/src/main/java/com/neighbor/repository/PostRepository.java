@@ -37,6 +37,14 @@ public interface PostRepository extends JpaRepository<Post, Long> {
     Page<Post> findHotPostsAll(@Param("status") String status, Pageable pageable);
 
     @EntityGraph(attributePaths = {"user", "community"})
+    @Query("SELECT p FROM Post p WHERE p.type = :type AND p.status = :status ORDER BY p.likeCount DESC, p.createdAt DESC")
+    Page<Post> findHotPostsByType(@Param("type") PostType type, @Param("status") String status, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"user", "community"})
+    @Query("SELECT p FROM Post p WHERE p.community.id = :communityId AND p.type = :type AND p.status = :status ORDER BY p.likeCount DESC, p.createdAt DESC")
+    Page<Post> findHotPostsByCommunityAndType(@Param("communityId") Long communityId, @Param("type") PostType type, @Param("status") String status, Pageable pageable);
+
+    @EntityGraph(attributePaths = {"user", "community"})
     @Query("SELECT p FROM Post p WHERE p.id = :id")
     Post findByIdWithFetch(@Param("id") Long id);
 }

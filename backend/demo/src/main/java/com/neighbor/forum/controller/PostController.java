@@ -32,14 +32,7 @@ public class PostController {
             @RequestParam(defaultValue = "10") int size,
             Authentication authentication) {
         Long currentUserId = getUserIdSafe(authentication);
-        Pageable pageable;
-
-        if ("hot".equals(sort)) {
-            pageable = PageRequest.of(page, size);
-            return ApiResponse.ok(postService.getHotPosts(communityId, currentUserId, pageable));
-        }
-
-        pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(page, size);
         return ApiResponse.ok(postService.getPosts(communityId, type, sort, currentUserId, pageable));
     }
 
