@@ -41,6 +41,9 @@ public class User {
     @Column(length = 20)
     private String unit;
 
+    @Column(name = "alipay_account", length = 64)
+    private String alipayAccount;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "address_verify_status", length = 20)
     private AddressVerifyStatus addressVerifyStatus = AddressVerifyStatus.NONE;

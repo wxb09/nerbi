@@ -923,6 +923,31 @@
                   修改密码
                 </button>
               </div>
+
+              <div class="flex items-center justify-between p-5 bg-gray-50 rounded-xl hover:bg-gray-100/50 transition-colors">
+                <div class="flex items-center gap-4">
+                  <div class="w-10 h-10 rounded-lg bg-blue-50 flex items-center justify-center">
+                    <span class="iconify text-xl text-blue-500" data-icon="solar:wallet-bold"></span>
+                  </div>
+                  <div>
+                    <p class="text-sm text-gray-500">支付宝账号</p>
+                    <p v-if="(user as any)?.alipayAccount" class="font-medium">{{ (user as any).alipayAccount }}</p>
+                    <p v-else class="font-medium text-gray-300">未绑定</p>
+                  </div>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span v-if="(user as any)?.alipayAccount" class="text-xs text-green-500 flex items-center gap-1">
+                    <span class="iconify" data-icon="solar:check-circle-bold"></span>
+                    已绑定
+                  </span>
+                  <button 
+                    @click="showAlipayBindModal = true"
+                    class="px-4 py-2 text-sm text-[#E2B04D] font-medium hover:bg-[#E2B04D]/10 rounded-lg transition-colors"
+                  >
+                    {{ (user as any)?.alipayAccount ? '修改' : '绑定' }}
+                  </button>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -950,6 +975,49 @@
     @close="showDepositDisputeModal = false"
     @success="handleDepositDisputeSuccess"
   />
+
+  <Teleport to="body">
+    <Transition name="modal">
+      <div v-if="showAlipayBindModal" class="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/50" @click="showAlipayBindModal = false"></div>
+        <div class="relative bg-white rounded-3xl w-full max-w-md shadow-2xl overflow-hidden">
+          <div class="p-6 border-b border-gray-100">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xl font-bold">绑定支付宝账号</h3>
+              <button @click="showAlipayBindModal = false" class="text-gray-400 hover:text-gray-600 transition-colors">
+                <span class="iconify text-2xl" data-icon="solar:close-circle-bold"></span>
+              </button>
+            </div>
+          </div>
+          <div class="p-6 space-y-4">
+            <div class="p-3 bg-blue-50 rounded-xl flex items-start gap-2">
+              <span class="iconify text-blue-500 text-lg flex-shrink-0 mt-0.5" data-icon="solar:info-circle-bold"></span>
+              <p class="text-xs text-blue-700 leading-relaxed">绑定支付宝账号后，租金和扣款将自动转入您的支付宝账户。</p>
+            </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700">支付宝账号</label>
+              <input 
+                v-model="alipayAccountInput"
+                type="text"
+                class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#E2B04D]/30"
+                placeholder="请输入支付宝登录账号（手机号/邮箱）"
+              />
+            </div>
+          </div>
+          <div class="p-6 border-t border-gray-100 space-y-3">
+            <button
+              @click="bindAlipayAccount"
+              :disabled="alipayBinding || !alipayAccountInput.trim()"
+              class="w-full py-3.5 bg-[#E2B04D] text-white rounded-xl font-bold hover:bg-[#C49A2E] transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              <span v-if="alipayBinding" class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+              {{ alipayBinding ? '绑定中...' : '确认绑定' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 
   <Teleport to="body">
     <div v-if="appealModal.show" class="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center" @click.self="appealModal.show = false">
@@ -1094,6 +1162,9 @@ const showPaymentModal = ref(false)
 const payingBorrow = ref<any>(null)
 const showDepositDisputeModal = ref(false)
 const disputingBorrow = ref<any>(null)
+const showAlipayBindModal = ref(false)
+const alipayAccountInput = ref('')
+const alipayBinding = ref(false)
 const openMenuId = ref<number | null>(null)
 const reviewTab = ref<'received' | 'given'>('received')
 const givenReviews = ref<Review[]>([])
@@ -1377,6 +1448,24 @@ const openDepositDisputeModal = (item: BorrowItem) => {
 const handleDepositDisputeSuccess = () => {
   showDepositDisputeModal.value = false
   loadUserInfo()
+}
+
+const bindAlipayAccount = async () => {
+  if (!alipayAccountInput.value.trim()) {
+    alert('请输入支付宝账号')
+    return
+  }
+  alipayBinding.value = true
+  try {
+    await userApi.updateUser({ alipayAccount: alipayAccountInput.value.trim() })
+    await loadUserInfo()
+    showAlipayBindModal.value = false
+    alert('支付宝账号绑定成功')
+  } catch (error: any) {
+    alert(error.message || '绑定失败')
+  } finally {
+    alipayBinding.value = false
+  }
 }
 
 const applyReturn = async (item: BorrowItem) => {

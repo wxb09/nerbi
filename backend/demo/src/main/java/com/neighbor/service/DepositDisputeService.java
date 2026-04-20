@@ -44,6 +44,7 @@ public class DepositDisputeService {
     private final MessageService messageService;
     private final AlipayClient alipayClient;
     private final ObjectMapper objectMapper;
+    private final TransferService transferService;
 
     public DepositDisputeService(DepositDisputeRepository depositDisputeRepository,
                                   PaymentRepository paymentRepository,
@@ -51,7 +52,8 @@ public class DepositDisputeService {
                                   UserRepository userRepository,
                                   MessageService messageService,
                                   AlipayClient alipayClient,
-                                  ObjectMapper objectMapper) {
+                                  ObjectMapper objectMapper,
+                                  TransferService transferService) {
         this.depositDisputeRepository = depositDisputeRepository;
         this.paymentRepository = paymentRepository;
         this.borrowRepository = borrowRepository;
@@ -59,6 +61,7 @@ public class DepositDisputeService {
         this.messageService = messageService;
         this.alipayClient = alipayClient;
         this.objectMapper = objectMapper;
+        this.transferService = transferService;
     }
 
     @Transactional
@@ -264,6 +267,22 @@ public class DepositDisputeService {
                         "借阅订单「" + borrow.getItem().getName() + "」的押金纠纷已处理：" + deductionMsg + refundMsg +
                                 (request.resolution() != null ? "。" + request.resolution() : ""),
                         borrow.getId());
+
+                try {
+                    transferService.transferToLender(payment, deduction, TransferType.DEDUCTION);
+                    log.info("[DepositDisputeService] 扣款已转账给借出者: borrowId={}, deduction={}", borrow.getId(), deduction);
+                } catch (Exception e) {
+                    log.warn("[DepositDisputeService] 扣款转账失败，不影响纠纷处理: {}", e.getMessage());
+                }
+
+                try {
+                    if (payment.getRentAmount().compareTo(BigDecimal.ZERO) > 0) {
+                        transferService.transferToLender(payment, payment.getRentAmount(), TransferType.RENT);
+                        log.info("[DepositDisputeService] 租金已转账给借出者: borrowId={}, rent={}", borrow.getId(), payment.getRentAmount());
+                    }
+                } catch (Exception e) {
+                    log.warn("[DepositDisputeService] 租金转账失败，不影响纠纷处理: {}", e.getMessage());
+                }
             }
             case "reject" -> {
                 dispute.setStatus(DepositDisputeStatus.REJECTED);
@@ -296,6 +315,15 @@ public class DepositDisputeService {
                         "借阅订单「" + borrow.getItem().getName() + "」的押金纠纷已驳回，押金将全额退还给借入者" +
                                 (request.resolution() != null ? "。" + request.resolution() : ""),
                         borrow.getId());
+
+                try {
+                    if (payment.getRentAmount().compareTo(BigDecimal.ZERO) > 0) {
+                        transferService.transferToLender(payment, payment.getRentAmount(), TransferType.RENT);
+                        log.info("[DepositDisputeService] 驳回后租金已转账给借出者: borrowId={}", borrow.getId());
+                    }
+                } catch (Exception e) {
+                    log.warn("[DepositDisputeService] 驳回后租金转账失败: {}", e.getMessage());
+                }
             }
             default -> throw new BusinessException(ErrorCode.DEPOSIT_DISPUTE_INVALID_ACTION);
         }

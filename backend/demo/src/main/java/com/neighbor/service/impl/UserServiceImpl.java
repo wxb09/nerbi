@@ -72,6 +72,9 @@ public class UserServiceImpl implements UserService {
         if (updateData.containsKey("unit")) {
             user.setUnit((String) updateData.get("unit"));
         }
+        if (updateData.containsKey("alipayAccount")) {
+            user.setAlipayAccount((String) updateData.get("alipayAccount"));
+        }
 
         user = userRepository.save(user);
         return convertToUserDTO(user);
@@ -323,6 +326,7 @@ public class UserServiceImpl implements UserService {
                 communityName,
                 user.getBuilding(),
                 user.getUnit(),
+                user.getAlipayAccount(),
                 addressVerifyStatus,
                 user.getCreditScore(),
                 user.getBorrowCount(),

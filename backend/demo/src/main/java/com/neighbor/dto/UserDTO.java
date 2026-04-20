@@ -12,6 +12,7 @@ public record UserDTO(
     String communityName,
     String building,
     String unit,
+    String alipayAccount,
     String addressVerifyStatus,
     BigDecimal creditScore,
     Integer borrowCount,

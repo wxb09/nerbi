@@ -17,6 +17,7 @@ import com.neighbor.enums.BorrowStatus;
 import com.neighbor.enums.ErrorCode;
 import com.neighbor.enums.PaymentStatus;
 import com.neighbor.enums.PaymentType;
+import com.neighbor.enums.TransferType;
 import com.neighbor.repository.BorrowRepository;
 import com.neighbor.repository.PaymentRepository;
 import com.neighbor.repository.UserRepository;
@@ -47,19 +48,22 @@ public class PaymentService {
     private final AlipayClient alipayClient;
     private final AlipayConfig alipayConfig;
     private final ObjectMapper objectMapper;
+    private final TransferService transferService;
 
     public PaymentService(PaymentRepository paymentRepository,
                           BorrowRepository borrowRepository,
                           UserRepository userRepository,
                           AlipayClient alipayClient,
                           AlipayConfig alipayConfig,
-                          ObjectMapper objectMapper) {
+                          ObjectMapper objectMapper,
+                          TransferService transferService) {
         this.paymentRepository = paymentRepository;
         this.borrowRepository = borrowRepository;
         this.userRepository = userRepository;
         this.alipayClient = alipayClient;
         this.alipayConfig = alipayConfig;
         this.objectMapper = objectMapper;
+        this.transferService = transferService;
     }
 
     public String createPayment(Long borrowId, Long payerId) {
@@ -277,6 +281,15 @@ public class PaymentService {
                 payment.setRefundedAt(LocalDateTime.now());
                 paymentRepository.save(payment);
                 log.info("[PaymentService] 押金退还成功: borrowId={}, refundAmount={}", borrowId, payment.getDepositAmount());
+
+                if (payment.getRentAmount().compareTo(BigDecimal.ZERO) > 0) {
+                    try {
+                        transferService.transferToLender(payment, payment.getRentAmount(), TransferType.RENT);
+                        log.info("[PaymentService] 租金已转账给借出者: borrowId={}, rentAmount={}", borrowId, payment.getRentAmount());
+                    } catch (Exception e) {
+                        log.warn("[PaymentService] 租金转账失败，不影响押金退还: {}", e.getMessage());
+                    }
+                }
             } else {
                 payment.setStatus(PaymentStatus.REFUND_FAILED);
                 paymentRepository.save(payment);
@@ -431,6 +444,14 @@ public class PaymentService {
         payment.setRefundTradeNo("SKIP_REFUND_" + payment.getOutTradeNo());
         payment.setRefundedAt(LocalDateTime.now());
         paymentRepository.save(payment);
+
+        if (payment.getRentAmount().compareTo(BigDecimal.ZERO) > 0) {
+            try {
+                transferService.transferToLender(payment, payment.getRentAmount(), TransferType.RENT);
+            } catch (Exception e) {
+                log.warn("[PaymentService] 跳过退还时租金转账失败: {}", e.getMessage());
+            }
+        }
 
         log.info("[PaymentService] 跳过退还完成: borrowId={}", borrowId);
     }
