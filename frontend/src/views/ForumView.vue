@@ -2,76 +2,96 @@
   <MainNav />
   <main class="max-w-7xl mx-auto px-6 py-12 animate-fadeIn">
     <div class="grid lg:grid-cols-3 gap-8">
-      <!-- 左侧：主要动态流 -->
       <section class="lg:col-span-2 space-y-8">
-        <!-- 标题和标签 -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <h1 class="text-3xl font-bold italic text-[#2D3436]">
-            情感联结流 
-            <span class="text-sm not-italic font-normal text-gray-400 ml-2">栖霞苑社区</span>
+            情感联结流
+            <span class="text-sm not-italic font-normal text-gray-400 ml-2">社区论坛</span>
           </h1>
           <div class="flex gap-2">
-            <button 
+            <button
               class="px-4 py-2 bg-white border border-gray-200 rounded-full text-xs font-bold hover:bg-gray-50 transition-all"
               :class="activeTab === 'latest' ? 'bg-[#E2B04D] text-white border-[#E2B04D] shadow-lg shadow-[#E2B04D]/20' : ''"
-              @click="activeTab = 'latest'"
+              @click="switchTab('latest')"
             >
               最新
             </button>
-            <button 
+            <button
               class="px-4 py-2 rounded-full text-xs font-bold transition-all"
               :class="activeTab === 'hot' ? 'bg-[#E2B04D] text-white shadow-lg shadow-[#E2B04D]/20' : 'bg-white border border-gray-200 hover:bg-gray-50'"
-              @click="activeTab = 'hot'"
+              @click="switchTab('hot')"
             >
               最热
             </button>
-            <button class="px-4 py-2 bg-white border border-gray-200 rounded-full text-xs font-bold hover:bg-gray-50 transition-all">
+            <button
+              class="px-4 py-2 rounded-full text-xs font-bold transition-all"
+              :class="activeType === 'THANKS' ? 'bg-orange-400 text-white shadow-lg' : 'bg-white border border-gray-200 hover:bg-gray-50'"
+              @click="toggleType('THANKS')"
+            >
               感谢信
+            </button>
+            <button
+              class="px-4 py-2 rounded-full text-xs font-bold transition-all"
+              :class="activeType === 'HELP' ? 'bg-blue-400 text-white shadow-lg' : 'bg-white border border-gray-200 hover:bg-gray-50'"
+              @click="toggleType('HELP')"
+            >
+              求助
             </button>
           </div>
         </div>
 
-        <!-- 发帖入口 -->
         <div class="bg-white border-2 border-dashed border-gray-200 p-6 rounded-[2rem] flex items-center space-x-4">
-          <img 
-            :src="currentUserAvatar" 
+          <img
+            :src="authStore.user?.avatar || defaultAvatar"
             class="w-12 h-12 rounded-full border border-gray-100 flex-shrink-0"
             alt="User avatar"
           />
-          <input 
-            v-model="newPost.content"
+          <input
+            v-model="newPostContent"
             class="flex-1 text-left py-3 px-6 bg-gray-50 text-gray-400 rounded-2xl hover:bg-gray-100 transition-all focus:bg-white focus:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#E2B04D]"
             placeholder="分享今天的邻里小故事或是求助..."
             @keyup.enter="publishPost"
           />
           <div class="flex gap-4">
-            <span class="iconify text-2xl text-gray-300 hover:text-[#E2B04D] cursor-pointer transition-colors" data-icon="solar:camera-bold"></span>
-            <span class="iconify text-2xl text-gray-300 hover:text-[#E2B04D] cursor-pointer transition-colors" data-icon="solar:link-bold"></span>
+            <span class="iconify text-2xl text-gray-300 hover:text-[#E2B04D] cursor-pointer transition-colors" data-icon="solar:camera-bold" @click="showPostEditor = true"></span>
           </div>
         </div>
 
-        <!-- 帖子列表 -->
-        <div class="space-y-6">
-          <article 
-            v-for="post in posts" 
-            :key="post.id" 
-            class="p-8 rounded-[2rem] post-card transition-all duration-300"
-            :class="post.type === 'thanks' ? 'bg-orange-50/50 border border-orange-100' : 'bg-white border border-gray-100 shadow-sm'"
+        <div v-if="loading && posts.length === 0" class="text-center py-20 text-gray-400">
+          <span class="iconify text-4xl animate-spin inline-block" data-icon="solar:refresh-bold"></span>
+          <p class="mt-2">加载中...</p>
+        </div>
+
+        <div v-else-if="posts.length === 0" class="text-center py-20 text-gray-400">
+          <span class="iconify text-5xl" data-icon="solar:chat-round-dots-bold"></span>
+          <p class="mt-4 text-lg">还没有帖子，快来发布第一条吧！</p>
+        </div>
+
+        <div v-else class="space-y-6">
+          <article
+            v-for="post in posts"
+            :key="post.id"
+            class="p-8 rounded-[2rem] post-card transition-all duration-300 cursor-pointer"
+            :class="post.type === 'THANKS' ? 'bg-orange-50/50 border border-orange-100' : 'bg-white border border-gray-100 shadow-sm'"
+            @click="goToDetail(post.id)"
           >
-            <!-- 帖子头部 -->
             <div class="flex items-center justify-between mb-6">
               <div class="flex items-center space-x-4">
-                <img 
-                  :src="post.avatar || defaultAvatar" 
+                <img
+                  :src="post.author?.avatar || defaultAvatar"
                   class="w-10 h-10 rounded-full border-2 border-white shadow-sm"
-                  :alt="post.author"
+                  :alt="post.author?.nickname"
                 />
                 <div>
-                  <h3 class="font-bold text-sm text-[#2D3436]">{{ post.author }}</h3>
-                  <p class="text-[10px] text-gray-400 font-medium">{{ post.time }}发布于 {{ post.location }}</p>
+                  <h3 class="font-bold text-sm text-[#2D3436]">{{ post.author?.nickname || '匿名用户' }}</h3>
+                  <p class="text-[10px] text-gray-400 font-medium">
+                    {{ formatTime(post.createdAt) }}
+                    <span v-if="post.author?.building"> · {{ post.author.building }}</span>
+                    <span v-if="post.communityName"> · {{ post.communityName }}</span>
+                  </p>
                 </div>
               </div>
-              <span 
+              <span
                 class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm"
                 :class="getPostTypeClass(post.type)"
               >
@@ -79,48 +99,58 @@
               </span>
             </div>
 
-            <!-- 帖子标题（如果有） -->
             <h4 v-if="post.title" class="font-bold text-lg mb-3 text-[#2D3436]">{{ post.title }}</h4>
 
-            <!-- 帖子内容 -->
-            <p 
+            <p
               class="leading-relaxed mb-6"
-              :class="post.type === 'thanks' ? 'text-gray-700 font-medium' : 'text-gray-600'"
+              :class="post.type === 'THANKS' ? 'text-gray-700 font-medium' : 'text-gray-600'"
               v-html="formatContent(post.content)"
             ></p>
 
-            <!-- 帖子操作 -->
-            <div class="flex items-center space-x-6" :class="post.type === 'thanks' ? 'text-gray-400' : 'text-gray-300'">
-              <button 
-                @click="toggleLike(post)"
+            <div v-if="post.images" class="flex gap-2 mb-4 overflow-x-auto">
+              <img
+                v-for="(img, idx) in parseImages(post.images)"
+                :key="idx"
+                :src="img"
+                class="w-24 h-24 rounded-xl object-cover flex-shrink-0"
+                alt="帖子图片"
+              />
+            </div>
+
+            <div class="flex items-center space-x-6" :class="post.type === 'THANKS' ? 'text-gray-400' : 'text-gray-300'">
+              <button
+                @click.stop="toggleLike(post)"
                 class="flex items-center space-x-1 hover:text-red-400 transition-colors group"
               >
-                <span class="iconify text-xl transition-transform group-hover:scale-125" :data-icon="post.liked ? 'solar:heart-bold' : 'solar:heart-linear'"></span>
-                <span class="text-xs font-bold">{{ post.likes }}</span>
+                <span class="iconify text-xl transition-transform group-hover:scale-125" :data-icon="post.likedByMe ? 'solar:heart-bold' : 'solar:heart-linear'"></span>
+                <span class="text-xs font-bold">{{ post.likeCount }}</span>
               </button>
               <button class="flex items-center space-x-1 hover:text-[#E2B04D] transition-colors group">
                 <span class="iconify text-xl transition-transform group-hover:scale-125" data-icon="solar:chat-round-dots-bold"></span>
-                <span class="text-xs font-bold">{{ post.comments }}</span>
+                <span class="text-xs font-bold">{{ post.commentCount }}</span>
               </button>
-              <button class="flex items-center space-x-1 hover:text-blue-400 transition-colors group">
-                <span class="iconify text-xl transition-transform group-hover:scale-125" data-icon="solar:share-bold"></span>
-                <span class="text-xs font-bold">分享</span>
-              </button>
+              <span class="flex items-center space-x-1 text-gray-300">
+                <span class="iconify text-xl" data-icon="solar:eye-bold"></span>
+                <span class="text-xs font-bold">{{ post.viewCount }}</span>
+              </span>
             </div>
           </article>
         </div>
 
-        <!-- 加载更多 -->
-        <div class="text-center py-10">
-          <button class="bg-[#2D3436] text-white px-8 py-3 rounded-full font-bold text-sm hover:scale-105 transition-all">
-            加载更多邻里动态
+        <div v-if="posts.length > 0" class="text-center py-10">
+          <button
+            v-if="hasMore"
+            class="bg-[#2D3436] text-white px-8 py-3 rounded-full font-bold text-sm hover:scale-105 transition-all"
+            :disabled="loading"
+            @click="loadMore"
+          >
+            {{ loading ? '加载中...' : '加载更多邻里动态' }}
           </button>
+          <p v-else class="text-gray-400 text-sm">没有更多了</p>
         </div>
       </section>
 
-      <!-- 右侧：边栏 -->
       <aside class="space-y-6">
-        <!-- 社区公告 -->
         <div class="bg-gradient-to-br from-[#2D3436] to-[#3d4648] text-white p-6 rounded-3xl shadow-lg">
           <div class="flex items-center gap-2 mb-4">
             <span class="iconify text-xl text-[#E2B04D]" data-icon="solar:megaphone-bold"></span>
@@ -134,44 +164,17 @@
           </div>
         </div>
 
-        <!-- 绿色榜 -->
-        <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
-          <div class="flex items-center gap-2 mb-4">
-            <span class="iconify text-xl text-green-500" data-icon="solar:leaf-bold"></span>
-            <h3 class="font-bold text-lg text-[#2D3436]">三月绿色榜</h3>
-          </div>
-          <div class="space-y-4">
-            <div 
-              v-for="(item, index) in greenRank" 
-              :key="index"
-              class="flex items-center justify-between p-3 rounded-xl hover:bg-gray-50 transition-colors"
-            >
-              <div class="flex items-center gap-3">
-                <div 
-                  class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm"
-                  :class="index === 0 ? 'bg-yellow-400 text-yellow-900' : index === 1 ? 'bg-gray-300 text-gray-700' : index === 2 ? 'bg-orange-300 text-orange-900' : 'bg-gray-100 text-gray-500'"
-                >
-                  {{ index + 1 }}
-                </div>
-                <img :src="item.avatar || defaultAvatar" class="w-10 h-10 rounded-full" :alt="item.name" />
-                <span class="font-medium text-[#333333]">{{ item.name }}</span>
-              </div>
-              <span class="font-bold text-green-600 text-sm">+{{ item.co2 }}g CO₂</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- 热门话题 -->
         <div class="bg-white p-6 rounded-3xl border border-gray-100 shadow-sm">
           <div class="flex items-center gap-2 mb-4">
             <span class="iconify text-xl text-[#E2B04D]" data-icon="solar:hashtag-bold"></span>
             <h3 class="font-bold text-lg text-[#2D3436]">热门话题</h3>
           </div>
           <div class="flex flex-wrap gap-2">
-            <span 
-              v-for="tag in hotTags" 
+            <span
+              v-for="tag in hotTags"
               :key="tag"
               class="px-4 py-2 bg-[#F5E6C8] text-[#E2B04D] rounded-full text-sm font-medium hover:bg-[#E2B04D] hover:text-white transition-colors cursor-pointer"
+              @click="searchByTag(tag)"
             >
               #{{ tag }}
             </span>
@@ -179,67 +182,36 @@
         </div>
       </aside>
     </div>
+
+    <PostEditor
+      v-if="showPostEditor"
+      @close="showPostEditor = false"
+      @published="onPostPublished"
+    />
   </main>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import MainNav from '../components/MainNav.vue'
+import PostEditor from '../components/PostEditor.vue'
+import { forumApi, type PostList } from '../api/forum'
+import { useAuthStore } from '../stores/auth'
 
-const activeTab = ref('latest')
-const currentUserAvatar = 'https://modao.cc/agent-py/media/generated_images/2026-03-19/7a697da7cb0e46808f265a42ae7934f3.jpg'
+const router = useRouter()
+const authStore = useAuthStore()
+
 const defaultAvatar = 'https://modao.cc/agent-py/media/generated_images/2026-03-19/7a697da7cb0e46808f265a42ae7934f3.jpg'
 
-const newPost = ref({
-  content: ''
-})
-
-const posts = ref([
-  { 
-    id: 1, 
-    type: 'thanks',
-    author: '小雅雅', 
-    avatar: 'https://modao.cc/agent-py/media/generated_images/2026-03-19/7a697da7cb0e46808f265a42ae7934f3.jpg',
-    location: '栖霞苑3号楼',
-    content: '特别感谢 5号楼的 <b>@李大明白</b> 大哥！我家吸尘器坏了，大哥直接把他的戴森借我用了整整一星期，解决了我家猫脱皮期的尴尬。大哥还送了我两个替换过滤网，感动哭了！在这个社区住真的太温暖了。', 
-    likes: 128, 
-    comments: 24,
-    time: '刚刚',
-    liked: false
-  },
-  { 
-    id: 2, 
-    type: 'help',
-    author: '陈工', 
-    avatar: 'https://modao.cc/agent-py/media/generated_images/2026-03-19/7a697da7cb0e46808f265a42ae7934f3.jpg',
-    location: '栖霞苑12号楼',
-    title: '求借一套专业的水粉画架！',
-    content: '女儿马上要参加校外写生活动，临时发现画架高度不够。想向邻居借用三五天。用完一定清洗干净并附赠精美小礼品！在线等！', 
-    likes: 42, 
-    comments: 15,
-    time: '1小时前',
-    liked: false
-  },
-  { 
-    id: 3, 
-    type: 'share',
-    author: '王阿姨', 
-    avatar: 'https://modao.cc/agent-py/media/generated_images/2026-03-19/7a697da7cb0e46808f265a42ae7934f3.jpg',
-    location: '栖霞苑8号楼',
-    content: '老伴儿钓鱼回来带了好多草鱼，邻居谁家想要？免费拿走，直接来8号楼1单元楼下就行。别客气哦，都是新鲜的！', 
-    likes: 89, 
-    comments: 31,
-    time: '3小时前',
-    liked: false
-  },
-])
-
-const greenRank = ref([
-  { name: '李大明白', co2: 82, avatar: 'https://modao.cc/agent-py/media/generated_images/2026-03-19/7a697da7cb0e46808f265a42ae7934f3.jpg' },
-  { name: '张小美', co2: 67, avatar: 'https://modao.cc/agent-py/media/generated_images/2026-03-19/7a697da7cb0e46808f265a42ae7934f3.jpg' },
-  { name: '王叔叔', co2: 54, avatar: 'https://modao.cc/agent-py/media/generated_images/2026-03-19/7a697da7cb0e46808f265a42ae7934f3.jpg' },
-  { name: '刘阿姨', co2: 41, avatar: 'https://modao.cc/agent-py/media/generated_images/2026-03-19/7a697da7cb0e46808f265a42ae7934f3.jpg' },
-])
+const activeTab = ref('latest')
+const activeType = ref<string | null>(null)
+const posts = ref<PostList[]>([])
+const loading = ref(false)
+const currentPage = ref(0)
+const hasMore = ref(true)
+const newPostContent = ref('')
+const showPostEditor = ref(false)
 
 const hotTags = ref([
   '邻里互助',
@@ -249,53 +221,149 @@ const hotTags = ref([
   '社区新闻'
 ])
 
+const switchTab = (tab: string) => {
+  activeTab.value = tab
+  activeType.value = null
+  reloadPosts()
+}
+
+const toggleType = (type: string) => {
+  activeType.value = activeType.value === type ? null : type
+  reloadPosts()
+}
+
+const reloadPosts = () => {
+  posts.value = []
+  currentPage.value = 0
+  hasMore.value = true
+  loadPosts()
+}
+
+const loadPosts = async () => {
+  loading.value = true
+  try {
+    const params: any = {
+      sort: activeTab.value,
+      page: currentPage.value,
+      size: 10
+    }
+    if (activeType.value) {
+      params.type = activeType.value
+    }
+    const res = await forumApi.getPosts(params)
+    const pageData = res as any
+    const newPosts = pageData.content || []
+    if (currentPage.value === 0) {
+      posts.value = newPosts
+    } else {
+      posts.value.push(...newPosts)
+    }
+    hasMore.value = !pageData.last
+  } catch (error) {
+    console.error('加载帖子失败', error)
+  } finally {
+    loading.value = false
+  }
+}
+
+const loadMore = () => {
+  currentPage.value++
+  loadPosts()
+}
+
+const toggleLike = async (post: PostList) => {
+  if (!authStore.isLoggedIn) {
+    router.push('/login')
+    return
+  }
+  try {
+    const res = await forumApi.toggleLike('POST', post.id) as any
+    post.likeCount = res.likeCount
+  } catch (error) {
+    console.error('点赞失败', error)
+  }
+}
+
+const publishPost = async () => {
+  if (!authStore.isLoggedIn) {
+    router.push('/login')
+    return
+  }
+  if (!newPostContent.value.trim()) return
+
+  try {
+    await forumApi.createPost({
+      content: newPostContent.value.trim(),
+      type: 'NORMAL'
+    })
+    newPostContent.value = ''
+    reloadPosts()
+  } catch (error) {
+    console.error('发布失败', error)
+  }
+}
+
+const onPostPublished = () => {
+  showPostEditor.value = false
+  reloadPosts()
+}
+
+const goToDetail = (postId: number) => {
+  router.push(`/forum/post/${postId}`)
+}
+
+const searchByTag = (tag: string) => {
+  newPostContent.value = ''
+  reloadPosts()
+}
+
 const getPostTypeClass = (type: string) => {
   const classes: Record<string, string> = {
-    'thanks': 'bg-white text-orange-600',
-    'help': 'bg-blue-50 text-blue-600',
-    'share': 'bg-gray-100 text-gray-600'
+    'THANKS': 'bg-white text-orange-600',
+    'HELP': 'bg-blue-50 text-blue-600',
+    'EXCHANGE': 'bg-green-50 text-green-600',
+    'NORMAL': 'bg-gray-100 text-gray-600'
   }
   return classes[type] || 'bg-gray-100 text-gray-600'
 }
 
 const getPostTypeText = (type: string) => {
   const texts: Record<string, string> = {
-    'thanks': '邻里感谢信',
-    'help': '物品求助',
-    'share': '闲置分享'
+    'THANKS': '邻里感谢信',
+    'HELP': '物品求助',
+    'EXCHANGE': '技能交换',
+    'NORMAL': '社区动态'
   }
   return texts[type] || '社区动态'
 }
 
 const formatContent = (content: string) => {
-  // 简单处理 @提及 高亮
   return content.replace(/@(\S+)/g, '<span class="text-[#E2B04D] font-bold">@$1</span>')
 }
 
-const toggleLike = (post: any) => {
-  post.liked = !post.liked
-  post.likes += post.liked ? 1 : -1
+const formatTime = (dateStr: string) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diff = now.getTime() - date.getTime()
+  const minutes = Math.floor(diff / 60000)
+  if (minutes < 1) return '刚刚'
+  if (minutes < 60) return `${minutes}分钟前`
+  const hours = Math.floor(minutes / 60)
+  if (hours < 24) return `${hours}小时前`
+  const days = Math.floor(hours / 24)
+  if (days < 30) return `${days}天前`
+  return date.toLocaleDateString()
 }
 
-const publishPost = () => {
-  if (!newPost.value.content.trim()) return
-  
-  posts.value.unshift({
-    id: Date.now(),
-    type: 'share',
-    author: '我',
-    avatar: currentUserAvatar,
-    location: '栖霞苑',
-    content: newPost.value.content,
-    likes: 0,
-    comments: 0,
-    time: '刚刚',
-    liked: false
-  })
-  
-  newPost.value.content = ''
-  alert('发布成功！')
+const parseImages = (images: string | null) => {
+  if (!images) return []
+  return images.split(',').filter(s => s.trim())
 }
+
+onMounted(() => {
+  loadPosts()
+})
 </script>
 
 <style scoped>

@@ -51,6 +51,10 @@ public class SecurityConfig {
                         .requestMatchers("/ws/**").permitAll()
                         .requestMatchers("/api/payments/notify").permitAll()
                         .requestMatchers("/api/payments/return").permitAll()
+                        .requestMatchers(
+                                "/api/forum/posts",
+                                "/api/forum/posts/{id}"
+                        ).permitAll()
                         .anyRequest().authenticated()
                 );
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

@@ -5,6 +5,7 @@ import LoginView from '../views/LoginView.vue'
 import IndexView from '../views/IndexView.vue'
 import DetailView from '../views/DetailView.vue'
 import ForumView from '../views/ForumView.vue'
+import PostDetailView from '../views/PostDetailView.vue'
 import PublishView from '../views/PublishView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import DraftsView from '../views/DraftsView.vue'
@@ -19,6 +20,7 @@ const router = createRouter({
     { path: '/index', component: IndexView },
     { path: '/item/:id', component: DetailView },
     { path: '/forum', component: ForumView },
+    { path: '/forum/post/:id', component: PostDetailView },
     { path: '/publish', component: PublishView, meta: { requiresAuth: true } },
     { path: '/publish/:id', component: PublishView, meta: { requiresAuth: true } },
     { path: '/drafts', component: DraftsView, meta: { requiresAuth: true } },

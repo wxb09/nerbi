@@ -10,10 +10,14 @@ import java.util.List;
 
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, Long> {
-    
+
     Page<Comment> findByPostIdAndStatus(Long postId, String status, Pageable pageable);
-    
+
+    Page<Comment> findByPostIdAndParentIdIsNullAndStatus(Long postId, String status, Pageable pageable);
+
+    Page<Comment> findByParentIdAndStatus(Long parentId, String status, Pageable pageable);
+
     List<Comment> findByParentId(Long parentId);
-    
+
     Long countByPostIdAndStatus(Long postId, String status);
 }
