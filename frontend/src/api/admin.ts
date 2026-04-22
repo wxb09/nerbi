@@ -101,6 +101,16 @@ export interface PageResult<T> {
   size: number
 }
 
+export interface Announcement {
+  id: number
+  title: string
+  content: string
+  type: string
+  communityId: number | null
+  communityName: string | null
+  createdAt: string
+}
+
 export const adminApi = {
   getStats: () => api.get<AdminStats>('/admin/stats'),
 
@@ -149,4 +159,16 @@ export const adminApi = {
 
   getDepositDisputeStats: () =>
     api.get<{ pendingCount: number; processingCount: number; approvedCount: number; rejectedCount: number }>('/admin/deposit-disputes/stats'),
+
+  getAnnouncements: (params: { page?: number; size?: number }) =>
+    api.get<PageResult<Announcement>>('/admin/announcements', { params }),
+
+  createAnnouncement: (data: { title: string; content: string; type?: string; communityId?: number }) =>
+    api.post<Announcement>('/admin/announcements', data),
+
+  updateAnnouncement: (id: number, data: { title?: string; content?: string; type?: string }) =>
+    api.put<Announcement>(`/admin/announcements/${id}`, data),
+
+  deleteAnnouncement: (id: number) =>
+    api.delete(`/admin/announcements/${id}`),
 }

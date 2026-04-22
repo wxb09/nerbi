@@ -129,11 +129,21 @@
       @close="showPostEditor = false"
       @published="onPostPublished"
     />
+
+    <Transition name="fade">
+      <button
+        v-if="showBackToTop"
+        class="fixed bottom-8 lg:right-[calc((100%-1280px)/2+1280px/6-20px)] right-6 w-12 h-12 bg-[#2D3436] text-white rounded-full shadow-lg hover:bg-[#E2B04D] transition-all hover:scale-110 flex items-center justify-center z-50"
+        @click="scrollToTop"
+      >
+        <span class="iconify text-xl" data-icon="solar:alt-arrow-up-bold"></span>
+      </button>
+    </Transition>
   </main>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue'
+import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import MainNav from '../components/MainNav.vue'
 import PostEditor from '../components/PostEditor.vue'
@@ -152,6 +162,7 @@ const defaultAvatar = 'https://modao.cc/agent-py/media/generated_images/2026-03-
 const activeTab = ref('latest')
 const activeType = ref<string | null>(null)
 const showPostEditor = ref(false)
+const showBackToTop = ref(false)
 
 const newPostContent = ref('')
 const newPostType = ref('NORMAL')
@@ -279,7 +290,36 @@ watch([activeTab, activeType], () => {
   reloadPosts()
 })
 
+const handleScroll = () => {
+  showBackToTop.value = window.scrollY > 300
+}
+
+const scrollToTop = () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  })
+}
+
 onMounted(() => {
   refresh()
+  window.addEventListener('scroll', handleScroll)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('scroll', handleScroll)
 })
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(20px);
+}
+</style>

@@ -24,7 +24,7 @@
         class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm"
         :class="getPostTypeClass(post.type)"
       >
-        # {{ getPostTypeText(post.type) }}
+        {{ getPostTypeText(post.type) }}
       </span>
     </div>
 

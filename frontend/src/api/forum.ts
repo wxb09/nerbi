@@ -83,6 +83,16 @@ export interface LikeStatus {
   likeCount: number
 }
 
+export interface Announcement {
+  id: number
+  title: string
+  content: string
+  type: string
+  communityId: number | null
+  communityName: string | null
+  createdAt: string
+}
+
 export const forumApi = {
   getPosts: (params: {
     communityId?: number
@@ -118,4 +128,10 @@ export const forumApi = {
 
   checkLike: (targetType: string, targetId: number) =>
     api.get('/forum/likes/check', { params: { targetType, targetId } }),
+
+  getAnnouncements: (communityId?: number) =>
+    api.get<Announcement[]>('/announcements', { params: { communityId } }),
+
+  getAnnouncementById: (id: number) =>
+    api.get<Announcement>(`/announcements/${id}`),
 }

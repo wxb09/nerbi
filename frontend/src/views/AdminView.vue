@@ -134,7 +134,7 @@ const navItems = [
 
 const opsItems = [
   { key: 'home', label: '首页管理', icon: 'solar:home-bold' },
-  { key: 'community', label: '社区管理', icon: 'solar:buildings-bold' },
+  { key: 'community', label: '论坛管理', icon: 'solar:buildings-bold' },
   { key: 'sensitive-words', label: '敏感词管理', icon: 'solar:shield-check-bold' },
 ]
 
