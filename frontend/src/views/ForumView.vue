@@ -16,20 +16,74 @@
           />
         </div>
 
-        <div class="bg-white border-2 border-dashed border-gray-200 p-6 rounded-[2rem] flex items-center space-x-4">
-          <img
-            :src="authStore.user?.avatar || defaultAvatar"
-            class="w-12 h-12 rounded-full border border-gray-100 flex-shrink-0"
-            alt="User avatar"
-          />
-          <input
-            v-model="newPostContent"
-            class="flex-1 text-left py-3 px-6 bg-gray-50 text-gray-400 rounded-2xl hover:bg-gray-100 transition-all focus:bg-white focus:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#E2B04D]"
-            placeholder="分享今天的邻里小故事或是求助..."
-            @keyup.enter="publishPost"
-          />
-          <div class="flex gap-4">
-            <span class="iconify text-2xl text-gray-300 hover:text-[#E2B04D] cursor-pointer transition-colors" data-icon="solar:camera-bold" @click="showPostEditor = true"></span>
+        <div class="bg-white border-2 border-dashed border-gray-200 p-6 rounded-[2rem]">
+          <div class="flex items-center space-x-4 mb-4">
+            <img
+              :src="authStore.user?.avatar || defaultAvatar"
+              class="w-12 h-12 rounded-full border border-gray-100 flex-shrink-0"
+              alt="User avatar"
+            />
+            <input
+              v-model="newPostContent"
+              class="flex-1 text-left py-3 px-6 bg-gray-50 text-gray-400 rounded-2xl hover:bg-gray-100 transition-all focus:bg-white focus:text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#E2B04D]"
+              placeholder="分享今天的邻里小故事或是求助..."
+              @keyup.enter="publishPost"
+            />
+            <div class="flex gap-4">
+              <span class="iconify text-2xl text-gray-300 hover:text-[#E2B04D] cursor-pointer transition-colors" data-icon="solar:camera-bold" @click="showPostEditor = true"></span>
+            </div>
+          </div>
+
+          <div class="flex flex-wrap items-center gap-3 pt-4 border-t border-gray-100">
+            <div class="flex flex-wrap gap-2">
+              <button
+                v-for="t in postTypes"
+                :key="t.value"
+                class="px-3 py-1.5 rounded-full text-xs font-bold transition-all"
+                :class="newPostType === t.value ? 'bg-[#E2B04D] text-white shadow-md' : 'bg-white border border-gray-200 text-gray-500 hover:border-[#E2B04D] hover:text-[#E2B04D]'"
+                @click="newPostType = t.value"
+              >
+                {{ t.label }}
+              </button>
+            </div>
+
+            <div class="h-4 w-px bg-gray-200 mx-1 hidden sm:block"></div>
+
+            <div class="flex flex-wrap items-center gap-2 flex-1">
+              <button
+                v-for="tag in availableTags"
+                :key="tag"
+                class="px-3 py-1.5 rounded-full text-xs font-medium transition-all"
+                :class="selectedTags.includes(tag) ? 'bg-[#E2B04D] text-white shadow-md' : 'bg-white border border-gray-200 text-gray-500 hover:border-[#E2B04D] hover:text-[#E2B04D]'"
+                @click="toggleTag(tag)"
+              >
+                #{{ tag }}
+              </button>
+              <div class="flex items-center">
+                <input
+                  v-model="customTagInput"
+                  type="text"
+                  class="w-20 px-3 py-1.5 rounded-full text-xs border border-dashed border-gray-300 focus:border-[#E2B04D] focus:outline-none transition-all"
+                  placeholder="自定义"
+                  @keyup.enter="addCustomTag"
+                />
+                <button
+                  v-if="customTagInput.trim()"
+                  class="ml-1 w-6 h-6 rounded-full bg-[#E2B04D] text-white flex items-center justify-center text-xs hover:scale-110 transition-transform"
+                  @click="addCustomTag"
+                >
+                  +
+                </button>
+              </div>
+            </div>
+
+            <button
+              class="px-5 py-2 rounded-full text-xs font-bold bg-[#2D3436] text-white hover:scale-105 transition-all disabled:opacity-50 disabled:hover:scale-100"
+              :disabled="!newPostContent.trim() || publishing"
+              @click="publishPost"
+            >
+              {{ publishing ? '发布中...' : '发布' }}
+            </button>
           </div>
         </div>
 
@@ -100,8 +154,46 @@ const posts = ref<PostList[]>([])
 const loading = ref(false)
 const currentPage = ref(0)
 const hasMore = ref(true)
-const newPostContent = ref('')
 const showPostEditor = ref(false)
+
+const newPostContent = ref('')
+const newPostType = ref('NORMAL')
+const selectedTags = ref<string[]>([])
+const customTagInput = ref('')
+const publishing = ref(false)
+
+const postTypes = [
+  { value: 'NORMAL', label: '日常' },
+  { value: 'THANKS', label: '感谢' },
+  { value: 'HELP', label: '求助' },
+]
+
+const availableTags = ref([
+  '邻里互助',
+  '绿色生活',
+  '周末活动',
+])
+
+const toggleTag = (tag: string) => {
+  const idx = selectedTags.value.indexOf(tag)
+  if (idx >= 0) {
+    selectedTags.value.splice(idx, 1)
+  } else {
+    selectedTags.value.push(tag)
+  }
+}
+
+const addCustomTag = () => {
+  const tag = customTagInput.value.trim()
+  if (!tag) return
+  if (!availableTags.value.includes(tag)) {
+    availableTags.value.unshift(tag)
+  }
+  if (!selectedTags.value.includes(tag)) {
+    selectedTags.value.push(tag)
+  }
+  customTagInput.value = ''
+}
 
 const switchTab = (tab: string) => {
   activeTab.value = tab
@@ -173,15 +265,21 @@ const publishPost = async () => {
   }
   if (!newPostContent.value.trim()) return
 
+  publishing.value = true
   try {
     await forumApi.createPost({
       content: newPostContent.value.trim(),
-      type: 'NORMAL'
+      type: newPostType.value,
+      tags: selectedTags.value.length > 0 ? selectedTags.value : undefined
     })
     newPostContent.value = ''
+    newPostType.value = 'NORMAL'
+    selectedTags.value = []
     reloadPosts()
   } catch (error) {
     console.error('发布失败', error)
+  } finally {
+    publishing.value = false
   }
 }
 

@@ -1,5 +1,7 @@
 package com.neighbor.forum.service;
 
+import com.neighbor.audit.dto.AuditResult;
+import com.neighbor.audit.service.SensitiveWordService;
 import com.neighbor.common.exception.BusinessException;
 import com.neighbor.entity.Comment;
 import com.neighbor.entity.Post;
@@ -28,13 +30,16 @@ public class CommentService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final LikeRepository likeRepository;
+    private final SensitiveWordService sensitiveWordService;
 
     public CommentService(CommentRepository commentRepository, PostRepository postRepository,
-                          UserRepository userRepository, LikeRepository likeRepository) {
+                          UserRepository userRepository, LikeRepository likeRepository,
+                          SensitiveWordService sensitiveWordService) {
         this.commentRepository = commentRepository;
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.likeRepository = likeRepository;
+        this.sensitiveWordService = sensitiveWordService;
     }
 
     @Transactional(readOnly = true)
@@ -71,10 +76,17 @@ public class CommentService {
         Post post = postRepository.findById(request.postId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
 
+        AuditResult auditResult = sensitiveWordService.auditText(request.content(), "COMMENT", 0L);
+        if (!auditResult.passed()) {
+            log.warn("[CommentService] 评论被拦截: userId={}, reason={}", userId, auditResult.reason());
+            throw new BusinessException(ErrorCode.SENSITIVE_CONTENT, "内容包含敏感词，请修改后重试");
+        }
+
         Comment comment = new Comment();
         comment.setPost(post);
         comment.setUser(user);
         comment.setContent(request.content());
+        comment.setAuditStatus(1);
 
         if (request.parentId() != null) {
             Comment parent = commentRepository.findById(request.parentId())

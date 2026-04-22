@@ -1,5 +1,7 @@
 package com.neighbor.forum.service;
 
+import com.neighbor.audit.dto.AuditResult;
+import com.neighbor.audit.service.SensitiveWordService;
 import com.neighbor.common.exception.BusinessException;
 import com.neighbor.entity.Community;
 import com.neighbor.entity.Post;
@@ -32,11 +34,14 @@ public class PostService {
     private final PostRepository postRepository;
     private final UserRepository userRepository;
     private final LikeRepository likeRepository;
+    private final SensitiveWordService sensitiveWordService;
 
-    public PostService(PostRepository postRepository, UserRepository userRepository, LikeRepository likeRepository) {
+    public PostService(PostRepository postRepository, UserRepository userRepository, 
+                       LikeRepository likeRepository, SensitiveWordService sensitiveWordService) {
         this.postRepository = postRepository;
         this.userRepository = userRepository;
         this.likeRepository = likeRepository;
+        this.sensitiveWordService = sensitiveWordService;
     }
 
     @Transactional(readOnly = true)
@@ -131,6 +136,18 @@ public class PostService {
         } else if (user.getCommunity() != null) {
             post.setCommunity(user.getCommunity());
         }
+
+        String auditContent = (request.title() != null ? request.title() + " " : "") + request.content();
+        AuditResult auditResult = sensitiveWordService.auditText(auditContent, "POST", 0L);
+        
+        if (!auditResult.passed()) {
+            post.setAuditStatus(2);
+            post.setAuditReason(auditResult.reason() + ": " + auditResult.sensitiveWords());
+            log.warn("[PostService] 帖子被拦截: userId={}, reason={}", userId, auditResult.reason());
+            throw new BusinessException(ErrorCode.SENSITIVE_CONTENT, "内容包含敏感词，请修改后重试");
+        }
+        
+        post.setAuditStatus(1);
 
         Post saved = postRepository.save(post);
         log.info("[PostService] 帖子已创建: postId={}", saved.getId());

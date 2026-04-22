@@ -40,6 +40,7 @@ public enum ErrorCode {
     DEPOSIT_DISPUTE_INVALID_ACTION(6107, "无效的纠纷处理操作"),
     TRANSFER_FAILED(7001, "转账失败"),
     TRANSFER_ACCOUNT_NOT_BOUND(7002, "未绑定支付宝账号"),
+    SENSITIVE_CONTENT(8001, "内容包含敏感词"),
     SYSTEM_ERROR(9000, "系统异常");
 
     private final int code;

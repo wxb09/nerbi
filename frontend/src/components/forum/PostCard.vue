@@ -46,22 +46,33 @@
       />
     </div>
 
-    <div class="flex items-center space-x-6" :class="post.type === 'THANKS' ? 'text-gray-400' : 'text-gray-300'">
-      <button
-        @click.stop="$emit('like', post)"
-        class="flex items-center space-x-1 hover:text-red-400 transition-colors group"
-      >
-        <span class="iconify text-xl transition-transform group-hover:scale-125" :data-icon="post.likedByMe ? 'solar:heart-bold' : 'solar:heart-linear'"></span>
-        <span class="text-xs font-bold">{{ post.likeCount }}</span>
-      </button>
-      <button class="flex items-center space-x-1 hover:text-[#E2B04D] transition-colors group">
-        <span class="iconify text-xl transition-transform group-hover:scale-125" data-icon="solar:chat-round-dots-bold"></span>
-        <span class="text-xs font-bold">{{ post.commentCount }}</span>
-      </button>
-      <span class="flex items-center space-x-1 text-gray-300">
-        <span class="iconify text-xl" data-icon="solar:eye-bold"></span>
-        <span class="text-xs font-bold">{{ post.viewCount }}</span>
-      </span>
+    <div class="flex items-center justify-between">
+      <div class="flex items-center space-x-6" :class="post.type === 'THANKS' ? 'text-gray-400' : 'text-gray-300'">
+        <button
+          @click.stop="$emit('like', post)"
+          class="flex items-center space-x-1 hover:text-red-400 transition-colors group"
+        >
+          <span class="iconify text-xl transition-transform group-hover:scale-125" :data-icon="post.likedByMe ? 'solar:heart-bold' : 'solar:heart-linear'"></span>
+          <span class="text-xs font-bold">{{ post.likeCount }}</span>
+        </button>
+        <button class="flex items-center space-x-1 hover:text-[#E2B04D] transition-colors group">
+          <span class="iconify text-xl transition-transform group-hover:scale-125" data-icon="solar:chat-round-dots-bold"></span>
+          <span class="text-xs font-bold">{{ post.commentCount }}</span>
+        </button>
+        <span class="flex items-center space-x-1 text-gray-300">
+          <span class="iconify text-xl" data-icon="solar:eye-bold"></span>
+          <span class="text-xs font-bold">{{ post.viewCount }}</span>
+        </span>
+      </div>
+      <div v-if="post.tags" class="flex items-center gap-2">
+        <span
+          v-for="tag in parseTags(post.tags)"
+          :key="tag"
+          class="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-[10px] font-medium"
+        >
+          #{{ tag }}
+        </span>
+      </div>
     </div>
   </article>
 </template>
@@ -121,6 +132,11 @@ const formatTime = (dateStr: string) => {
 const parseImages = (images: string | null) => {
   if (!images) return []
   return images.split(',').filter(s => s.trim())
+}
+
+const parseTags = (tags: string | null) => {
+  if (!tags) return []
+  return tags.split(',').filter(s => s.trim())
 }
 </script>
 
