@@ -1,5 +1,6 @@
 package com.neighbor.audit.service;
 
+import com.github.houbb.sensitive.word.api.IWordDeny;
 import com.github.houbb.sensitive.word.bs.SensitiveWordBs;
 import com.neighbor.audit.dto.AuditResult;
 import com.neighbor.audit.dto.CreateSensitiveWordRequest;
@@ -18,7 +19,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class SensitiveWordService {
@@ -27,22 +27,30 @@ public class SensitiveWordService {
 
     private final SensitiveWordRepository sensitiveWordRepository;
     private final AuditLogRepository auditLogRepository;
-    private final SensitiveWordBs sensitiveWordBs;
+    private volatile SensitiveWordBs sensitiveWordBs;
     private volatile boolean auditEnabled = true;
 
     public SensitiveWordService(SensitiveWordRepository sensitiveWordRepository,
                                 AuditLogRepository auditLogRepository) {
         this.sensitiveWordRepository = sensitiveWordRepository;
         this.auditLogRepository = auditLogRepository;
-        this.sensitiveWordBs = SensitiveWordBs.newInstance()
-                .init();
         refreshWordBuffer();
     }
 
     @Scheduled(fixedRate = 60000)
-    public void refreshWordBuffer() {
+    public synchronized void refreshWordBuffer() {
         List<String> words = sensitiveWordRepository.findAllEnabledWords();
-        sensitiveWordBs.initWord(words);
+        
+        IWordDeny wordDeny = new IWordDeny() {
+            @Override
+            public List<String> deny() {
+                return words;
+            }
+        };
+        
+        sensitiveWordBs = SensitiveWordBs.newInstance()
+                .wordDeny(wordDeny)
+                .init();
         log.info("[SensitiveWord] 敏感词库已刷新，共 {} 个敏感词", words.size());
     }
 
@@ -89,7 +97,7 @@ public class SensitiveWordService {
         if (text == null || text.isBlank()) {
             return text;
         }
-        return sensitiveWordBs.replace(text, '*');
+        return sensitiveWordBs.replace(text);
     }
 
     private void saveAuditLog(String targetType, Long targetId, String content, 

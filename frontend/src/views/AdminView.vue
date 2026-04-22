@@ -88,6 +88,7 @@
         <AdminVerifies v-else-if="activeTab === 'verifies'" />
         <AdminHome v-else-if="activeTab === 'home'" />
         <AdminCommunity v-else-if="activeTab === 'community'" />
+        <AdminSensitiveWords v-else-if="activeTab === 'sensitive-words'" />
         <AdminSettings v-else-if="activeTab === 'settings'" />
 
         <footer class="mt-8 pt-6 border-t border-[#E8D48B]/15 text-center">
@@ -111,6 +112,7 @@ import AdminDepositDisputes from '../components/admin/AdminDepositDisputes.vue'
 import AdminHome from '../components/admin/AdminHome.vue'
 import AdminCommunity from '../components/admin/AdminCommunity.vue'
 import AdminSettings from '../components/admin/AdminSettings.vue'
+import AdminSensitiveWords from '../components/admin/AdminSensitiveWords.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -133,6 +135,7 @@ const navItems = [
 const opsItems = [
   { key: 'home', label: '首页管理', icon: 'solar:home-bold' },
   { key: 'community', label: '社区管理', icon: 'solar:buildings-bold' },
+  { key: 'sensitive-words', label: '敏感词管理', icon: 'solar:shield-check-bold' },
 ]
 
 const sysItems = [
