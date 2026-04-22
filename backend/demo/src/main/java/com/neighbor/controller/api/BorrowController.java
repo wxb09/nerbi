@@ -2,6 +2,7 @@ package com.neighbor.controller.api;
 
 import com.neighbor.auth.AuthUser;
 import com.neighbor.common.api.ApiResponse;
+import com.neighbor.common.dto.PageResponse;
 import com.neighbor.dto.ApproveRequest;
 import com.neighbor.dto.BorrowDTO;
 import com.neighbor.dto.BorrowRequest;
@@ -81,23 +82,25 @@ public class BorrowController {
     }
 
     @GetMapping("/my/borrowed")
-    public ApiResponse<Page<BorrowDTO>> getMyBorrowed(
+    public ApiResponse<PageResponse<BorrowDTO>> getMyBorrowed(
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Long borrowerId = getUserIdFromAuth(authentication);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return ApiResponse.ok(borrowService.getMyBorrowed(borrowerId, pageable));
+        Page<BorrowDTO> pageResult = borrowService.getMyBorrowed(borrowerId, pageable);
+        return ApiResponse.ok(PageResponse.from(pageResult));
     }
 
     @GetMapping("/my/lent")
-    public ApiResponse<Page<BorrowDTO>> getMyLent(
+    public ApiResponse<PageResponse<BorrowDTO>> getMyLent(
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Long lenderId = getUserIdFromAuth(authentication);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return ApiResponse.ok(borrowService.getMyLent(lenderId, pageable));
+        Page<BorrowDTO> pageResult = borrowService.getMyLent(lenderId, pageable);
+        return ApiResponse.ok(PageResponse.from(pageResult));
     }
 
     @GetMapping("/my/pending")

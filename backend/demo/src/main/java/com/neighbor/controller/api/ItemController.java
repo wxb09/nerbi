@@ -2,6 +2,7 @@ package com.neighbor.controller.api;
 
 import com.neighbor.auth.AuthUser;
 import com.neighbor.common.api.ApiResponse;
+import com.neighbor.common.dto.PageResponse;
 import com.neighbor.dto.ItemDetailDTO;
 import com.neighbor.dto.ItemListDTO;
 import com.neighbor.entity.Item;
@@ -29,26 +30,26 @@ public class ItemController {
     }
 
     @GetMapping
-    public ApiResponse<Page<ItemListDTO>> getItems(
+    public ApiResponse<PageResponse<ItemListDTO>> getItems(
             @RequestParam(required = false) Long communityId,
             @RequestParam(required = false) Long categoryId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         List<ItemStatus> statuses = Arrays.asList(ItemStatus.AVAILABLE);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<ItemListDTO> items = itemService.getItems(statuses, communityId, categoryId, pageable);
-        return ApiResponse.ok(items);
+        Page<ItemListDTO> pageResult = itemService.getItems(statuses, communityId, categoryId, pageable);
+        return ApiResponse.ok(PageResponse.from(pageResult));
     }
 
     @GetMapping("/search")
-    public ApiResponse<Page<ItemListDTO>> searchItems(
+    public ApiResponse<PageResponse<ItemListDTO>> searchItems(
             @RequestParam String keyword,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         List<ItemStatus> statuses = Arrays.asList(ItemStatus.AVAILABLE);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        Page<ItemListDTO> items = itemService.searchItems(keyword, statuses, pageable);
-        return ApiResponse.ok(items);
+        Page<ItemListDTO> pageResult = itemService.searchItems(keyword, statuses, pageable);
+        return ApiResponse.ok(PageResponse.from(pageResult));
     }
 
     @GetMapping("/{id}")

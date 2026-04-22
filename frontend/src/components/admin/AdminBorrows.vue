@@ -243,7 +243,7 @@ function borrowStatusClass(s: string) {
 
 async function loadDisputes() {
   try {
-    const params: any = { page: disputePage.value, size: 20 }
+    const params: any = { page: disputePage.value, size: 12 }
     if (disputeStatusFilter.value) params.status = disputeStatusFilter.value
     const data = await adminApi.getDisputes(params) as any
     disputes.value = data.content || []; disputeTotalPages.value = data.totalPages || 1
@@ -252,7 +252,7 @@ async function loadDisputes() {
 
 async function loadBorrows() {
   try {
-    const params: any = { page: borrowPage.value, size: 20 }
+    const params: any = { page: borrowPage.value, size: 12 }
     if (borrowStatusFilter.value) params.status = borrowStatusFilter.value
     const data = await adminApi.getBorrows(params) as any
     borrows.value = data.content || []; borrowTotalPages.value = data.totalPages || 1

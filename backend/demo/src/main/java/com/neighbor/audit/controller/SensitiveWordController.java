@@ -5,6 +5,7 @@ import com.neighbor.audit.dto.CreateSensitiveWordRequest;
 import com.neighbor.audit.dto.SensitiveWordDTO;
 import com.neighbor.audit.service.SensitiveWordService;
 import com.neighbor.common.api.ApiResponse;
+import com.neighbor.common.dto.PageResponse;
 import com.neighbor.common.exception.BusinessException;
 import com.neighbor.enums.ErrorCode;
 import jakarta.validation.Valid;
@@ -48,14 +49,15 @@ public class SensitiveWordController {
     }
 
     @GetMapping("/words")
-    public ApiResponse<Page<SensitiveWordDTO>> getWords(
+    public ApiResponse<PageResponse<SensitiveWordDTO>> getWords(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String category,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             Authentication authentication) {
         checkAdmin(authentication);
-        return ApiResponse.ok(sensitiveWordService.getWords(keyword, category, page, size));
+        Page<SensitiveWordDTO> pageResult = sensitiveWordService.getWords(keyword, category, page, size);
+        return ApiResponse.ok(PageResponse.from(pageResult));
     }
 
     @PostMapping("/words")

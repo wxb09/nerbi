@@ -2,6 +2,7 @@ package com.neighbor.controller.api;
 
 import com.neighbor.auth.AuthUser;
 import com.neighbor.common.api.ApiResponse;
+import com.neighbor.common.dto.PageResponse;
 import com.neighbor.dto.*;
 import com.neighbor.enums.BorrowStatus;
 import com.neighbor.enums.DepositDisputeStatus;

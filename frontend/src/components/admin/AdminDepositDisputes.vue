@@ -85,11 +85,14 @@
           </tbody>
         </table>
       </div>
-      <div v-if="totalPages > 1" class="flex items-center justify-center gap-2 mt-5">
-        <button class="page-btn" :class="page > 0 ? '' : 'disabled'" :disabled="page <= 0" @click="page--; loadDisputes()">上一页</button>
-        <span class="text-sm text-[#9A9082]">{{ page + 1 }} / {{ totalPages }}</span>
-        <button class="page-btn" :class="page < totalPages - 1 ? '' : 'disabled'" :disabled="page >= totalPages - 1" @click="page++; loadDisputes()">下一页</button>
-      </div>
+      <Pagination
+        v-if="totalPages > 1"
+        :page="page"
+        :total-pages="totalPages"
+        :total-elements="totalElements"
+        @change="goToPage"
+        class="mt-5"
+      />
     </template>
 
     <Teleport to="body">
@@ -282,6 +285,7 @@
 <script setup lang="ts">
 import { ref, reactive, computed, onMounted } from 'vue'
 import { adminApi, type DepositDispute } from '../../api/admin'
+import Pagination from '../common/Pagination.vue'
 
 const loading = ref(true)
 const error = ref('')
@@ -289,6 +293,7 @@ const error = ref('')
 const disputes = ref<DepositDispute[]>([])
 const page = ref(0)
 const totalPages = ref(0)
+const totalElements = ref(0)
 const statusFilter = ref('')
 
 const stats = reactive({
@@ -386,14 +391,20 @@ async function loadStats() {
 
 async function loadDisputes() {
   try {
-    const params: any = { page: page.value, size: 20 }
+    const params: any = { page: page.value, size: 12 }
     if (statusFilter.value) params.status = statusFilter.value
     const data = await adminApi.getDepositDisputes(params) as any
     disputes.value = data.content || []
     totalPages.value = data.totalPages || 1
+    totalElements.value = data.totalElements || 0
   } catch (e: any) { 
     error.value = e.message || '加载失败' 
   }
+}
+
+function goToPage(targetPage: number) {
+  page.value = targetPage
+  loadDisputes()
 }
 
 function openResolveModal(d: DepositDispute) {

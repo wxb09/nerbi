@@ -2,6 +2,7 @@ package com.neighbor.forum.controller;
 
 import com.neighbor.auth.AuthUser;
 import com.neighbor.common.api.ApiResponse;
+import com.neighbor.common.dto.PageResponse;
 import com.neighbor.forum.dto.CreatePostRequest;
 import com.neighbor.forum.dto.PostDetailDTO;
 import com.neighbor.forum.dto.PostListDTO;
@@ -24,7 +25,7 @@ public class PostController {
     }
 
     @GetMapping
-    public ApiResponse<Page<PostListDTO>> getPosts(
+    public ApiResponse<PageResponse<PostListDTO>> getPosts(
             @RequestParam(required = false) Long communityId,
             @RequestParam(required = false) String type,
             @RequestParam(defaultValue = "latest") String sort,
@@ -38,7 +39,8 @@ public class PostController {
         } else {
             pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         }
-        return ApiResponse.ok(postService.getPosts(communityId, type, sort, currentUserId, pageable));
+        Page<PostListDTO> pageResult = postService.getPosts(communityId, type, sort, currentUserId, pageable);
+        return ApiResponse.ok(PageResponse.from(pageResult));
     }
 
     @GetMapping("/{id}")
@@ -72,13 +74,14 @@ public class PostController {
     }
 
     @GetMapping("/my")
-    public ApiResponse<Page<PostListDTO>> getMyPosts(
+    public ApiResponse<PageResponse<PostListDTO>> getMyPosts(
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Long userId = getUserIdFromAuth(authentication);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return ApiResponse.ok(postService.getMyPosts(userId, pageable));
+        Page<PostListDTO> pageResult = postService.getMyPosts(userId, pageable);
+        return ApiResponse.ok(PageResponse.from(pageResult));
     }
 
     private Long getUserIdFromAuth(Authentication authentication) {

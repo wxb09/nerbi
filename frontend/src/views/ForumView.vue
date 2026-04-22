@@ -133,7 +133,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import MainNav from '../components/MainNav.vue'
 import PostEditor from '../components/PostEditor.vue'
@@ -142,6 +142,7 @@ import PostFilter from '../components/forum/PostFilter.vue'
 import ForumSidebar from '../components/forum/ForumSidebar.vue'
 import { forumApi, type PostList } from '../api/forum'
 import { useAuthStore } from '../stores/auth'
+import { usePagination } from '../composables/usePagination'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -150,10 +151,6 @@ const defaultAvatar = 'https://modao.cc/agent-py/media/generated_images/2026-03-
 
 const activeTab = ref('latest')
 const activeType = ref<string | null>(null)
-const posts = ref<PostList[]>([])
-const loading = ref(false)
-const currentPage = ref(0)
-const hasMore = ref(true)
 const showPostEditor = ref(false)
 
 const newPostContent = ref('')
@@ -195,6 +192,26 @@ const addCustomTag = () => {
   customTagInput.value = ''
 }
 
+const params = computed(() => ({
+  sort: activeTab.value,
+  type: activeType.value || undefined
+}))
+
+const {
+  loading,
+  error,
+  data: posts,
+  hasMore,
+  isEmpty,
+  loadMore,
+  refresh
+} = usePagination<PostList>(
+  (page, size, p) => forumApi.getPosts({ ...p, page, size }),
+  { pageSize: 10, mode: 'append', params }
+)
+
+const reloadPosts = () => refresh()
+
 const switchTab = (tab: string) => {
   activeTab.value = tab
   activeType.value = null
@@ -204,45 +221,6 @@ const switchTab = (tab: string) => {
 const toggleType = (type: string) => {
   activeType.value = activeType.value === type ? null : type
   reloadPosts()
-}
-
-const reloadPosts = () => {
-  posts.value = []
-  currentPage.value = 0
-  hasMore.value = true
-  loadPosts()
-}
-
-const loadPosts = async () => {
-  loading.value = true
-  try {
-    const params: any = {
-      sort: activeTab.value,
-      page: currentPage.value,
-      size: 10
-    }
-    if (activeType.value) {
-      params.type = activeType.value
-    }
-    const res = await forumApi.getPosts(params)
-    const pageData = res as any
-    const newPosts = pageData.content || []
-    if (currentPage.value === 0) {
-      posts.value = newPosts
-    } else {
-      posts.value.push(...newPosts)
-    }
-    hasMore.value = !pageData.last
-  } catch (error) {
-    console.error('加载帖子失败', error)
-  } finally {
-    loading.value = false
-  }
-}
-
-const loadMore = () => {
-  currentPage.value++
-  loadPosts()
 }
 
 const toggleLike = async (post: PostList) => {
@@ -297,7 +275,11 @@ const searchByTag = (tag: string) => {
   reloadPosts()
 }
 
+watch([activeTab, activeType], () => {
+  reloadPosts()
+})
+
 onMounted(() => {
-  loadPosts()
+  refresh()
 })
 </script>

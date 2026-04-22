@@ -50,7 +50,7 @@
     <div v-if="loading" class="text-center py-12 text-[#9A9082]">加载中...</div>
     <div v-else-if="error" class="text-center py-12 text-[#D4644A]">{{ error }}</div>
     <template v-else>
-      <div class="card overflow-hidden">
+      <div v-if="!isEmpty" class="card overflow-hidden">
         <table class="data-table w-full">
           <thead>
             <tr>
@@ -108,18 +108,23 @@
                 </div>
               </td>
             </tr>
-            <tr v-if="words.length === 0">
-              <td colspan="6" class="text-center py-8 text-[#B8AE9E]">暂无数据</td>
-            </tr>
           </tbody>
         </table>
       </div>
 
-      <div v-if="totalPages > 1" class="flex items-center justify-center gap-2 mt-5">
-        <button class="page-btn" :class="page > 0 ? '' : 'disabled'" :disabled="page <= 0" @click="page--; search()">上一页</button>
-        <span class="text-sm text-[#9A9082]">{{ page + 1 }} / {{ totalPages }}</span>
-        <button class="page-btn" :class="page < totalPages - 1 ? '' : 'disabled'" :disabled="page >= totalPages - 1" @click="page++; search()">下一页</button>
+      <div v-else class="text-center py-20 text-[#B8AE9E]">
+        <span class="iconify text-5xl inline-block" data-icon="solar:shield-check-bold"></span>
+        <p class="mt-4">暂无敏感词</p>
       </div>
+
+      <Pagination
+        v-if="totalPages > 1"
+        :page="currentPage"
+        :total-pages="totalPages"
+        :total-elements="totalElements"
+        @change="goToPage"
+        class="mt-5"
+      />
     </template>
 
     <Teleport to="body">
@@ -176,19 +181,15 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
 import { auditApi, type SensitiveWord } from '../../api/audit'
+import Pagination from '../common/Pagination.vue'
+import { usePagination } from '../../composables/usePagination'
 
-const loading = ref(false)
-const error = ref('')
-const words = ref<SensitiveWord[]>([])
 const categories = ref<string[]>(['INSULT', 'PORN', 'POLITICAL', 'AD', 'OTHER'])
 const auditEnabled = ref(true)
-
 const keyword = ref('')
 const categoryFilter = ref('')
-const page = ref(0)
-const totalPages = ref(1)
 
 const addModal = ref({
   show: false,
@@ -229,24 +230,30 @@ const formatDate = (dateStr: string) => {
   return date.toLocaleDateString('zh-CN')
 }
 
-const loadWords = async () => {
-  loading.value = true
-  error.value = ''
-  try {
-    const res = await auditApi.getWords({
-      keyword: keyword.value || undefined,
-      category: categoryFilter.value || undefined,
-      page: page.value,
-      size: 10
-    }) as any
-    words.value = res.content || []
-    totalPages.value = res.totalPages || 1
-  } catch (e: any) {
-    error.value = e.message || '加载失败'
-  } finally {
-    loading.value = false
-  }
-}
+const params = computed(() => ({
+  keyword: keyword.value || undefined,
+  category: categoryFilter.value || undefined
+}))
+
+const {
+  loading,
+  error,
+  data: words,
+  page: currentPage,
+  totalPages,
+  totalElements,
+  isEmpty,
+  refresh,
+  goToPage
+} = usePagination<SensitiveWord>(
+  (page, size) => auditApi.getWords({ ...params.value, page, size }),
+  { pageSize: 10, mode: 'replace' }
+)
+
+// 监听筛选条件变化，自动刷新
+watch([keyword, categoryFilter], () => {
+  refresh()
+})
 
 const loadAuditStatus = async () => {
   try {
@@ -266,10 +273,7 @@ const toggleAuditStatus = async () => {
   }
 }
 
-const search = () => {
-  page.value = 0
-  loadWords()
-}
+const search = () => refresh()
 
 const openAddModal = () => {
   addModal.value = {
@@ -291,7 +295,7 @@ const addWord = async () => {
       severity: addModal.value.severity
     })
     addModal.value.show = false
-    loadWords()
+    refresh()
   } catch (e: any) {
     alert(e.message || '添加失败')
   } finally {
@@ -302,7 +306,7 @@ const addWord = async () => {
 const toggleStatus = async (word: SensitiveWord) => {
   try {
     await auditApi.toggleWordStatus(word.id)
-    word.status = word.status === 1 ? 0 : 1
+    refresh()
   } catch (e: any) {
     alert(e.message || '操作失败')
   }
@@ -312,7 +316,7 @@ const deleteWord = async (word: SensitiveWord) => {
   if (!confirm(`确定要删除敏感词"${word.word}"吗？`)) return
   try {
     await auditApi.deleteWord(word.id)
-    loadWords()
+    refresh()
   } catch (e: any) {
     alert(e.message || '删除失败')
   }
@@ -328,7 +332,7 @@ const refreshBuffer = async () => {
 }
 
 onMounted(() => {
-  loadWords()
+  refresh()
   loadAuditStatus()
 })
 </script>

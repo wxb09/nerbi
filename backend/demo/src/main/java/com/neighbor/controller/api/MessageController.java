@@ -2,6 +2,7 @@ package com.neighbor.controller.api;
 
 import com.neighbor.auth.AuthUser;
 import com.neighbor.common.api.ApiResponse;
+import com.neighbor.common.dto.PageResponse;
 import com.neighbor.dto.MessageDTO;
 import com.neighbor.service.MessageService;
 import org.springframework.data.domain.Page;
@@ -24,23 +25,25 @@ public class MessageController {
     }
 
     @GetMapping
-    public ApiResponse<Page<MessageDTO>> getMessages(
+    public ApiResponse<PageResponse<MessageDTO>> getMessages(
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Long userId = getUserIdFromAuth(authentication);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return ApiResponse.ok(messageService.getMessages(userId, pageable));
+        Page<MessageDTO> pageResult = messageService.getMessages(userId, pageable);
+        return ApiResponse.ok(PageResponse.from(pageResult));
     }
 
     @GetMapping("/unread")
-    public ApiResponse<Page<MessageDTO>> getUnreadMessages(
+    public ApiResponse<PageResponse<MessageDTO>> getUnreadMessages(
             Authentication authentication,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Long userId = getUserIdFromAuth(authentication);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return ApiResponse.ok(messageService.getUnreadMessages(userId, pageable));
+        Page<MessageDTO> pageResult = messageService.getUnreadMessages(userId, pageable);
+        return ApiResponse.ok(PageResponse.from(pageResult));
     }
 
     @GetMapping("/unread-count")

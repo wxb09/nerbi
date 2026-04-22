@@ -2,6 +2,7 @@ package com.neighbor.forum.controller;
 
 import com.neighbor.auth.AuthUser;
 import com.neighbor.common.api.ApiResponse;
+import com.neighbor.common.dto.PageResponse;
 import com.neighbor.forum.dto.CommentDTO;
 import com.neighbor.forum.dto.CreateCommentRequest;
 import com.neighbor.forum.service.CommentService;
@@ -23,25 +24,27 @@ public class CommentController {
     }
 
     @GetMapping("/post/{postId}")
-    public ApiResponse<Page<CommentDTO>> getCommentsByPostId(
+    public ApiResponse<PageResponse<CommentDTO>> getCommentsByPostId(
             @PathVariable Long postId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             Authentication authentication) {
         Long currentUserId = getUserIdSafe(authentication);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "createdAt"));
-        return ApiResponse.ok(commentService.getCommentsByPostId(postId, currentUserId, pageable));
+        Page<CommentDTO> pageResult = commentService.getCommentsByPostId(postId, currentUserId, pageable);
+        return ApiResponse.ok(PageResponse.from(pageResult));
     }
 
     @GetMapping("/{parentCommentId}/replies")
-    public ApiResponse<Page<CommentDTO>> getReplies(
+    public ApiResponse<PageResponse<CommentDTO>> getReplies(
             @PathVariable Long parentCommentId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size,
             Authentication authentication) {
         Long currentUserId = getUserIdSafe(authentication);
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.ASC, "createdAt"));
-        return ApiResponse.ok(commentService.getReplies(parentCommentId, currentUserId, pageable));
+        Page<CommentDTO> pageResult = commentService.getReplies(parentCommentId, currentUserId, pageable);
+        return ApiResponse.ok(PageResponse.from(pageResult));
     }
 
     @PostMapping
