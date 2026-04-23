@@ -33,52 +33,75 @@
       <p class="text-lg text-[#B8AE9E] mt-4">暂无举报记录</p>
     </div>
 
-    <div v-else class="space-y-4">
-      <div
-        v-for="report in reports"
-        :key="report.id"
-        class="card p-6"
-      >
-        <div class="flex items-start justify-between gap-4">
-          <div class="flex-1">
-            <div class="flex items-center gap-2 mb-2">
+    <div v-else class="card overflow-hidden">
+      <table class="w-full">
+        <thead class="bg-[#FFF9EE]">
+          <tr class="text-left text-xs font-medium text-[#8C7D66]">
+            <th class="px-5 py-3">状态</th>
+            <th class="px-5 py-3">举报内容</th>
+            <th class="px-5 py-3">举报原因</th>
+            <th class="px-5 py-3">举报人</th>
+            <th class="px-5 py-3">时间</th>
+            <th class="px-5 py-3 text-right">操作</th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-50">
+          <tr
+            v-for="report in reports"
+            :key="report.id"
+            class="hover:bg-gray-50/50 transition-colors"
+          >
+            <td class="px-5 py-3">
               <span
-                class="px-2 py-0.5 rounded-full text-xs font-medium"
+                class="px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap"
                 :class="getStatusClass(report.auditResult)"
               >
                 {{ getStatusText(report.auditResult) }}
               </span>
-              <span class="text-xs text-[#B8AE9E]">{{ report.createdAt }}</span>
-            </div>
-            <p class="text-sm text-[#3D3426] mb-1">
-              <span class="font-medium">举报类型:</span> {{ report.targetType }} #{{ report.targetId }}
-            </p>
-            <p class="text-sm text-[#8C7D66] mb-2">
-              <span class="font-medium">举报原因:</span> {{ report.result }}
-            </p>
-            <p v-if="report.contentSnapshot" class="text-xs text-gray-400 line-clamp-2">
-              内容快照: {{ report.contentSnapshot }}
-            </p>
-          </div>
-          <div v-if="report.auditResult === 'PENDING'" class="flex items-center gap-2 flex-shrink-0">
-            <button
-              class="px-4 py-2 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-colors text-sm font-medium"
-              @click="openResolveModal(report, 'DELETE')"
-            >
-              删除内容
-            </button>
-            <button
-              class="px-4 py-2 rounded-lg bg-[#FFF9EE] text-[#C9A227] hover:bg-[#C9A227] hover:text-white transition-colors text-sm font-medium"
-              @click="openResolveModal(report, 'REJECT')"
-            >
-              驳回举报
-            </button>
-          </div>
-          <div v-else class="text-xs text-[#B8AE9E] flex-shrink-0">
-            处理人: {{ report.handlerId || '-' }}
-          </div>
-        </div>
-      </div>
+            </td>
+            <td class="px-5 py-3">
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-[#B8AE9E] whitespace-nowrap">{{ report.targetType }}</span>
+                <span class="text-sm text-[#3D3426] font-medium">#{{ report.targetId }}</span>
+                <button
+                  class="text-xs text-[#C9A227] hover:text-[#B8911F] underline"
+                  @click="showDetail(report)"
+                >
+                  查看详情
+                </button>
+              </div>
+            </td>
+            <td class="px-5 py-3">
+              <p class="text-sm text-[#8C7D66] max-w-[200px] truncate">{{ report.reason }}</p>
+            </td>
+            <td class="px-5 py-3">
+              <span class="text-sm text-[#3D3426]">{{ report.reporterId || '-' }}</span>
+            </td>
+            <td class="px-5 py-3">
+              <span class="text-xs text-[#B8AE9E] whitespace-nowrap">{{ formatDate(report.createdAt) }}</span>
+            </td>
+            <td class="px-5 py-3 text-right">
+              <div v-if="report.auditResult === 'PENDING'" class="flex items-center justify-end gap-2">
+                <button
+                  class="px-3 py-1.5 rounded-lg bg-red-50 text-red-500 hover:bg-red-500 hover:text-white transition-colors text-xs font-medium"
+                  @click="openResolveModal(report, 'DELETE')"
+                >
+                  删除内容
+                </button>
+                <button
+                  class="px-3 py-1.5 rounded-lg bg-[#FFF9EE] text-[#C9A227] hover:bg-[#C9A227] hover:text-white transition-colors text-xs font-medium"
+                  @click="openResolveModal(report, 'REJECT')"
+                >
+                  驳回
+                </button>
+              </div>
+              <span v-else class="text-xs text-[#B8AE9E]">
+                处理人: {{ report.handlerId || '-' }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
     </div>
 
     <Pagination
@@ -135,6 +158,71 @@
         </div>
       </Transition>
     </Teleport>
+
+    <Teleport to="body">
+      <Transition name="modal">
+        <div
+          v-if="showDetailModal"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4"
+          @click.self="closeDetailModal"
+        >
+          <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+          <div class="relative bg-white rounded-2xl w-full max-w-lg shadow-2xl p-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-lg font-bold text-[#3D3426]">举报详情</h3>
+              <button
+                class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
+                @click="closeDetailModal"
+              >
+                <span class="iconify text-lg text-gray-400" data-icon="solar:close-circle-bold"></span>
+              </button>
+            </div>
+            <div class="space-y-3">
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-[#B8AE9E] w-16">举报类型</span>
+                <span class="text-sm text-[#3D3426] font-medium">{{ selectedDetail?.targetType }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-[#B8AE9E] w-16">目标ID</span>
+                <span class="text-sm text-[#3D3426]">#{{ selectedDetail?.targetId }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-[#B8AE9E] w-16">状态</span>
+                <span
+                  class="px-2 py-0.5 rounded-full text-xs font-medium"
+                  :class="getStatusClass(selectedDetail?.auditResult)"
+                >
+                  {{ getStatusText(selectedDetail?.auditResult) }}
+                </span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-[#B8AE9E] w-16">举报人</span>
+                <span class="text-sm text-[#3D3426]">{{ selectedDetail?.reporterId || '-' }}</span>
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-[#B8AE9E] w-16">举报时间</span>
+                <span class="text-sm text-[#3D3426]">{{ selectedDetail?.createdAt }}</span>
+              </div>
+              <div class="pt-2 border-t border-gray-100">
+                <span class="text-xs text-[#B8AE9E]">举报原因</span>
+                <p class="text-sm text-[#3D3426] mt-1">{{ selectedDetail?.reason || '-' }}</p>
+              </div>
+              <div v-if="selectedDetail?.contentSnapshot" class="pt-2 border-t border-gray-100">
+                <span class="text-xs text-[#B8AE9E]">举报内容</span>
+                <p class="text-sm text-[#8C7D66] mt-1">{{ selectedDetail?.contentSnapshot }}</p>
+              </div>
+              <div v-if="selectedDetail?.handlerId" class="pt-2 border-t border-gray-100">
+                <span class="text-xs text-[#B8AE9E]">处理信息</span>
+                <p class="text-sm text-[#8C7D66] mt-1">
+                  处理人: {{ selectedDetail?.handlerId }}<br>
+                  处理结果: {{ selectedDetail?.result }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </div>
 </template>
 
@@ -156,10 +244,13 @@ const selectedReport = ref<any>(null)
 const resolveAction = ref('')
 const resolveResult = ref('')
 
+const showDetailModal = ref(false)
+const selectedDetail = ref<any>(null)
+
 const loadReports = async (page = 0) => {
   try {
     loading.value = true
-    const params: any = { page, size: 10 }
+    const params: any = { page, size: 15 }
     if (filterStatus.value) params.status = filterStatus.value
     const data = await adminApi.getReports(params) as any
     reports.value = data.content || []
@@ -175,6 +266,16 @@ const loadReports = async (page = 0) => {
 
 const goToPage = (page: number) => {
   loadReports(page)
+}
+
+const showDetail = (report: any) => {
+  selectedDetail.value = report
+  showDetailModal.value = true
+}
+
+const closeDetailModal = () => {
+  showDetailModal.value = false
+  selectedDetail.value = null
 }
 
 const openResolveModal = (report: any, action: string) => {
@@ -204,6 +305,12 @@ const submitResolve = async () => {
   } finally {
     submitting.value = false
   }
+}
+
+const formatDate = (dateStr: string) => {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  return `${date.getMonth() + 1}/${date.getDate()} ${date.getHours()}:${String(date.getMinutes()).padStart(2, '0')}`
 }
 
 const getStatusClass = (status: string) => {
@@ -240,11 +347,10 @@ onMounted(() => {
   border: 1px solid rgba(201, 162, 39, 0.08);
 }
 
-.line-clamp-2 {
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
+.truncate {
   overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .modal-enter-active,

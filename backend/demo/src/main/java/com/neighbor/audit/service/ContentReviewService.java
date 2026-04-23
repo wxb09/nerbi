@@ -41,7 +41,15 @@ public class ContentReviewService {
         report.setReviewType("REPORT");
         report.setAuditResult("PENDING");
         report.setReporterId(reporterId);
-        report.setResult(reason);
+        report.setReason(reason);
+
+        // 获取内容快照
+        if ("POST".equals(targetType)) {
+            Post post = postRepository.findById(targetId).orElse(null);
+            if (post != null) {
+                report.setContentSnapshot(post.getContent());
+            }
+        }
 
         auditLogRepository.save(report);
 

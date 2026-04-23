@@ -37,6 +37,9 @@ public class AuditLog {
     @Column(name = "handler_id")
     private Long handlerId;
 
+    @Column(name = "reason", columnDefinition = "TEXT")
+    private String reason;
+
     @Column(name = "result", columnDefinition = "TEXT")
     private String result;
 
