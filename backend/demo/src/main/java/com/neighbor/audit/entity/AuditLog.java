@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "audit_logs")
 public class AuditLog {
-    
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -19,6 +19,9 @@ public class AuditLog {
     @Column(name = "target_id", nullable = false)
     private Long targetId;
 
+    @Column(name = "review_type", length = 20)
+    private String reviewType = "AUTO";
+
     @Column(name = "content_snapshot", columnDefinition = "TEXT")
     private String contentSnapshot;
 
@@ -27,6 +30,15 @@ public class AuditLog {
 
     @Column(name = "sensitive_words", columnDefinition = "TEXT")
     private String sensitiveWords;
+
+    @Column(name = "reporter_id")
+    private Long reporterId;
+
+    @Column(name = "handler_id")
+    private Long handlerId;
+
+    @Column(name = "result", columnDefinition = "TEXT")
+    private String result;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;

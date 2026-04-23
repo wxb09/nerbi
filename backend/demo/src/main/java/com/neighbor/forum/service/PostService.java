@@ -139,15 +139,11 @@ public class PostService {
 
         String auditContent = (request.title() != null ? request.title() + " " : "") + request.content();
         AuditResult auditResult = sensitiveWordService.auditText(auditContent, "POST", 0L);
-        
+
         if (!auditResult.passed()) {
-            post.setAuditStatus(2);
-            post.setAuditReason(auditResult.reason() + ": " + auditResult.sensitiveWords());
             log.warn("[PostService] 帖子被拦截: userId={}, reason={}", userId, auditResult.reason());
             throw new BusinessException(ErrorCode.SENSITIVE_CONTENT, "内容包含敏感词，请修改后重试");
         }
-        
-        post.setAuditStatus(1);
 
         Post saved = postRepository.save(post);
         log.info("[PostService] 帖子已创建: postId={}", saved.getId());

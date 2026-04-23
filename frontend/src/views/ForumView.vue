@@ -105,6 +105,7 @@
             :default-avatar="defaultAvatar"
             @click="goToDetail"
             @like="toggleLike"
+            @delete="handleDeletePost"
           />
         </div>
 
@@ -284,6 +285,15 @@ const goToDetail = (postId: number) => {
 const searchByTag = (tag: string) => {
   newPostContent.value = ''
   reloadPosts()
+}
+
+const handleDeletePost = async (post: PostList) => {
+  try {
+    await forumApi.deletePost(post.id)
+    reloadPosts()
+  } catch (error) {
+    console.error('删除帖子失败', error)
+  }
 }
 
 watch([activeTab, activeType], () => {

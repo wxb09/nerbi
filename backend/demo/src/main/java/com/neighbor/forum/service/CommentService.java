@@ -86,7 +86,6 @@ public class CommentService {
         comment.setPost(post);
         comment.setUser(user);
         comment.setContent(request.content());
-        comment.setAuditStatus(1);
 
         if (request.parentId() != null) {
             Comment parent = commentRepository.findById(request.parentId())

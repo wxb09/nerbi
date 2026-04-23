@@ -134,4 +134,7 @@ export const forumApi = {
 
   getAnnouncementById: (id: number) =>
     api.get<Announcement>(`/announcements/${id}`),
+
+  reportContent: (data: { targetType: string; targetId: number; reason: string }) =>
+    api.post('/reports', data),
 }

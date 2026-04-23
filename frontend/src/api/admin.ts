@@ -171,4 +171,10 @@ export const adminApi = {
 
   deleteAnnouncement: (id: number) =>
     api.delete(`/admin/announcements/${id}`),
+
+  getReports: (params: { status?: string; page?: number; size?: number }) =>
+    api.get<PageResult<any>>('/admin/reports', { params }),
+
+  resolveReport: (id: number, data: { action: string; result: string }) =>
+    api.post(`/admin/reports/${id}/resolve`, data),
 }

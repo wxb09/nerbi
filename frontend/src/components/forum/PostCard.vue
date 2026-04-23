@@ -12,7 +12,7 @@
           :alt="post.author?.nickname"
         />
         <div>
-          <h3 class="font-bold text-sm text-[#2D3436]">{{ post.author?.nickname || '匿名用户' }}</h3>
+          <h3 class="font-bold text-sm text-[#3D3426]">{{ post.author?.nickname || '匿名用户' }}</h3>
           <p class="text-[10px] text-gray-400 font-medium">
             {{ formatTime(post.createdAt) }}
             <span v-if="post.author?.building"> · {{ post.author.building }}</span>
@@ -20,15 +20,17 @@
           </p>
         </div>
       </div>
-      <span
-        class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm"
-        :class="getPostTypeClass(post.type)"
-      >
-        {{ getPostTypeText(post.type) }}
-      </span>
+      <div class="flex items-center gap-2">
+        <span
+          class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-sm"
+          :class="getPostTypeClass(post.type)"
+        >
+          {{ getPostTypeText(post.type) }}
+        </span>
+      </div>
     </div>
 
-    <h4 v-if="post.title" class="font-bold text-lg mb-3 text-[#2D3436]">{{ post.title }}</h4>
+    <h4 v-if="post.title" class="font-bold text-lg mb-3 text-[#3D3426]">{{ post.title }}</h4>
 
     <p
       class="leading-relaxed mb-6"
@@ -64,31 +66,166 @@
           <span class="text-xs font-bold">{{ post.viewCount }}</span>
         </span>
       </div>
-      <div v-if="post.tags" class="flex items-center gap-2">
-        <span
-          v-for="tag in parseTags(post.tags)"
-          :key="tag"
-          class="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-[10px] font-medium"
-        >
-          #{{ tag }}
-        </span>
+      <div class="flex items-center gap-3">
+        <div v-if="post.tags" class="flex items-center gap-2">
+          <span
+            v-for="tag in parseTags(post.tags)"
+            :key="tag"
+            class="px-2 py-0.5 bg-gray-100 text-gray-500 rounded-full text-[10px] font-medium"
+          >
+            #{{ tag }}
+          </span>
+        </div>
+        <div class="relative">
+          <button
+            class="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors"
+            @click.stop="toggleMenu"
+          >
+            <span class="iconify text-lg text-gray-400" data-icon="solar:menu-dots-bold"></span>
+          </button>
+          <Transition name="menu">
+            <div
+              v-if="showMenu"
+              class="absolute right-0 top-full mt-1 bg-white rounded-xl shadow-lg border border-gray-100 py-1 w-32 z-10"
+            >
+              <button
+                v-if="isMyPost"
+                class="w-full px-4 py-2 text-left text-sm text-red-500 hover:bg-red-50 transition-colors flex items-center gap-2"
+                @click.stop="handleDelete"
+              >
+                <span class="iconify" data-icon="solar:trash-bin-trash-bold"></span>
+                删除
+              </button>
+              <button
+                v-if="!isMyPost"
+                class="w-full px-4 py-2 text-left text-sm text-gray-600 hover:bg-gray-50 transition-colors flex items-center gap-2"
+                @click.stop="handleReport"
+              >
+                <span class="iconify" data-icon="solar:danger-triangle-bold"></span>
+                举报
+              </button>
+            </div>
+          </Transition>
+        </div>
       </div>
     </div>
+
+    <Teleport to="body">
+      <Transition name="modal">
+        <div
+          v-if="showReportModal"
+          class="fixed inset-0 z-50 flex items-center justify-center p-4"
+          @click.self="closeReportModal"
+        >
+          <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+          <div class="relative bg-white rounded-2xl w-full max-w-sm shadow-2xl p-6">
+            <h3 class="text-lg font-bold text-[#3D3426] mb-4">举报帖子</h3>
+            <textarea
+              v-model="reportReason"
+              rows="3"
+              class="w-full px-4 py-2.5 rounded-xl border border-gray-200 focus:border-[#C9A227] focus:ring-2 focus:ring-[#C9A227]/20 outline-none transition-all resize-none text-sm"
+              placeholder="请输入举报原因..."
+            ></textarea>
+            <div class="flex gap-3 mt-4">
+              <button
+                class="flex-1 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors text-sm"
+                @click="closeReportModal"
+              >
+                取消
+              </button>
+              <button
+                class="flex-1 px-4 py-2.5 rounded-xl bg-[#C9A227] text-white font-medium hover:bg-[#B8911F] transition-colors text-sm disabled:opacity-50"
+                :disabled="!reportReason.trim() || reporting"
+                @click="submitReport"
+              >
+                {{ reporting ? '提交中...' : '举报' }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+    </Teleport>
   </article>
 </template>
 
 <script setup lang="ts">
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { PostList } from '../../api/forum'
+import { forumApi } from '../../api/forum'
+import { useAuthStore } from '../../stores/auth'
 
-defineProps<{
+const props = defineProps<{
   post: PostList
   defaultAvatar: string
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'click', id: number): void
   (e: 'like', post: PostList): void
+  (e: 'delete', post: PostList): void
 }>()
+
+const authStore = useAuthStore()
+
+const showMenu = ref(false)
+const showReportModal = ref(false)
+const reportReason = ref('')
+const reporting = ref(false)
+
+const isMyPost = computed(() => {
+  return authStore.user?.id && props.post.author?.id && Number(authStore.user.id) === props.post.author.id
+})
+
+const toggleMenu = () => {
+  showMenu.value = !showMenu.value
+}
+
+const handleDelete = () => {
+  showMenu.value = false
+  if (confirm('确定要删除这条帖子吗？')) {
+    emit('delete', props.post)
+  }
+}
+
+const handleReport = () => {
+  showMenu.value = false
+  showReportModal.value = true
+}
+
+const closeReportModal = () => {
+  showReportModal.value = false
+  reportReason.value = ''
+}
+
+const submitReport = async () => {
+  if (!reportReason.value.trim()) return
+  try {
+    reporting.value = true
+    await forumApi.reportContent({
+      targetType: 'POST',
+      targetId: props.post.id,
+      reason: reportReason.value.trim()
+    })
+    alert('举报已提交，管理员会尽快处理')
+    closeReportModal()
+  } catch (error: any) {
+    alert(error.message || '举报失败')
+  } finally {
+    reporting.value = false
+  }
+}
+
+const handleClickOutside = (event: MouseEvent) => {
+  showMenu.value = false
+}
+
+onMounted(() => {
+  document.addEventListener('click', handleClickOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 
 const getPostTypeClass = (type: string) => {
   const classes: Record<string, string> = {
@@ -147,5 +284,31 @@ const parseTags = (tags: string | null) => {
 .post-card:hover {
   transform: translateX(10px);
   background: white;
+}
+
+.menu-enter-active,
+.menu-leave-active {
+  transition: all 0.2s ease;
+}
+
+.menu-enter-from,
+.menu-leave-to {
+  opacity: 0;
+  transform: translateY(-5px);
+}
+
+.modal-enter-active,
+.modal-leave-active {
+  transition: all 0.3s ease;
+}
+
+.modal-enter-from,
+.modal-leave-to {
+  opacity: 0;
+}
+
+.modal-enter-from > div:last-child,
+.modal-leave-to > div:last-child {
+  transform: scale(0.95);
 }
 </style>

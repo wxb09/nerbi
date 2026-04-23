@@ -100,7 +100,7 @@ public class SensitiveWordService {
         return sensitiveWordBs.replace(text);
     }
 
-    private void saveAuditLog(String targetType, Long targetId, String content, 
+    private void saveAuditLog(String targetType, Long targetId, String content,
                               String result, String sensitiveWords) {
         AuditLog log = new AuditLog();
         log.setTargetType(targetType);
@@ -108,6 +108,7 @@ public class SensitiveWordService {
         log.setContentSnapshot(content.length() > 500 ? content.substring(0, 500) : content);
         log.setAuditResult(result);
         log.setSensitiveWords(sensitiveWords);
+        log.setReviewType("AUTO");
         auditLogRepository.save(log);
     }
 

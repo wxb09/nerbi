@@ -33,12 +33,6 @@ public class Comment {
     @Column(length = 20)
     private String status = "PUBLISHED";
 
-    @Column(name = "audit_status")
-    private Integer auditStatus = 1;
-
-    @Column(name = "audit_reason", length = 255)
-    private String auditReason;
-
     @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 
