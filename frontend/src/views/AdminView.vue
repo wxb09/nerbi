@@ -14,7 +14,7 @@
         </div>
       </div>
 
-      <nav class="flex-1 overflow-y-auto py-5 px-4 space-y-0.5">
+      <nav class="flex-1 overflow-y-auto py-5 px-4 space-y-0.5 sidebar-nav">
         <a
           v-for="item in navItems"
           :key="item.key"
@@ -156,6 +156,9 @@ function goHome() {
 </script>
 
 <style scoped>
+.sidebar-nav::-webkit-scrollbar {
+  width: 0;
+}
 .nav-item {
   display: flex;
   align-items: center;

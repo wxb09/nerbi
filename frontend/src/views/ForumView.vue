@@ -87,15 +87,19 @@
           </div>
         </div>
 
-        <div v-if="loading && posts.length === 0" class="text-center py-20 text-gray-400">
-          <span class="iconify text-4xl animate-spin inline-block" data-icon="solar:refresh-bold"></span>
-          <p class="mt-2">加载中...</p>
+        <div v-if="loading && posts.length === 0" class="space-y-6">
+          <SkeletonLoader v-for="i in 3" :key="i" type="post" />
         </div>
 
-        <div v-else-if="posts.length === 0" class="text-center py-20 text-gray-400">
-          <span class="iconify text-5xl" data-icon="solar:chat-round-dots-bold"></span>
-          <p class="mt-4 text-lg">还没有帖子，快来发布第一条吧！</p>
-        </div>
+        <EmptyState
+          v-else-if="posts.length === 0"
+          icon="solar:chat-round-dots-bold"
+          title="还没有帖子"
+          description="这里还没有内容，快来发布第一条邻里动态吧！"
+          action-text="发布帖子"
+          action-link="/forum"
+          action-icon="solar:pen-new-square-bold"
+        />
 
         <div v-else class="space-y-6">
           <PostCard
@@ -151,6 +155,8 @@ import PostEditor from '../components/PostEditor.vue'
 import PostCard from '../components/forum/PostCard.vue'
 import PostFilter from '../components/forum/PostFilter.vue'
 import ForumSidebar from '../components/forum/ForumSidebar.vue'
+import SkeletonLoader from '../components/common/SkeletonLoader.vue'
+import EmptyState from '../components/common/EmptyState.vue'
 import { forumApi, type PostList } from '../api/forum'
 import { useAuthStore } from '../stores/auth'
 import { usePagination } from '../composables/usePagination'

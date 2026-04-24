@@ -65,17 +65,24 @@
   </section>
 
   <main class="max-w-7xl mx-auto px-6 py-8">
-    <div v-if="loading" class="text-center py-12">
-      <div class="inline-block w-8 h-8 border-4 border-[#E2B04D] border-t-transparent rounded-full animate-spin"></div>
-      <p class="text-gray-500 mt-4">加载中...</p>
-    </div>
-    <div v-else-if="items.length === 0" class="text-center py-12">
-      <span class="iconify text-6xl text-gray-200" data-icon="solar:box-bold"></span>
-      <p class="text-gray-500 mt-4">暂无物品</p>
-      <RouterLink to="/publish" class="text-[#E2B04D] font-bold hover:underline inline-block mt-2">
-        成为第一个发布者
-      </RouterLink>
-    </div>
+    <SkeletonGrid
+      v-if="loading"
+      type="card"
+      :count="8"
+      :cols="1"
+      :sm-cols="2"
+      :md-cols="3"
+      :lg-cols="4"
+    />
+    <EmptyState
+      v-else-if="items.length === 0"
+      icon="solar:box-bold"
+      title="暂无物品"
+      description="这里还没有人发布物品，成为第一个分享者吧！"
+      action-text="发布物品"
+      action-link="/publish"
+      action-icon="solar:plus-circle-bold"
+    />
     <div v-else class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
       <article v-for="item in items" :key="item.id" class="bg-white rounded-3xl border-2 border-gray-100 overflow-hidden hover:shadow-md hover:-translate-y-1 transition-all duration-300 group">
         <div class="h-44 bg-gray-100 relative overflow-hidden">
@@ -85,7 +92,7 @@
             <span>无图片</span>
           </div>
         </div>
-        <div class="p-5 space-y-2">
+        <div class="p-5 space-y-2 h-[164px]">
           <h3 class="font-bold text-[#333333]">{{ item.name }}</h3>
           <p class="text-sm text-gray-500">{{ item.locationText }}</p>
           <div class="flex flex-wrap gap-1">
@@ -106,7 +113,7 @@
       </article>
     </div>
     
-    <div v-if="totalPages > 1" class="flex justify-center items-center gap-2 mt-8">
+    <div v-if="totalPages > 1 && !loading" class="flex justify-center items-center gap-2 mt-8">
       <button 
         @click="changePage(currentPage - 1)" 
         :disabled="currentPage === 1"
@@ -180,9 +187,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import MainNav from '../components/MainNav.vue'
+import SkeletonGrid from '../components/common/SkeletonGrid.vue'
+import EmptyState from '../components/common/EmptyState.vue'
 import { itemApi } from '../api/item'
 import { publicApi, type Category, type Community } from '../api/public'
-import { apiCache } from '../utils/cache'
 
 const items = ref<any[]>([])
 const loading = ref(true)
@@ -198,10 +206,6 @@ const totalPages = ref(1)
 const totalElements = ref(0)
 
 let searchTimer: any = null
-
-const getCacheKey = () => {
-  return `index_items_${currentPage.value}_${selectedCommunityId.value}_${selectedCategoryId.value}_${searchQuery.value}`
-}
 
 const loadItems = async () => {
   loading.value = true
