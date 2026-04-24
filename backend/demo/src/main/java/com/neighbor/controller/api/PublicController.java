@@ -7,6 +7,8 @@ import com.neighbor.entity.Community;
 import com.neighbor.entity.Category;
 import com.neighbor.repository.CommunityRepository;
 import com.neighbor.repository.CategoryRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -27,6 +29,7 @@ public class PublicController {
     }
 
     @GetMapping("/communities")
+    @Cacheable(value = "communities")
     public ApiResponse<List<CommunityDTO>> getCommunities() {
         List<Community> communities = communityRepository.findAll();
         List<CommunityDTO> dtos = communities.stream()
@@ -40,6 +43,7 @@ public class PublicController {
     }
 
     @GetMapping("/categories")
+    @Cacheable(value = "categories")
     public ApiResponse<List<CategoryDTO>> getCategories() {
         List<Category> categories = categoryRepository.findAll();
         List<CategoryDTO> dtos = categories.stream()
@@ -55,12 +59,11 @@ public class PublicController {
 
     @GetMapping("/stats/carbon")
     public ApiResponse<CarbonStats> getCarbonStats() {
-        // 这里可以根据实际数据计算碳排放
         return ApiResponse.ok(new CarbonStats(125000, 36500));
     }
 
     public record CarbonStats(
-            int totalCo2Saved,  // 总碳减排量（克）
-            int todayCo2Saved   // 今日碳减排量（克）
+            int totalCo2Saved,
+            int todayCo2Saved
     ) {}
 }

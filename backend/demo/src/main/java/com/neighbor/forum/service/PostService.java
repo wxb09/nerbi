@@ -16,6 +16,8 @@ import com.neighbor.repository.PostRepository;
 import com.neighbor.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -45,6 +47,7 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "posts", key = "#communityId + '-' + #type + '-' + #sort + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<PostListDTO> getPosts(Long communityId, String type, String sort, Long currentUserId, Pageable pageable) {
         PostType postType = null;
         if (type != null) {
@@ -74,6 +77,7 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "hotPosts", key = "#communityId + '-' + (#postType != null ? #postType.name() : 'null') + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<PostListDTO> getHotPosts(Long communityId, PostType postType, Long currentUserId, Pageable pageable) {
         Page<Post> posts;
         if (communityId != null && postType != null) {
@@ -89,6 +93,7 @@ public class PostService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "postDetail", key = "#id + '-' + #currentUserId")
     public PostDetailDTO getPostById(Long id, Long currentUserId) {
         Post post = postRepository.findByIdWithFetch(id);
         if (post == null) {
@@ -101,6 +106,7 @@ public class PostService {
         return toDetailDTO(post, currentUserId);
     }
 
+    @CacheEvict(value = {"posts", "hotPosts"}, allEntries = true)
     public Long createPost(CreatePostRequest request, Long userId) {
         log.info("[PostService] 创建帖子: userId={}, type={}", userId, request.type());
 
@@ -150,6 +156,7 @@ public class PostService {
         return saved.getId();
     }
 
+    @CacheEvict(value = {"posts", "hotPosts", "postDetail"}, allEntries = true)
     public void updatePost(Long postId, CreatePostRequest request, Long userId) {
         log.info("[PostService] 更新帖子: postId={}, userId={}", postId, userId);
 
@@ -184,6 +191,7 @@ public class PostService {
         log.info("[PostService] 帖子已更新: postId={}", postId);
     }
 
+    @CacheEvict(value = {"posts", "hotPosts", "postDetail"}, allEntries = true)
     public void deletePost(Long postId, Long userId) {
         log.info("[PostService] 删除帖子: postId={}, userId={}", postId, userId);
 

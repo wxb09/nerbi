@@ -15,6 +15,8 @@ import com.neighbor.repository.PostRepository;
 import com.neighbor.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -43,6 +45,7 @@ public class CommentService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "comments", key = "#postId + '-' + #pageable.pageNumber + '-' + #pageable.pageSize")
     public Page<CommentDTO> getCommentsByPostId(Long postId, Long currentUserId, Pageable pageable) {
         postRepository.findById(postId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
@@ -67,6 +70,7 @@ public class CommentService {
         return toDTO(comment, currentUserId);
     }
 
+    @CacheEvict(value = {"comments", "postDetail"}, allEntries = true)
     public Long createComment(CreateCommentRequest request, Long userId) {
         log.info("[CommentService] 创建评论: userId={}, postId={}", userId, request.postId());
 
@@ -102,6 +106,7 @@ public class CommentService {
         return saved.getId();
     }
 
+    @CacheEvict(value = {"comments", "postDetail"}, allEntries = true)
     public void deleteComment(Long commentId, Long userId) {
         log.info("[CommentService] 删除评论: commentId={}, userId={}", commentId, userId);
 

@@ -5,6 +5,8 @@ import com.neighbor.entity.Announcement;
 import com.neighbor.enums.ErrorCode;
 import com.neighbor.forum.dto.AnnouncementDTO;
 import com.neighbor.repository.AnnouncementRepository;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,7 @@ public class AnnouncementService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "announcements", key = "#communityId != null ? #communityId : 'all'")
     public List<AnnouncementDTO> getActiveAnnouncements(Long communityId) {
         List<Announcement> announcements;
         if (communityId != null) {
@@ -40,6 +43,7 @@ public class AnnouncementService {
     }
 
     @Transactional(readOnly = true)
+    @Cacheable(value = "announcementDetail", key = "#id")
     public AnnouncementDTO getAnnouncementById(Long id) {
         Announcement announcement = announcementRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
@@ -52,6 +56,7 @@ public class AnnouncementService {
                 .map(this::toDTO);
     }
 
+    @CacheEvict(value = {"announcements", "announcementDetail"}, allEntries = true)
     public AnnouncementDTO createAnnouncement(String title, String content, String type, Long communityId) {
         Announcement announcement = new Announcement();
         announcement.setTitle(title);
@@ -63,6 +68,7 @@ public class AnnouncementService {
         return toDTO(saved);
     }
 
+    @CacheEvict(value = {"announcements", "announcementDetail"}, allEntries = true)
     public AnnouncementDTO updateAnnouncement(Long id, String title, String content, String type) {
         Announcement announcement = announcementRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
@@ -81,6 +87,7 @@ public class AnnouncementService {
         return toDTO(saved);
     }
 
+    @CacheEvict(value = {"announcements", "announcementDetail"}, allEntries = true)
     public void deleteAnnouncement(Long id) {
         Announcement announcement = announcementRepository.findById(id)
                 .orElseThrow(() -> new BusinessException(ErrorCode.ITEM_NOT_FOUND));
