@@ -1,4 +1,5 @@
 import { ref, computed, type Ref } from 'vue'
+import { apiCache } from '../utils/cache'
 
 export interface PageResponse<T> {
   content: T[]
@@ -12,20 +13,24 @@ export interface PageResponse<T> {
   hasPrevious: boolean
 }
 
-export interface UsePaginationOptions<T> {
+export interface UsePaginationOptions {
   pageSize?: number
   mode?: 'append' | 'replace'
   params?: Ref<Record<string, any>>
+  cacheKey?: string
+  cacheTTL?: number
 }
 
 export function usePagination<T>(
   fetchFn: (page: number, size: number, params?: Record<string, any>) => Promise<any>,
-  options: UsePaginationOptions<T> = {}
+  options: UsePaginationOptions = {}
 ) {
   const {
     pageSize = 10,
     mode = 'replace',
-    params
+    params,
+    cacheKey,
+    cacheTTL = 2 * 60 * 1000
   } = options
 
   const loading = ref(false)
@@ -37,6 +42,11 @@ export function usePagination<T>(
 
   const hasMore = computed(() => page.value < totalPages.value)
   const isEmpty = computed(() => data.value.length === 0 && !loading.value)
+
+  const getCacheKey = (pageNum: number, pageParams?: Record<string, any>): string | undefined => {
+    if (!cacheKey) return undefined
+    return `${cacheKey}_page${pageNum}_${JSON.stringify(pageParams || {})}`
+  }
 
   const load = async (reset = false, targetPage?: number) => {
     if (loading.value) return
@@ -52,14 +62,31 @@ export function usePagination<T>(
       }
     }
 
+    const currentPageNum = page.value
+    const currentParams = params?.value
+
+    if (reset && cacheKey && currentPageNum === 0) {
+      const key = getCacheKey(currentPageNum, currentParams)
+      if (key) {
+        const cached = apiCache.get<PageResponse<T>>(key)
+        if (cached) {
+          data.value = cached.content as T[]
+          totalPages.value = cached.totalPages
+          totalElements.value = cached.totalElements
+          page.value = currentPageNum + 1
+          return
+        }
+      }
+    }
+
     loading.value = true
     error.value = ''
 
     try {
-      const res = await fetchFn(page.value, pageSize, params?.value)
+      const res = await fetchFn(currentPageNum, pageSize, currentParams)
       const pageData: PageResponse<T> = res
 
-      if (reset || page.value === 0) {
+      if (reset || currentPageNum === 0) {
         data.value = pageData.content as T[]
       } else {
         data.value.push(...pageData.content)
@@ -67,7 +94,14 @@ export function usePagination<T>(
 
       totalPages.value = pageData.totalPages
       totalElements.value = pageData.totalElements
-      page.value++
+      page.value = currentPageNum + 1
+
+      if (cacheKey && currentPageNum === 0) {
+        const key = getCacheKey(currentPageNum, currentParams)
+        if (key) {
+          apiCache.set(key, undefined, pageData, cacheTTL)
+        }
+      }
     } catch (e: any) {
       error.value = e.message || '加载失败'
       console.error('分页加载错误:', e)
@@ -82,12 +116,21 @@ export function usePagination<T>(
   }
 
   const refresh = async () => {
+    if (cacheKey) {
+      apiCache.clear(cacheKey)
+    }
     await load(true)
   }
 
   const goToPage = async (targetPage: number) => {
     if (targetPage < 0 || targetPage >= totalPages.value) return
     await load(true, targetPage)
+  }
+
+  const clearCache = () => {
+    if (cacheKey) {
+      apiCache.clear(cacheKey)
+    }
   }
 
   return {
@@ -101,6 +144,7 @@ export function usePagination<T>(
     isEmpty,
     loadMore,
     refresh,
-    goToPage
+    goToPage,
+    clearCache
   }
 }

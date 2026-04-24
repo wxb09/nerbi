@@ -182,6 +182,7 @@ import { ref, computed, onMounted } from 'vue'
 import MainNav from '../components/MainNav.vue'
 import { itemApi } from '../api/item'
 import { publicApi, type Category, type Community } from '../api/public'
+import { apiCache } from '../utils/cache'
 
 const items = ref<any[]>([])
 const loading = ref(true)
@@ -197,6 +198,10 @@ const totalPages = ref(1)
 const totalElements = ref(0)
 
 let searchTimer: any = null
+
+const getCacheKey = () => {
+  return `index_items_${currentPage.value}_${selectedCommunityId.value}_${selectedCategoryId.value}_${searchQuery.value}`
+}
 
 const loadItems = async () => {
   loading.value = true

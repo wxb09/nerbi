@@ -216,10 +216,11 @@ const {
   hasMore,
   isEmpty,
   loadMore,
-  refresh
+  refresh,
+  clearCache
 } = usePagination<PostList>(
   (page, size, p) => forumApi.getPosts({ ...p, page, size }),
-  { pageSize: 10, mode: 'append', params }
+  { pageSize: 10, mode: 'append', params, cacheKey: 'forum_posts', cacheTTL: 2 * 60 * 1000 }
 )
 
 const reloadPosts = () => refresh()
@@ -265,6 +266,7 @@ const publishPost = async () => {
     newPostContent.value = ''
     newPostType.value = 'NORMAL'
     selectedTags.value = []
+    clearCache()
     reloadPosts()
   } catch (error) {
     console.error('发布失败', error)
@@ -275,6 +277,7 @@ const publishPost = async () => {
 
 const onPostPublished = () => {
   showPostEditor.value = false
+  clearCache()
   reloadPosts()
 }
 
@@ -290,6 +293,7 @@ const searchByTag = (tag: string) => {
 const handleDeletePost = async (post: PostList) => {
   try {
     await forumApi.deletePost(post.id)
+    clearCache()
     reloadPosts()
   } catch (error) {
     console.error('删除帖子失败', error)
