@@ -27,13 +27,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
         String authHeader = request.getHeader("Authorization");
-        System.out.println("=== JWT Filter ===");
-        System.out.println("Request URI: " + request.getRequestURI());
-        System.out.println("Auth Header: " + (authHeader != null ? authHeader.substring(0, Math.min(20, authHeader.length())) + "..." : "null"));
+        //System.out.println("=== JWT Filter ===");
+        //System.out.println("Request URI: " + request.getRequestURI());
+        //System.out.println("Auth Header: " + (authHeader != null ? authHeader.substring(0, Math.min(20, authHeader.length())) + "..." : "null"));
         
         if (StringUtils.hasText(authHeader) && authHeader.startsWith("Bearer ")) {
             String token = authHeader.substring(7);
-            System.out.println("Token found, length: " + token.length());
+            //System.out.println("Token found, length: " + token.length());
             try {
                 Claims claims = jwtService.parse(token);
                 System.out.println("Token parsed successfully, userId: " + claims.get("userId"));
@@ -46,7 +46,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                         new UsernamePasswordAuthenticationToken(authUser, null, Collections.emptyList());
                 SecurityContextHolder.getContext().setAuthentication(authentication);
             } catch (Exception e) {
-                System.out.println("Token validation failed: " + e.getMessage());
+               // System.out.println("Token validation failed: " + e.getMessage());
                 SecurityContextHolder.clearContext();
             }
         } else {
