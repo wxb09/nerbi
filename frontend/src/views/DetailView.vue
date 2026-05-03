@@ -69,12 +69,22 @@
                 </p>
               </div>
             </div>
-            <RouterLink 
-              class="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold hover:border-[#E2B04D] hover:text-[#E2B04D] hover:bg-[#F5E6C8]/30 transition-all" 
-              :to="`/user/${item?.owner?.id}`"
-            >
-              查看主页
-            </RouterLink>
+            <div class="flex gap-2">
+              <RouterLink 
+                class="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold hover:border-[#E2B04D] hover:text-[#E2B04D] hover:bg-[#F5E6C8]/30 transition-all" 
+                :to="`/user/${item?.owner?.id}`"
+              >
+                查看主页
+              </RouterLink>
+              <button 
+                v-if="item?.owner?.id !== currentUserId"
+                @click="startChat"
+                class="px-4 py-2 bg-[#E2B04D] text-white rounded-lg text-xs font-bold hover:bg-[#d4a344] transition-all flex items-center gap-1"
+              >
+                <span class="iconify" data-icon="solar:chat-round-dots-bold"></span>
+                联系TA
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -211,6 +221,7 @@ import { useRoute, useRouter } from 'vue-router'
 import MainNav from '../components/MainNav.vue'
 import { itemApi } from '../api/item'
 import { borrowApi } from '../api/borrow'
+import { chatApi } from '../api/chat'
 import { useAuthStore } from '../stores/auth'
 
 const route = useRoute()
@@ -221,6 +232,7 @@ const item = ref<any>(null)
 const loading = ref(true)
 const submitting = ref(false)
 const errorMsg = ref('')
+const currentUserId = ref(Number(authStore.user?.id))
 
 const borrowForm = ref({
   startDate: '',
@@ -300,6 +312,23 @@ const submitBorrow = async () => {
     errorMsg.value = error.message || '提交失败，请重试'
   } finally {
     submitting.value = false
+  }
+}
+
+const startChat = async () => {
+  if (!authStore.isLoggedIn) {
+    router.push('/login')
+    return
+  }
+
+  if (!item.value?.owner?.id) return
+
+  try {
+    const res = await chatApi.getOrCreateConversation(item.value.owner.id)
+    router.push(`/chat?conversationId=${res.id}`)
+  } catch (error) {
+    console.error('创建会话失败', error)
+    alert('创建会话失败，请重试')
   }
 }
 

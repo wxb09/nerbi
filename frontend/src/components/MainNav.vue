@@ -26,6 +26,18 @@
             </span>
           </RouterLink>
           <RouterLink 
+            class="relative p-2 hover:bg-gray-100 rounded-full transition-colors" 
+            to="/chat"
+          >
+            <span class="iconify text-xl text-gray-600" data-icon="solar:chat-round-dots-bold"></span>
+            <span 
+              v-if="chatUnreadCount > 0"
+              class="absolute -top-0.5 -right-0.5 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold"
+            >
+              {{ chatUnreadCount > 9 ? '9+' : chatUnreadCount }}
+            </span>
+          </RouterLink>
+          <RouterLink 
             class="text-sm px-3 py-1.5 rounded-full border border-gray-200 relative" 
             to="/profile"
           >
@@ -60,6 +72,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import { userApi } from '../api/user'
 import { messageApi } from '../api/message'
+import { chatApi } from '../api/chat'
 import { wsManager } from '../utils/websocket'
 
 const router = useRouter()
@@ -68,6 +81,7 @@ const authStore = useAuthStore()
 const pendingApprovalCount = ref(0)
 const returnRequestedCount = ref(0)
 const unreadCount = ref(0)
+const chatUnreadCount = ref(0)
 
 const pendingTotal = computed(() => pendingApprovalCount.value + returnRequestedCount.value)
 
@@ -92,6 +106,16 @@ const loadUnreadCount = async () => {
   }
 }
 
+const loadChatUnreadCount = async () => {
+  if (!authStore.isLoggedIn) return
+  try {
+    const res = await chatApi.getUnreadCount()
+    chatUnreadCount.value = res.count || 0
+  } catch (error) {
+    console.error('加载聊天未读数量失败', error)
+  }
+}
+
 const handleWebSocketMessage = (message: any) => {
   console.log('收到 WebSocket 消息:', message)
   
@@ -104,6 +128,10 @@ const handleWebSocketMessage = (message: any) => {
       
     case 'UNREAD_COUNT':
       unreadCount.value = data.count
+      break
+      
+    case 'CHAT_MESSAGE':
+      chatUnreadCount.value++
       break
       
     case 'NEW_BORROW_APPLY':
@@ -143,10 +171,12 @@ onMounted(() => {
   authStore.init()
   loadPendingCount()
   loadUnreadCount()
+  loadChatUnreadCount()
   
   wsManager.on('*', handleWebSocketMessage)
   wsManager.on('NEW_MESSAGE', handleWebSocketMessage)
   wsManager.on('UNREAD_COUNT', handleWebSocketMessage)
+  wsManager.on('CHAT_MESSAGE', handleWebSocketMessage)
   wsManager.on('NEW_BORROW_APPLY', handleWebSocketMessage)
   wsManager.on('ITEM_STATUS_CHANGED', handleWebSocketMessage)
   wsManager.on('RETURN_REQUESTED', handleWebSocketMessage)
@@ -160,6 +190,7 @@ onUnmounted(() => {
   wsManager.off('*', handleWebSocketMessage)
   wsManager.off('NEW_MESSAGE', handleWebSocketMessage)
   wsManager.off('UNREAD_COUNT', handleWebSocketMessage)
+  wsManager.off('CHAT_MESSAGE', handleWebSocketMessage)
   wsManager.off('NEW_BORROW_APPLY', handleWebSocketMessage)
   wsManager.off('ITEM_STATUS_CHANGED', handleWebSocketMessage)
   wsManager.off('RETURN_REQUESTED', handleWebSocketMessage)

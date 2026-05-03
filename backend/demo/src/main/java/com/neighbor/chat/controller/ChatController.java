@@ -61,7 +61,7 @@ public class ChatController {
             @PathVariable Long id,
             @Valid @RequestBody SendMessageRequest request) {
         Long userId = getUserIdFromAuth(authentication);
-        ChatMessageDTO message = chatService.sendMessage(userId, request);
+        ChatMessageDTO message = chatService.sendMessage(userId, id, request);
         return ApiResponse.ok(message);
     }
 

@@ -76,19 +76,24 @@ public class ChatService {
         return messages.map(this::toMessageDTO);
     }
 
-    public ChatMessageDTO sendMessage(Long senderId, SendMessageRequest request) {
+    public ChatMessageDTO sendMessage(Long senderId, Long conversationId, SendMessageRequest request) {
         User sender = userRepository.findById(senderId)
             .orElseThrow(() -> new RuntimeException("发送者不存在"));
         
-        User receiver = userRepository.findById(request.receiverId())
+        ChatConversation conversation = conversationRepository.findById(conversationId)
+            .orElseThrow(() -> new RuntimeException("会话不存在"));
+        
+        Long receiverId = conversation.getUser1Id().equals(senderId) 
+            ? conversation.getUser2Id() 
+            : conversation.getUser1Id();
+        
+        User receiver = userRepository.findById(receiverId)
             .orElseThrow(() -> new RuntimeException("接收者不存在"));
         
-        ChatConversation conversation = getOrCreateConversationEntity(senderId, request.receiverId());
-        
         ChatMessage message = new ChatMessage();
-        message.setConversationId(conversation.getId());
+        message.setConversationId(conversationId);
         message.setSenderId(senderId);
-        message.setReceiverId(request.receiverId());
+        message.setReceiverId(receiverId);
         message.setContent(request.content());
         message.setType(request.type() != null ? request.type() : "TEXT");
         message.setIsRead(false);

@@ -11,6 +11,7 @@ import ProfileView from '../views/ProfileView.vue'
 import DraftsView from '../views/DraftsView.vue'
 import MessageView from '../views/MessageView.vue'
 import AdminView from '../views/AdminView.vue'
+import ChatPage from '../views/ChatPage.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -26,6 +27,7 @@ const router = createRouter({
     { path: '/drafts', component: DraftsView, meta: { requiresAuth: true } },
     { path: '/profile', component: ProfileView, meta: { requiresAuth: true } },
     { path: '/messages', component: MessageView, meta: { requiresAuth: true } },
+    { path: '/chat', component: ChatPage, meta: { requiresAuth: true } },
     { path: '/admin', component: AdminView, meta: { requiresAuth: true, requiresAdmin: true } },
   ],
 })
