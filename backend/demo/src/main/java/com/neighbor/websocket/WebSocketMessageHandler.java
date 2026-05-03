@@ -43,6 +43,11 @@ public class WebSocketMessageHandler extends TextWebSocketHandler {
             userSessions.put(userId, session);
             log.info("用户上线：userId={}, sessionId={}, 当前在线人数={}", 
                     userId, session.getId(), userSessions.size());
+            
+            broadcastToAll(Map.of(
+                "type", "USER_ONLINE",
+                "data", Map.of("userId", userId)
+            ));
         }
     }
 
@@ -52,11 +57,70 @@ public class WebSocketMessageHandler extends TextWebSocketHandler {
         String payload = message.getPayload();
         log.debug("收到消息：userId={}, payload={}", userId, payload);
         
-        Map<String, Object> response = Map.of(
-            "type", "PONG",
-            "data", Map.of("timestamp", System.currentTimeMillis())
-        );
-        session.sendMessage(new TextMessage(objectMapper.writeValueAsString(response)));
+        try {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> msg = objectMapper.readValue(payload, Map.class);
+            String type = (String) msg.get("type");
+            
+            if ("PING".equals(type)) {
+                Map<String, Object> response = Map.of(
+                    "type", "PONG",
+                    "data", Map.of("timestamp", System.currentTimeMillis())
+                );
+                session.sendMessage(new TextMessage(objectMapper.writeValueAsString(response)));
+            } else if ("TYPING".equals(type)) {
+                handleTypingMessage(userId, msg);
+            } else if ("MESSAGE_READ".equals(type)) {
+                handleMessageRead(userId, msg);
+            }
+        } catch (Exception e) {
+            log.error("处理消息失败：userId={}, error={}", userId, e.getMessage());
+        }
+    }
+    
+    private void handleTypingMessage(Long userId, Map<String, Object> msg) {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) msg.get("data");
+        if (data != null && data.get("receiverId") != null) {
+            Long receiverId = Long.parseLong(data.get("receiverId").toString());
+            Boolean isTyping = (Boolean) data.get("isTyping");
+            
+            Map<String, Object> notification = Map.of(
+                "type", "TYPING",
+                "data", Map.of(
+                    "userId", userId,
+                    "isTyping", isTyping != null ? isTyping : true
+                )
+            );
+            sendMessageToUser(receiverId, notification);
+        }
+    }
+    
+    private void handleMessageRead(Long userId, Map<String, Object> msg) {
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) msg.get("data");
+        if (data != null && data.get("conversationId") != null) {
+            Long conversationId = Long.parseLong(data.get("conversationId").toString());
+            
+            Map<String, Object> notification = Map.of(
+                "type", "MESSAGE_READ",
+                "data", Map.of(
+                    "conversationId", conversationId,
+                    "readerId", userId,
+                    "readAt", System.currentTimeMillis()
+                )
+            );
+            
+            userSessions.forEach((uid, sess) -> {
+                if (!uid.equals(userId) && sess.isOpen()) {
+                    try {
+                        sess.sendMessage(new TextMessage(objectMapper.writeValueAsString(notification)));
+                    } catch (IOException e) {
+                        log.error("发送已读通知失败：userId={}", uid, e);
+                    }
+                }
+            });
+        }
     }
 
     @Override
@@ -66,6 +130,11 @@ public class WebSocketMessageHandler extends TextWebSocketHandler {
             userSessions.remove(userId);
             log.info("用户下线：userId={}, reason={}, 当前在线人数={}", 
                     userId, status, userSessions.size());
+            
+            broadcastToAll(Map.of(
+                "type", "USER_OFFLINE",
+                "data", Map.of("userId", userId)
+            ));
         }
     }
 
