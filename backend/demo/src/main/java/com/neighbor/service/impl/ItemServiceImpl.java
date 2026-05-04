@@ -7,6 +7,7 @@ import com.neighbor.dto.ItemDetailDTO;
 import com.neighbor.dto.ItemListDTO;
 import com.neighbor.dto.OwnerDTO;
 import com.neighbor.entity.*;
+import com.neighbor.enums.BorrowStatus;
 import com.neighbor.enums.ErrorCode;
 import com.neighbor.enums.ItemStatus;
 import com.neighbor.repository.*;
@@ -37,15 +38,17 @@ public class ItemServiceImpl implements ItemService {
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
     private final CommunityRepository communityRepository;
+    private final BorrowRepository borrowRepository;
 
     public ItemServiceImpl(ItemRepository itemRepository, ItemImageRepository itemImageRepository, 
                          CategoryRepository categoryRepository, UserRepository userRepository, 
-                         CommunityRepository communityRepository) {
+                         CommunityRepository communityRepository, BorrowRepository borrowRepository) {
         this.itemRepository = itemRepository;
         this.itemImageRepository = itemImageRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
         this.communityRepository = communityRepository;
+        this.borrowRepository = borrowRepository;
     }
 
     @Override
@@ -253,11 +256,7 @@ public class ItemServiceImpl implements ItemService {
             mainImage = images.get(0).getUrl();
         }
         
-        OwnerDTO owner = new OwnerDTO(
-                item.getOwner().getId(),
-                item.getOwner().getNickname(),
-                item.getOwner().getAvatar()
-        );
+        OwnerDTO owner = buildOwnerDTO(item.getOwner());
         
         String locationText = "";
         if (item.getCommunity() != null) {
@@ -306,11 +305,7 @@ public class ItemServiceImpl implements ItemService {
             images.add(image.getUrl());
         }
         
-        OwnerDTO owner = new OwnerDTO(
-                item.getOwner().getId(),
-                item.getOwner().getNickname(),
-                item.getOwner().getAvatar()
-        );
+        OwnerDTO owner = buildOwnerDTO(item.getOwner());
         
         List<String> returnRequirements = parseTags(item.getReturnRequirements());
         List<String> tags = parseTags(item.getTags());
@@ -337,6 +332,23 @@ public class ItemServiceImpl implements ItemService {
                 item.getCreatedAt(),
                 item.getPublishedAt(),
                 images
+        );
+    }
+    
+    private OwnerDTO buildOwnerDTO(User owner) {
+        Long borrowCount = borrowRepository.countByBorrowerIdAndStatus(owner.getId(), BorrowStatus.RETURNED);
+        Long lendCount = borrowRepository.countByLenderIdAndStatus(owner.getId(), BorrowStatus.RETURNED);
+        
+        String communityName = owner.getCommunity() != null ? owner.getCommunity().getName() : null;
+        
+        return new OwnerDTO(
+                owner.getId(),
+                owner.getNickname(),
+                owner.getAvatar(),
+                borrowCount != null ? borrowCount.intValue() : 0,
+                lendCount != null ? lendCount.intValue() : 0,
+                communityName,
+                owner.getBuilding()
         );
     }
 }

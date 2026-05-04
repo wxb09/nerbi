@@ -20,6 +20,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -142,7 +143,8 @@ public class ReviewService {
 
     @Transactional(readOnly = true)
     public boolean hasReviewed(Long borrowId, Long fromUserId) {
-        return reviewRepository.findByBorrowIdAndFromUserId(borrowId, fromUserId).isPresent();
+        List<Review> reviews = reviewRepository.findAllByBorrowIdAndFromUserId(borrowId, fromUserId);
+        return !reviews.isEmpty();
     }
 
     @Transactional(readOnly = true)

@@ -70,12 +70,12 @@
               </div>
             </div>
             <div class="flex gap-2">
-              <RouterLink 
-                class="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold hover:border-[#E2B04D] hover:text-[#E2B04D] hover:bg-[#F5E6C8]/30 transition-all" 
-                :to="`/user/${item?.owner?.id}`"
+              <button 
+                @click="showUserModal = true"
+                class="px-4 py-2 border border-gray-200 rounded-lg text-xs font-bold hover:border-[#E2B04D] hover:text-[#E2B04D] hover:bg-[#F5E6C8]/30 transition-all"
               >
                 查看主页
-              </RouterLink>
+              </button>
               <button 
                 v-if="item?.owner?.id !== currentUserId"
                 @click="startChat"
@@ -213,12 +213,21 @@
       </div>
     </div>
   </main>
+
+  <UserInfoModal 
+    :visible="showUserModal" 
+    :user="item?.owner"
+    :showContact="item?.owner?.id !== currentUserId"
+    @close="showUserModal = false"
+    @contact="startChat"
+  />
 </template>
 
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import MainNav from '../components/MainNav.vue'
+import UserInfoModal from '../components/UserInfoModal.vue'
 import { itemApi } from '../api/item'
 import { borrowApi } from '../api/borrow'
 import { chatApi } from '../api/chat'
@@ -233,6 +242,7 @@ const loading = ref(true)
 const submitting = ref(false)
 const errorMsg = ref('')
 const currentUserId = ref(Number(authStore.user?.id))
+const showUserModal = ref(false)
 
 const borrowForm = ref({
   startDate: '',

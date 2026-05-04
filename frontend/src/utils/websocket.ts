@@ -16,6 +16,27 @@ class WebSocketManager {
   private reconnectAttempts = 0
   private maxReconnectAttempts = 5
   private reconnectDelay = 3000
+  private debug = false
+
+  setDebug(enabled: boolean) {
+    this.debug = enabled
+  }
+
+  private log(message: string, ...args: any[]) {
+    if (this.debug) {
+      console.log(`[WebSocket] ${message}`, ...args)
+    }
+  }
+
+  private error(message: string, ...args: any[]) {
+    console.error(`[WebSocket] ${message}`, ...args)
+  }
+
+  private warn(message: string, ...args: any[]) {
+    if (this.debug) {
+      console.warn(`[WebSocket] ${message}`, ...args)
+    }
+  }
 
   connect(token: string): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -36,7 +57,7 @@ class WebSocketManager {
         this.ws = new WebSocket(wsUrl)
 
         this.ws.onopen = () => {
-          console.log('[WebSocket] 连接成功')
+          this.log('连接成功')
           this.isConnecting = false
           this.reconnectAttempts = 0
           this.startHeartbeat()
@@ -52,21 +73,21 @@ class WebSocketManager {
         this.ws.onmessage = (event) => {
           try {
             const message: WebSocketMessage = JSON.parse(event.data)
-            console.log('[WebSocket] 收到消息:', message)
+            this.log('收到消息:', message)
             this.handleMessage(message)
           } catch (error) {
-            console.error('[WebSocket] 解析消息失败:', error)
+            this.error('解析消息失败:', error)
           }
         }
 
         this.ws.onerror = (error) => {
-          console.error('[WebSocket] 连接错误:', error)
+          this.error('连接错误:', error)
           this.isConnecting = false
           reject(error)
         }
 
         this.ws.onclose = (event) => {
-          console.log('[WebSocket] 连接关闭:', event.reason)
+          this.log('连接关闭:', event.reason)
           this.isConnecting = false
           this.stopHeartbeat()
           this.scheduleReconnect()
@@ -87,7 +108,7 @@ class WebSocketManager {
       this.ws = null
     }
     
-    console.log('[WebSocket] 已断开连接')
+    this.log('已断开连接')
   }
 
   isConnected(): boolean {
@@ -96,7 +117,7 @@ class WebSocketManager {
 
   send(message: any): boolean {
     if (!this.isConnected()) {
-      console.warn('[WebSocket] 未连接，无法发送消息')
+      this.warn('未连接，无法发送消息')
       return false
     }
 
@@ -104,7 +125,7 @@ class WebSocketManager {
       this.ws!.send(JSON.stringify(message))
       return true
     } catch (error) {
-      console.error('[WebSocket] 发送消息失败:', error)
+      this.error('发送消息失败:', error)
       return false
     }
   }
@@ -127,19 +148,19 @@ class WebSocketManager {
   }
 
   private handleMessage(message: WebSocketMessage) {
-    console.log('[WebSocket] 处理消息 - type:', message.type, 'data:', message.data)
+    this.log('处理消息 - type:', message.type, 'data:', message.data)
     
     const handlers = this.handlers.get(message.type)
     if (handlers) {
-      console.log(`[WebSocket] 找到 ${handlers.length} 个 ${message.type} 类型的处理器`)
+      this.log(`找到 ${handlers.length} 个 ${message.type} 类型的处理器`)
       handlers.forEach(handler => handler(message))
     } else {
-      console.log(`[WebSocket] 没有找到 ${message.type} 类型的处理器`)
+      this.log(`没有找到 ${message.type} 类型的处理器`)
     }
     
     const allHandlers = this.handlers.get('*')
     if (allHandlers) {
-      console.log(`[WebSocket] 找到 ${allHandlers.length} 个通配符处理器`)
+      this.log(`找到 ${allHandlers.length} 个通配符处理器`)
       allHandlers.forEach(handler => handler(message))
     }
   }

@@ -253,18 +253,18 @@ app.jwt.secret=change-this-secret-to-at-least-32-chars-for-production
 
 ### 6.5 支付模块
 
-| 接口                               | 方法   | 说明           |
-| -------------------------------- | ---- | ------------ |
-| `/api/payments/create`           | POST | 创建支付（返回支付宝表单） |
-| `/api/payments/notify`           | POST | 支付宝异步通知回调   |
-| `/api/payments/return`           | GET  | 支付宝同步跳转回调   |
-| `/api/payments/borrow/{borrowId}` | GET  | 查询借阅的支付记录   |
-| `/api/payments/order/{outTradeNo}` | GET  | 按商户订单号查询支付  |
-| `/api/payments/my/paid`          | GET  | 我支付的记录       |
-| `/api/payments/my/received`      | GET  | 我收到的支付记录     |
-| `/api/payments/{borrowId}/refund` | POST | 押金退还         |
-| `/api/payments/{borrowId}/skip-pay` | POST | 跳过支付（测试用）   |
-| `/api/payments/{borrowId}/skip-refund` | POST | 跳过退款（测试用）   |
+| 接口                                     | 方法   | 说明            |
+| -------------------------------------- | ---- | ------------- |
+| `/api/payments/create`                 | POST | 创建支付（返回支付宝表单） |
+| `/api/payments/notify`                 | POST | 支付宝异步通知回调     |
+| `/api/payments/return`                 | GET  | 支付宝同步跳转回调     |
+| `/api/payments/borrow/{borrowId}`      | GET  | 查询借阅的支付记录     |
+| `/api/payments/order/{outTradeNo}`     | GET  | 按商户订单号查询支付    |
+| `/api/payments/my/paid`                | GET  | 我支付的记录        |
+| `/api/payments/my/received`            | GET  | 我收到的支付记录      |
+| `/api/payments/{borrowId}/refund`      | POST | 押金退还          |
+| `/api/payments/{borrowId}/skip-pay`    | POST | 跳过支付（测试用）     |
+| `/api/payments/{borrowId}/skip-refund` | POST | 跳过退款（测试用）     |
 
 ### 6.6 论坛模块
 
@@ -278,30 +278,30 @@ app.jwt.secret=change-this-secret-to-at-least-32-chars-for-production
 
 ### 6.7 评价系统
 
-| 接口                                      | 方法     | 说明         |
-| --------------------------------------- | ------ | ---------- |
-| `/api/reviews`                          | POST   | 创建评价       |
-| `/api/reviews/{id}`                     | GET    | 评价详情       |
-| `/api/reviews/item/{itemId}`            | GET    | 物品评价列表     |
-| `/api/reviews/user/{userId}/received`   | GET    | 用户收到的评价   |
-| `/api/reviews/user/{userId}/given`      | GET    | 用户给出的评价   |
-| `/api/reviews/borrow/{borrowId}/check`  | GET    | 检查评价状态     |
-| `/api/reviews/{id}`                     | DELETE | 删除评价       |
+| 接口                                     | 方法     | 说明      |
+| -------------------------------------- | ------ | ------- |
+| `/api/reviews`                         | POST   | 创建评价    |
+| `/api/reviews/{id}`                    | GET    | 评价详情    |
+| `/api/reviews/item/{itemId}`           | GET    | 物品评价列表  |
+| `/api/reviews/user/{userId}/received`  | GET    | 用户收到的评价 |
+| `/api/reviews/user/{userId}/given`     | GET    | 用户给出的评价 |
+| `/api/reviews/borrow/{borrowId}/check` | GET    | 检查评价状态  |
+| `/api/reviews/{id}`                    | DELETE | 删除评价    |
 
 ### 6.8 消息通知
 
-| 接口                         | 方法   | 说明       |
-| -------------------------- | ---- | -------- |
-| `/api/messages`            | GET  | 消息列表     |
-| `/api/messages/unread`     | GET  | 未读消息列表   |
-| `/api/messages/unread-count` | GET  | 未读消息数量   |
-| `/api/messages/{id}/read`  | POST | 标记单条已读   |
-| `/api/messages/read-all`   | POST | 标记全部已读   |
+| 接口                           | 方法   | 说明     |
+| ---------------------------- | ---- | ------ |
+| `/api/messages`              | GET  | 消息列表   |
+| `/api/messages/unread`       | GET  | 未读消息列表 |
+| `/api/messages/unread-count` | GET  | 未读消息数量 |
+| `/api/messages/{id}/read`    | POST | 标记单条已读 |
+| `/api/messages/read-all`     | POST | 标记全部已读 |
 
 ### 6.9 图片上传
 
-| 接口                  | 方法   | 说明       |
-| ------------------- | ---- | -------- |
+| 接口                   | 方法   | 说明     |
+| -------------------- | ---- | ------ |
 | `/api/upload/images` | POST | 批量上传图片 |
 
 ### 6.11 管理员接口
@@ -407,10 +407,6 @@ npm run dev
 | ------ | ----------------------- |
 | 后端 API | <http://localhost:8080> |
 | 前端页面   | <http://localhost:5173> |
-
-***
-
-##
 
 ***
 

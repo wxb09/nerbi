@@ -1580,6 +1580,7 @@ const getStatusClass = (status: string) => {
     'RETURN_REQUESTED': 'px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-[10px] font-bold',
     'RETURNED': 'px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-[10px] font-bold',
     'OVERDUE': 'px-3 py-1 bg-red-100 text-red-700 rounded-full text-[10px] font-bold',
+    'DISPUTED': 'px-3 py-1 bg-orange-100 text-orange-700 rounded-full text-[10px] font-bold',
     'REJECTED': 'px-3 py-1 bg-red-100 text-red-700 rounded-full text-[10px] font-bold',
     'CANCELLED': 'px-3 py-1 bg-gray-100 text-gray-500 rounded-full text-[10px] font-bold'
   }
@@ -1594,6 +1595,7 @@ const getStatusText = (status: string) => {
     'RETURN_REQUESTED': '申请归还',
     'RETURNED': '已归还',
     'OVERDUE': '超期提示',
+    'DISPUTED': '纠纷中',
     'REJECTED': '已拒绝',
     'CANCELLED': '已取消'
   }

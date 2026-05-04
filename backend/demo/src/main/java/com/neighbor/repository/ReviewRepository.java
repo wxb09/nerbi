@@ -13,7 +13,7 @@ import java.util.Optional;
 @Repository
 public interface ReviewRepository extends JpaRepository<Review, Long> {
     
-    Optional<Review> findByBorrowIdAndFromUserId(Long borrowId, Long fromUserId);
+    List<Review> findAllByBorrowIdAndFromUserId(Long borrowId, Long fromUserId);
     
     Optional<Review> findByBorrowIdAndFromUserIdAndTargetType(Long borrowId, Long fromUserId, ReviewType targetType);
     

@@ -117,8 +117,6 @@ const loadChatUnreadCount = async () => {
 }
 
 const handleWebSocketMessage = (message: any) => {
-  console.log('收到 WebSocket 消息:', message)
-  
   const { type, data } = message
   
   switch (type) {
