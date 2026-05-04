@@ -240,13 +240,13 @@ const loadMessages = async () => {
   try {
     const res = await chatApi.getMessages(selectedConversation.value.id, 0, 100)
     messages.value = (res.content || []).reverse()
-    
-    await scrollToBottom()
   } catch (error) {
     console.error('加载消息失败', error)
   } finally {
     loadingMessages.value = false
   }
+  
+  await scrollToBottom()
 }
 
 const sendMessage = async () => {

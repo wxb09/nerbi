@@ -40,6 +40,12 @@ class WebSocketManager {
           this.isConnecting = false
           this.reconnectAttempts = 0
           this.startHeartbeat()
+          
+          this.handleMessage({
+            type: 'CONNECTED',
+            data: { timestamp: Date.now() }
+          })
+          
           resolve()
         }
 

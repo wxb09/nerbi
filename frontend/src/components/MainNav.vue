@@ -122,6 +122,10 @@ const handleWebSocketMessage = (message: any) => {
   const { type, data } = message
   
   switch (type) {
+    case 'CONNECTED':
+      loadChatUnreadCount()
+      break
+      
     case 'NEW_MESSAGE':
       unreadCount.value++
       break
@@ -174,30 +178,10 @@ onMounted(() => {
   loadChatUnreadCount()
   
   wsManager.on('*', handleWebSocketMessage)
-  wsManager.on('NEW_MESSAGE', handleWebSocketMessage)
-  wsManager.on('UNREAD_COUNT', handleWebSocketMessage)
-  wsManager.on('CHAT_MESSAGE', handleWebSocketMessage)
-  wsManager.on('NEW_BORROW_APPLY', handleWebSocketMessage)
-  wsManager.on('ITEM_STATUS_CHANGED', handleWebSocketMessage)
-  wsManager.on('RETURN_REQUESTED', handleWebSocketMessage)
-  wsManager.on('RETURN_CONFIRMED', handleWebSocketMessage)
-  wsManager.on('REQUEST_APPROVED', handleWebSocketMessage)
-  wsManager.on('REQUEST_REJECTED', handleWebSocketMessage)
-  wsManager.on('BORROW_RETURNED', handleWebSocketMessage)
 })
 
 onUnmounted(() => {
   wsManager.off('*', handleWebSocketMessage)
-  wsManager.off('NEW_MESSAGE', handleWebSocketMessage)
-  wsManager.off('UNREAD_COUNT', handleWebSocketMessage)
-  wsManager.off('CHAT_MESSAGE', handleWebSocketMessage)
-  wsManager.off('NEW_BORROW_APPLY', handleWebSocketMessage)
-  wsManager.off('ITEM_STATUS_CHANGED', handleWebSocketMessage)
-  wsManager.off('RETURN_REQUESTED', handleWebSocketMessage)
-  wsManager.off('RETURN_CONFIRMED', handleWebSocketMessage)
-  wsManager.off('REQUEST_APPROVED', handleWebSocketMessage)
-  wsManager.off('REQUEST_REJECTED', handleWebSocketMessage)
-  wsManager.off('BORROW_RETURNED', handleWebSocketMessage)
 })
 
 const logout = () => {
